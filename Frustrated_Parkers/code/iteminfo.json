@@ -1,0 +1,59 @@
+{
+    "access": "private",
+    "accessInformation": null,
+    "appCategories": [
+    ],
+    "avgRating": 0,
+    "banner": null,
+    "categories": [
+    ],
+    "commentsEnabled": true,
+    "created": 1520373120000,
+    "culture": "en-au",
+    "description": "\n<p style=' margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;'>This layout follows the Google Material design style. This layout is using a QML SwipeView to navigate pages. This app can be run on all mobile and desktop devices.</p>\n<p style='-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;'><br /></p>",
+    "documentation": null,
+    "extent": [
+    ],
+    "guid": null,
+    "id": "0061f2dd0294434dbd63a478deb8a07a",
+    "industries": [
+    ],
+    "itemControl": "admin",
+    "languages": [
+    ],
+    "largeThumbnail": null,
+    "licenseInfo": null,
+    "listed": false,
+    "modified": 1520825017000,
+    "name": "0061f2dd0294434dbd63a478deb8a07a.zip",
+    "numComments": 29,
+    "numRatings": 0,
+    "numViews": 70,
+    "owner": "ggeteam",
+    "ownerFolder": null,
+    "properties": null,
+    "protected": false,
+    "proxyFilter": null,
+    "scoreCompleteness": 63,
+    "screenshots": [
+    ],
+    "size": 5654433,
+    "snippet": "This layout demonstrates how to display onboarding screens to introduce the app.",
+    "spatialReference": null,
+    "tags": [
+    ],
+    "thumbnail": "thumbnail/thumbnail.png",
+    "title": "Frustrated Parkers",
+    "type": "Native Application",
+    "typeKeywords": [
+        "API_QML",
+        "App",
+        "Application",
+        "AppStudio",
+        "Configuration",
+        "Native",
+        "qml",
+        "Registered App"
+    ],
+    "url": null
+}
