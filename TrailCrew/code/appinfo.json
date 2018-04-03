@@ -1,0 +1,138 @@
+{
+  "arcgisRuntime": 1001,
+  "capabilities": {
+    "audio": true,
+    "backgroundLocation": false,
+    "biometricAuthentication": false,
+    "bluetooth": false,
+    "camera": true,
+    "fileSharing": false,
+    "highAccuracyLocation": false,
+    "localnotification": false,
+    "location": true,
+    "microphone": true,
+    "network": true,
+    "storage": true,
+    "vibration": false
+  },
+  "deployment": {
+    "android": {
+      "packageName": "com.esri.app520210d65a564a4283cc44fb2b527d43"
+    },
+    "arcgisRuntimeExtensionsLicense": "",
+    "arcgisRuntimeLicense": "",
+    "clientId": "",
+    "ios": {
+      "bundleId": "com.esri.app520210d65a564a4283cc44fb2b527d43",
+      "codeSignIdentity": ""
+    },
+    "macos": {
+      "bundleId": "",
+      "codeSignIdentity": ""
+    },
+    "publisherName": "",
+    "uwp": {
+      "packageName": "",
+      "productID": "",
+      "publisherID": ""
+    }
+  },
+  "devicesTypes": [
+    "desktop",
+    "tablet",
+    "phone"
+  ],
+  "display": {
+    "desktop": {
+      "minimumHeight": 500,
+      "minimumWidth": 320,
+      "windowMode": "default"
+    },
+    "enableHighDpi": true,
+    "phone": {
+      "landscape": false,
+      "portrait": true,
+      "showStatusBar": true
+    },
+    "tablet": {
+      "landscape": true,
+      "portrait": true,
+      "showStatusBar": true
+    }
+  },
+  "environment": {},
+  "mainFile": "app.qml",
+  "make": {
+    "ignore": [
+      "QuickReport/languages/*.sh",
+      "QuickReport/languages/*.bat",
+      "QuickReport/languages/*.ts",
+      "*.bat"
+    ],
+    "ios": {
+      "enableBitcode": false
+    }
+  },
+  "projectFile": "app.qmlproject",
+  "properties": {
+    "allowPhotoToSkip": true,
+    "baseFontSize": 20,
+    "buttonColor": "#FF7E09",
+    "customTextFontTTF": "assets/OpenSans-Regular.ttf",
+    "customTitleFontTTF": "assets/OpenSans-Regular.ttf",
+    "emailAddress": "",
+    "emailLabel": "",
+    "featureLayerId": "0",
+    "featureServiceURL": "https://services8.arcgis.com/nWP9UhhE1wleDVLI/arcgis/rest/services/TrailReports/FeatureServer",
+    "headerBackgroundColor": "#0071bc",
+    "headerTextColor": "#FFF",
+    "logoImage": "assets/appicon.png",
+    "logoUrl": "",
+    "offlineMMPKID": "",
+    "pageBackgroundColor": "#F8F8F8",
+    "password": "",
+    "phoneLabel": "",
+    "phoneNumber": "",
+    "reportHelpUrl": "",
+    "signInImage": "",
+    "socialMediaLabel": "",
+    "socialMediaUrl": "",
+    "startBackground": "assets/startbackground.jpg",
+    "startShowLogo": true,
+    "supportAudioRecorder": false,
+    "supportVideoRecorder": false,
+    "textColor": "#4C4C4C",
+    "thankyouMessage": "",
+    "username": "",
+    "webMapID": "2e6636db98c64d0882deb005b3307d51",
+    "websiteLabel": "",
+    "websiteUrl": "",
+    "startbackground": "assets/startbackground.jpg"
+  },
+  "resources": {
+    "appIcon": "assets/appicon.jpg",
+    "launchImageBackground": "assets/launchimagebackground.jpg",
+    "launchImageBackgroundColor": "#ffffff",
+    "launchImageOverlay": ""
+  },
+  "templateName": "quickreport",
+  "translations": {
+    "fileName": "QuickReport",
+    "path": "QuickReport/languages"
+  },
+  "type": "app",
+  "urlScheme": "",
+  "usageDescriptionKeys": {
+    "bluetoothUsageDescription": "This app uses bluetooth to scan and connect to devices.",
+    "cameraUsageDescription": "This app needs access to camera to take a picture.",
+    "locationAlwaysUsageDescription": "This app needs access to device location when the app is running or in the background.",
+    "locationWhenInUseUsageDescription": "This app needs access to device location when the app is running.",
+    "microphoneUsageDescription": "This app needs to access microphone to record audio.",
+    "photoLibraryUsageDescription": "This app needs access to photo library to select a photo."
+  },
+  "version": {
+    "major": 2,
+    "micro": 9,
+    "minor": 1
+  }
+}

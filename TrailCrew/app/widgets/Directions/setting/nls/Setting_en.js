@@ -1,0 +1,6 @@
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+define({"widgets/Directions/setting/nls/strings":{routeUrl:"Route URL",locatorUrl:"Geocoder URL",geocoderOptions:"Geocoder options",autoComplete:"Autocomplete",maximumSuggestions:"Maximum suggestions",minCharacters:"Minimum characters",searchDelay:"Search delay",placeholder:"Placeholder",routeOptions:"Route options",directionsLanguage:"Directions language",directionsLengthUnits:"Directions length units",directionsOutputType:"Directions output type",impedanceAttribute:"Impedance attribute",kilometers:"Kilometers",
+miles:"Miles",meters:"Meters",feet:"Feet",yards:"Yards",nauticalMiles:"Nautical miles",parametersTip:"Please set parameters correctly !",complete:"Complete",completeNoEvents:"Complete No Events",instructionsOnly:"Instructions only",standard:"Standard",summaryOnly:"Summary only",travelModesUrl:"Travel modes URL",searchPlaceholder:"Find address or place",trafficLayerUrl:"Traffic layer URL",presetDestinations:"Preset stops",startPoint:"Start point",endPoint:"End point",destinationHolder:"Address or coordinates",
+optional:"Optional.",_localized:{}}});
