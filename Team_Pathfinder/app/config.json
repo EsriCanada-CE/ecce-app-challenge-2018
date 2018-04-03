@@ -1,0 +1,1423 @@
+{
+  "theme": {
+    "name": "FoldableTheme",
+    "styles": [
+      "default",
+      "black",
+      "blue",
+      "cyan",
+      "green",
+      "purple",
+      "red",
+      "yellow"
+    ],
+    "version": "2.7",
+    "sharedTheme": {
+      "isPortalSupport": false,
+      "useHeader": false,
+      "useLogo": false
+    }
+  },
+  "portalUrl": "https://mikko.maps.arcgis.com",
+  "appId": "",
+  "authorizedCrossOriginDomains": [],
+  "title": "Day One",
+  "subtitle": "ECCE App Challenge 2018 - University of Calgary",
+  "keepAppState": true,
+  "logo": "images/app-logo.png",
+  "geometryService": "https://utility.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer",
+  "links": [],
+  "widgetOnScreen": {
+    "widgets": [
+      {
+        "uri": "themes/FoldableTheme/widgets/HeaderController/Widget",
+        "position": {
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "height": 40,
+          "relativeTo": "browser"
+        },
+        "version": "2.7",
+        "id": "themes_FoldableTheme_widgets_HeaderController_Widget_1",
+        "name": "HeaderController"
+      },
+      {
+        "uri": "widgets/Scalebar/Widget",
+        "position": {
+          "left": 7,
+          "bottom": 25,
+          "relativeTo": "map"
+        },
+        "version": "2.7",
+        "id": "widgets_Scalebar_Widget_2",
+        "name": "Scalebar",
+        "config": "configs/Scalebar/config_widgets_Scalebar_Widget_2.json",
+        "visible": false
+      },
+      {
+        "uri": "widgets/Search/Widget",
+        "position": {
+          "left": 55,
+          "top": 5,
+          "relativeTo": "map"
+        },
+        "version": "2.7",
+        "id": "widgets_Search_Widget_3",
+        "name": "Search",
+        "config": "configs/Search/config_widgets_Search_Widget_3.json"
+      },
+      {
+        "uri": "widgets/Coordinate/Widget",
+        "position": {
+          "left": 7,
+          "bottom": 5,
+          "relativeTo": "map"
+        },
+        "version": "2.7",
+        "id": "widgets_Coordinate_Widget_4",
+        "name": "Coordinate"
+      },
+      {
+        "position": {
+          "left": 55,
+          "top": 45,
+          "relativeTo": "map"
+        },
+        "placeholderIndex": 1,
+        "id": "_5",
+        "version": "2.7",
+        "closeable": true,
+        "uri": "widgets/Bookmark/Widget",
+        "name": "Bookmark",
+        "config": "configs/Bookmark/config__5.json"
+      },
+      {
+        "position": {
+          "left": 105,
+          "top": 45,
+          "relativeTo": "map"
+        },
+        "placeholderIndex": 1,
+        "id": "_6",
+        "name": "NearMe",
+        "version": "2.7",
+        "closeable": true,
+        "uri": "widgets/NearMe/Widget",
+        "config": "configs/NearMe/config__6.json",
+        "IsController": false
+      },
+      {
+        "position": {
+          "left": 155,
+          "top": 45,
+          "relativeTo": "map"
+        },
+        "placeholderIndex": 1,
+        "id": "_7",
+        "version": "2.7",
+        "closeable": true,
+        "uri": "widgets/Query/Widget",
+        "name": "Query",
+        "config": "configs/Query/config__7.json"
+      },
+      {
+        "position": {
+          "left": 205,
+          "top": 45,
+          "relativeTo": "map"
+        },
+        "placeholderIndex": 1,
+        "id": "_8",
+        "name": "LayerList",
+        "version": "2.7",
+        "closeable": true,
+        "uri": "widgets/LayerList/Widget",
+        "config": "configs/LayerList/config__8.json",
+        "openAtStart": false
+      },
+      {
+        "position": {
+          "left": 255,
+          "top": 45,
+          "relativeTo": "map"
+        },
+        "placeholderIndex": 1,
+        "id": "_9",
+        "version": "2.7",
+        "closeable": true,
+        "uri": "widgets/Share/Widget",
+        "name": "Share",
+        "config": "configs/Share/config__9.json"
+      },
+      {
+        "uri": "widgets/OverviewMap/Widget",
+        "position": {
+          "right": 0,
+          "bottom": 0,
+          "zIndex": 1,
+          "relativeTo": "map"
+        },
+        "version": "2.7",
+        "id": "widgets_OverviewMap_Widget_10",
+        "name": "OverviewMap",
+        "config": "configs/OverviewMap/config_widgets_OverviewMap_Widget_10.json"
+      },
+      {
+        "uri": "widgets/HomeButton/Widget",
+        "position": {
+          "left": 7,
+          "top": 75,
+          "relativeTo": "map"
+        },
+        "version": "2.7",
+        "id": "widgets_HomeButton_Widget_11",
+        "name": "HomeButton"
+      },
+      {
+        "uri": "widgets/MyLocation/Widget",
+        "position": {
+          "left": 7,
+          "top": 110,
+          "relativeTo": "map"
+        },
+        "version": "2.7",
+        "id": "widgets_MyLocation_Widget_12",
+        "name": "MyLocation"
+      },
+      {
+        "uri": "widgets/AttributeTable/Widget",
+        "position": {
+          "relativeTo": "browser"
+        },
+        "version": "2.7",
+        "id": "widgets_AttributeTable_Widget_13",
+        "name": "AttributeTable"
+      },
+      {
+        "uri": "widgets/Splash/Widget",
+        "position": {
+          "relativeTo": "browser"
+        },
+        "version": "2.7",
+        "id": "widgets_Splash_Widget_14",
+        "name": "Splash",
+        "config": "configs/Splash/config_widgets_Splash_Widget_14.json",
+        "visible": false
+      },
+      {
+        "uri": "widgets/ZoomSlider/Widget",
+        "position": {
+          "top": 5,
+          "left": 7,
+          "relativeTo": "map"
+        },
+        "version": "2.7",
+        "id": "widgets_ZoomSlider_Widget_15",
+        "name": "ZoomSlider"
+      },
+      {
+        "uri": "widgets/ExtentNavigate/Widget",
+        "visible": false,
+        "position": {
+          "top": 150,
+          "left": 7,
+          "relativeTo": "map"
+        },
+        "id": "widgets_ExtentNavigate_Widget_16",
+        "name": "ExtentNavigate",
+        "version": "2.7"
+      },
+      {
+        "uri": "widgets/FullScreen/Widget",
+        "position": {
+          "right": 8,
+          "top": 8,
+          "relativeTo": "map"
+        },
+        "version": "2.7",
+        "id": "widgets_FullScreen_Widget_17",
+        "name": "FullScreen"
+      }
+    ],
+    "panel": {
+      "uri": "jimu/OnScreenWidgetPanel",
+      "position": {
+        "relativeTo": "map"
+      }
+    }
+  },
+  "map": {
+    "3D": false,
+    "2D": true,
+    "position": {
+      "left": 0,
+      "top": 40,
+      "right": 0,
+      "bottom": 0
+    },
+    "itemId": "c71d7fa21b214f86a83a375bedd378c0",
+    "mapOptions": {
+      "extent": {
+        "xmin": -12715766.229443984,
+        "ymin": 6618777.838842095,
+        "xmax": -12672349.997378064,
+        "ymax": 6642091.132469042,
+        "spatialReference": {
+          "wkid": 102100
+        }
+      }
+    },
+    "id": "map",
+    "portalUrl": "https://mikko.maps.arcgis.com",
+    "appProxy": {
+      "mapItemId": "b834a68d7a484c5fb473d4ba90d35e71",
+      "proxyItems": []
+    },
+    "mapRefreshInterval": {
+      "useWebMapRefreshInterval": true
+    }
+  },
+  "widgetPool": {
+    "panel": {
+      "uri": "themes/FoldableTheme/panels/FoldablePanel/Panel",
+      "position": {
+        "top": 5,
+        "right": 5,
+        "bottom": 5,
+        "zIndex": 5,
+        "relativeTo": "map"
+      }
+    },
+    "widgets": [
+      {
+        "uri": "widgets/Legend/Widget",
+        "version": "2.7",
+        "id": "widgets_Legend_Widget_18",
+        "name": "Legend",
+        "index": 2,
+        "config": "configs/Legend/config_widgets_Legend_Widget_18.json"
+      },
+      {
+        "name": "About",
+        "version": "2.7",
+        "uri": "widgets/About/Widget",
+        "config": "configs/About/config_widgets_About_Widget_20.json",
+        "index": 3,
+        "id": "widgets_About_Widget_20",
+        "openAtStart": true
+      }
+    ],
+    "groups": []
+  },
+  "mobileLayout": {
+    "widgetOnScreen": {
+      "widgets": [
+        {
+          "uri": "themes/FoldableTheme/widgets/HeaderController/Widget",
+          "position": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "height": 40,
+            "relativeTo": "browser"
+          },
+          "version": "2.7"
+        },
+        {
+          "uri": "widgets/Scalebar/Widget",
+          "position": {
+            "left": 7,
+            "bottom": 40,
+            "relativeTo": "map"
+          },
+          "version": "2.7"
+        },
+        {
+          "uri": "widgets/Search/Widget",
+          "position": {
+            "left": 55,
+            "top": 5
+          },
+          "version": "2.7"
+        },
+        {
+          "uri": "widgets/Coordinate/Widget",
+          "position": {
+            "left": 7,
+            "bottom": 17,
+            "relativeTo": "map"
+          },
+          "version": "2.7"
+        },
+        {
+          "position": {
+            "left": 55,
+            "top": 45
+          }
+        },
+        {
+          "position": {
+            "left": 105,
+            "top": 45
+          }
+        },
+        {
+          "position": {
+            "left": 155,
+            "top": 45
+          }
+        },
+        {
+          "position": {
+            "left": 205,
+            "top": 45
+          }
+        },
+        {
+          "position": {
+            "left": 255,
+            "top": 45
+          }
+        },
+        {
+          "uri": "widgets/OverviewMap/Widget",
+          "position": {
+            "right": 0,
+            "bottom": 0,
+            "zIndex": 1
+          },
+          "version": "2.7"
+        },
+        {
+          "uri": "widgets/HomeButton/Widget",
+          "inPanel": false,
+          "position": {
+            "left": 7,
+            "top": 75
+          },
+          "version": "2.7"
+        },
+        {
+          "uri": "widgets/MyLocation/Widget",
+          "inPanel": false,
+          "position": {
+            "left": 7,
+            "top": 110
+          },
+          "version": "2.7"
+        },
+        {
+          "uri": "widgets/AttributeTable/Widget",
+          "version": "2.7",
+          "position": {
+            "relativeTo": "browser"
+          }
+        },
+        {
+          "uri": "widgets/Splash/Widget",
+          "visible": false,
+          "position": {
+            "relativeTo": "browser"
+          },
+          "version": "2.7"
+        },
+        {
+          "uri": "widgets/ZoomSlider/Widget",
+          "visible": true,
+          "position": {
+            "top": 5,
+            "left": 7
+          },
+          "version": "2.7"
+        },
+        {
+          "uri": "widgets/ExtentNavigate/Widget",
+          "visible": false,
+          "position": {
+            "top": 150,
+            "left": 7
+          },
+          "version": "2.7"
+        },
+        {
+          "uri": "widgets/FullScreen/Widget",
+          "visible": false,
+          "position": {
+            "right": 8,
+            "top": 8
+          },
+          "version": "2.7"
+        }
+      ]
+    },
+    "map": {
+      "position": {
+        "left": 0,
+        "top": 40,
+        "right": 0,
+        "bottom": 0
+      }
+    },
+    "widgetPool": {
+      "panel": {
+        "uri": "themes/FoldableTheme/panels/FoldablePanel/Panel",
+        "position": {
+          "top": 5,
+          "right": 5,
+          "bottom": 5,
+          "zIndex": 5
+        }
+      }
+    }
+  },
+  "loadingPage": {
+    "backgroundColor": "#508dca",
+    "backgroundImage": {
+      "visible": false
+    },
+    "loadingGif": {
+      "visible": true,
+      "uri": "configs/loading/images/predefined_loading_1.gif",
+      "width": 58,
+      "height": 29
+    }
+  },
+  "wabVersion": "2.7",
+  "isWebTier": false,
+  "dataSource": {
+    "dataSources": {
+      "widget~_7~0": {
+        "id": "widget~_7~0",
+        "type": "Features",
+        "label": "English Language",
+        "dataSchema": {
+          "geometryType": "esriGeometryPoint",
+          "fields": [
+            {
+              "name": "ID",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "ID",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Sub_Category",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Sub-Category",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Name",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Name",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Address",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Address",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Postal_Code",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Postal Code",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Phone_Number",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Phone Number",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Description",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Description",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "FID",
+              "type": "esriFieldTypeOID",
+              "actualType": "int",
+              "alias": "FID",
+              "sqlType": "sqlTypeInteger",
+              "nullable": false,
+              "editable": false,
+              "domain": null,
+              "defaultValue": null
+            }
+          ],
+          "displayField": "",
+          "objectIdField": {
+            "name": "FID",
+            "type": "esriFieldTypeOID",
+            "actualType": "int",
+            "alias": "FID",
+            "sqlType": "sqlTypeInteger",
+            "nullable": false,
+            "editable": false,
+            "domain": null,
+            "defaultValue": null
+          },
+          "typeIdField": ""
+        }
+      },
+      "widget~_7~1": {
+        "id": "widget~_7~1",
+        "type": "Features",
+        "label": "Daily Needs",
+        "dataSchema": {
+          "geometryType": "esriGeometryPoint",
+          "fields": [
+            {
+              "name": "Sub_Category",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Sub-Category",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Name",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Name",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Address",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Address",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Postal_Code",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Postal Code",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Phone_Number",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Phone Number",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Ethnicity__Region",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Ethnicity/ Region",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "FID",
+              "type": "esriFieldTypeOID",
+              "actualType": "int",
+              "alias": "FID",
+              "sqlType": "sqlTypeInteger",
+              "nullable": false,
+              "editable": false,
+              "domain": null,
+              "defaultValue": null
+            }
+          ],
+          "displayField": "",
+          "objectIdField": {
+            "name": "FID",
+            "type": "esriFieldTypeOID",
+            "actualType": "int",
+            "alias": "FID",
+            "sqlType": "sqlTypeInteger",
+            "nullable": false,
+            "editable": false,
+            "domain": null,
+            "defaultValue": null
+          },
+          "typeIdField": ""
+        }
+      },
+      "widget~_7~2": {
+        "id": "widget~_7~2",
+        "type": "Features",
+        "label": "Health Services",
+        "dataSchema": {
+          "geometryType": "esriGeometryPoint",
+          "fields": [
+            {
+              "name": "Sub_Category",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Sub-Category",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Name",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Name",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Phone_Number",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Phone Number",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Address",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Address",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Postal_Code",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Postal Code",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Information",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Information",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 289,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "FID",
+              "type": "esriFieldTypeOID",
+              "actualType": "int",
+              "alias": "FID",
+              "sqlType": "sqlTypeInteger",
+              "nullable": false,
+              "editable": false,
+              "domain": null,
+              "defaultValue": null
+            }
+          ],
+          "displayField": "",
+          "objectIdField": {
+            "name": "FID",
+            "type": "esriFieldTypeOID",
+            "actualType": "int",
+            "alias": "FID",
+            "sqlType": "sqlTypeInteger",
+            "nullable": false,
+            "editable": false,
+            "domain": null,
+            "defaultValue": null
+          },
+          "typeIdField": ""
+        }
+      },
+      "widget~_7~3": {
+        "id": "widget~_7~3",
+        "type": "Features",
+        "label": "Immigration",
+        "dataSchema": {
+          "geometryType": "esriGeometryPoint",
+          "fields": [
+            {
+              "name": "Sub_Category",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Sub-Category",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Name",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Name",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Address",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Address",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Postal_Code",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Postal Code",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Phone_Number",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Phone Number",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Description",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Description",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "FID",
+              "type": "esriFieldTypeOID",
+              "actualType": "int",
+              "alias": "FID",
+              "sqlType": "sqlTypeInteger",
+              "nullable": false,
+              "editable": false,
+              "domain": null,
+              "defaultValue": null
+            }
+          ],
+          "displayField": "",
+          "objectIdField": {
+            "name": "FID",
+            "type": "esriFieldTypeOID",
+            "actualType": "int",
+            "alias": "FID",
+            "sqlType": "sqlTypeInteger",
+            "nullable": false,
+            "editable": false,
+            "domain": null,
+            "defaultValue": null
+          },
+          "typeIdField": ""
+        }
+      },
+      "widget~_7~4": {
+        "id": "widget~_7~4",
+        "type": "Features",
+        "label": "Childcare",
+        "dataSchema": {
+          "geometryType": "esriGeometryPoint",
+          "fields": [
+            {
+              "name": "ID",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "ID",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Sub_Category",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Sub-Category",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Name",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Name",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Address",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Address",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Postal_Code",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Postal Code",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Phone_Number",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Phone Number",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Age",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Age",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Description",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Description",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 436,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "FID",
+              "type": "esriFieldTypeOID",
+              "actualType": "int",
+              "alias": "FID",
+              "sqlType": "sqlTypeInteger",
+              "nullable": false,
+              "editable": false,
+              "domain": null,
+              "defaultValue": null
+            }
+          ],
+          "displayField": "",
+          "objectIdField": {
+            "name": "FID",
+            "type": "esriFieldTypeOID",
+            "actualType": "int",
+            "alias": "FID",
+            "sqlType": "sqlTypeInteger",
+            "nullable": false,
+            "editable": false,
+            "domain": null,
+            "defaultValue": null
+          },
+          "typeIdField": ""
+        }
+      },
+      "widget~_7~5": {
+        "id": "widget~_7~5",
+        "type": "Features",
+        "label": "Transportation",
+        "dataSchema": {
+          "geometryType": "esriGeometryPoint",
+          "fields": [
+            {
+              "name": "Sub_Category",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Sub-Category",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Name",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Name",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Address",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Address",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Postal_Code",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Postal Code",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Phone_Number",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Phone Number",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Description",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Description",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "FID",
+              "type": "esriFieldTypeOID",
+              "actualType": "int",
+              "alias": "FID",
+              "sqlType": "sqlTypeInteger",
+              "nullable": false,
+              "editable": false,
+              "domain": null,
+              "defaultValue": null
+            }
+          ],
+          "displayField": "",
+          "objectIdField": {
+            "name": "FID",
+            "type": "esriFieldTypeOID",
+            "actualType": "int",
+            "alias": "FID",
+            "sqlType": "sqlTypeInteger",
+            "nullable": false,
+            "editable": false,
+            "domain": null,
+            "defaultValue": null
+          },
+          "typeIdField": ""
+        }
+      },
+      "widget~_7~6": {
+        "id": "widget~_7~6",
+        "type": "Features",
+        "label": "Recreation",
+        "dataSchema": {
+          "geometryType": "esriGeometryPoint",
+          "fields": [
+            {
+              "name": "Sub_Category",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Sub-Category",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Name",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Name",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Address",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Address",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Postal_Code",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Postal Code",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Phone_Number",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Phone Number",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Description",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Description",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "FID",
+              "type": "esriFieldTypeOID",
+              "actualType": "int",
+              "alias": "FID",
+              "sqlType": "sqlTypeInteger",
+              "nullable": false,
+              "editable": false,
+              "domain": null,
+              "defaultValue": null
+            }
+          ],
+          "displayField": "",
+          "objectIdField": {
+            "name": "FID",
+            "type": "esriFieldTypeOID",
+            "actualType": "int",
+            "alias": "FID",
+            "sqlType": "sqlTypeInteger",
+            "nullable": false,
+            "editable": false,
+            "domain": null,
+            "defaultValue": null
+          },
+          "typeIdField": ""
+        }
+      },
+      "widget~_7~7": {
+        "id": "widget~_7~7",
+        "type": "Features",
+        "label": "Employment and Careers",
+        "dataSchema": {
+          "geometryType": "esriGeometryPoint",
+          "fields": [
+            {
+              "name": "Sub_Category",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Sub-Category",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Name",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Name",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Address",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Address",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Postal_Code",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Postal Code",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Phone_Number",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Phone Number",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Description",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Description",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "FID",
+              "type": "esriFieldTypeOID",
+              "actualType": "int",
+              "alias": "FID",
+              "sqlType": "sqlTypeInteger",
+              "nullable": false,
+              "editable": false,
+              "domain": null,
+              "defaultValue": null
+            }
+          ],
+          "displayField": "",
+          "objectIdField": {
+            "name": "FID",
+            "type": "esriFieldTypeOID",
+            "actualType": "int",
+            "alias": "FID",
+            "sqlType": "sqlTypeInteger",
+            "nullable": false,
+            "editable": false,
+            "domain": null,
+            "defaultValue": null
+          },
+          "typeIdField": ""
+        }
+      }
+    },
+    "settings": {}
+  },
+  "appItemId": "0cc55c448cec4ad3bb98d218df505ab5",
+  "httpProxy": {
+    "useProxy": true,
+    "alwaysUseProxy": false,
+    "url": "",
+    "rules": [
+	{
+		"urlPrefix": "http://route.arcgis.com/",
+		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+	}
+	{
+		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/English_Language/FeatureServer/0",
+		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+	}
+	{
+		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Immigration/FeatureServer/0",
+		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+	}
+	{
+		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Daily_Needs/FeatureServer/0",
+		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+	}
+	{
+		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Health_Services/FeatureServer/0",
+		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+	}
+	{
+		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Childcare/FeatureServer/0",
+		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+	}
+	{
+		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Transportation/FeatureServer/0",
+		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+	}
+	{
+		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Recreation/FeatureServer/0",
+		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+	}
+	{
+		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Employment_and_Careers/FeatureServer/0",
+		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+	}
+
+	
+	]
+  }
+}
