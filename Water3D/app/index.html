@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link rel="icon" href="https://image.ibb.co/cLy5xc/ECCE_Azure.png">
+    <title>Azure: Water Level Rises</title>
+
+    <style>
+        html,
+        body {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            /* background-color: #ECEFF1 !important; */
+        }
+
+        .checkBoxed {
+            display: none
+        }
+    </style>
+
+    <script>
+        //dojoConfig was required to allow Cedar.js to work well within the app.
+        //Calling the Cedar library on a HTML web-page that is not on a web-server
+        //will Error because it cannot the use the library without a web-server.
+        var dojoConfig = {
+            async: true,
+            packages: [
+                {
+                    name: 'd3',
+                    location: 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6',
+                    main: 'd3.min'
+                }, {
+                    name: 'vega',
+                    location: 'https://cdnjs.cloudflare.com/ajax/libs/vega/2.6.1',
+                    main: 'vega.min'
+                }, {
+                    name: 'cedar',
+                    location: 'https://unpkg.com/arcgis-cedar@0.7.0/dist',
+                    main: 'cedar.min'
+                }
+            ]
+        };
+    </script>
+
+    <!-- Import Bootstrap UI Library for visualizing the entire app -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <!-- Import ArcGIS API 4.6 for Javascript to render the maps and all respective functionality -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.6/esri/css/main.css">
+    <script src="https://js.arcgis.com/4.6/"></script>
+
+    <!-- The following script is the entirity of the functionality of the app. -->
+    <script>
+        require([
+            //IMPORT LIBRARIES
+            //Cedar for charts
+            "cedar",
+
+            //Key libraries to add 2D map, 3D scene, and all appropriate layers
+            "esri/Map",
+            "esri/layers/FeatureLayer",
+            "esri/layers/SceneLayer",
+            "esri/layers/GraphicsLayer", // for symbology
+            "esri/views/MapView",
+            "esri/views/SceneView",
+
+            //KEY library to allow linked and in-sync map panning
+            "esri/core/watchUtils",
+
+            "esri/tasks/QueryTask",
+            "esri/tasks/support/Query",
+
+            //all appropriate widgets used
+            "esri/widgets/Legend",
+            "esri/widgets/Fullscreen",
+            "esri/widgets/Locate",
+            "esri/widgets/Search",
+            "esri/widgets/ScaleBar",
+            "esri/widgets/Expand",
+            "esri/widgets/BasemapGallery",
+
+            //Dojo for connecting and accessing key map components
+            "dojo/_base/array",
+            "dojo/dom",
+            "dojo/on",
+
+            //domReady for finalization
+            "dojo/domReady!"
+        ], function (
+            //NOTE: following variable names REFER to the library paths above
+            // and need to be matched 1-to-1
+            Cedar,
+
+            Map,
+            FeatureLayer,
+            SceneLayer,
+            GraphicsLayer,
+            MapView,
+            SceneView,
+
+            watchUtils,
+
+            QueryTask,
+            Query,
+
+            Legend,
+            Fullscreen,
+            Locate,
+            Search,
+            ScaleBar,
+            Expand,
+            BasemapGallery,
+
+            arrayUtils,
+            dom,
+            on
+        ) {
+                //Test to see if Cedar charts library has been imported correctly
+                //var chart = new Cedar({ "type": "bar" });
+
+                //Record all appropriate serviceLinks to the features needed to be loaded
+                //If any updates are made to the data of these layers, only these service links need
+                // to be updated with the updated data for the app to stay fully functional
+                var serviceLinks = {
+                    studyArea: "https://services7.arcgis.com/9AT0nF0QB2beMZjV/arcgis/rest/services/Population/FeatureServer/0",
+                    buildingsFlat: "https://services8.arcgis.com/7KgiaRO0oWJ2igcT/arcgis/rest/services/VanCityBldg2/FeatureServer/0",
+                    flood5dc: "https://services7.arcgis.com/9AT0nF0QB2beMZjV/arcgis/rest/services/FloodPlainsFinal/FeatureServer/4",
+                    flood4dc: "https://services7.arcgis.com/9AT0nF0QB2beMZjV/arcgis/rest/services/FloodPlainsFinal/FeatureServer/0",
+                    flood3dc: "https://services7.arcgis.com/9AT0nF0QB2beMZjV/arcgis/rest/services/FloodPlainsFinal/FeatureServer/1",
+                    flood2dc: "https://services7.arcgis.com/9AT0nF0QB2beMZjV/arcgis/rest/services/FloodPlainsFinal/FeatureServer/2",
+                    flood1dc: "https://services7.arcgis.com/9AT0nF0QB2beMZjV/arcgis/rest/services/FloodPlainsFinal/FeatureServer/3",
+                };
+
+                //CREATE the appropriate feature layer variables to be added to the map
+                var studyArea = new FeatureLayer({
+                    url: serviceLinks.studyArea,
+                    id: "studyArea"
+                });
+
+
+                var buildings3D = new SceneLayer({
+                    portalItem: {
+                        id: "9813c29e84994c8a80ab729e865528e5"
+                    },
+                    popupEnabled: false
+                });
+                //for some reason I had to do this twice because it wouldn't work inside the SceneLayer
+                buildings3D.popupEnabled = false;
+
+                //Symbology class to represent building overwater
+                var overWater = {
+                    type: "simple-fill",
+                    color: "#607D8B",
+                    style: "solid",
+                    outline: {
+                        width: 0.5,
+                        color: "white"
+                    }
+                };
+
+                //Symbology class to represent building underwater
+                var underWater = {
+                    type: "simple-fill",
+                    color: "#F44336",
+                    style: "solid",
+                    outline: {
+                        width: 0.5,
+                        color: "white"
+                    }
+                };
+
+                //Renderer for the buildings in the 2D map
+                var rendererBuildingsFlat = {
+                    type: "class-breaks",
+                    field: "Flood_5C",
+                    classBreakInfos: [{
+                        minValue: 1,
+                        maxValue: 1,
+                        symbol: underWater,
+                        label: "Underwater"
+                    }],
+                    defaultSymbol: overWater,
+                    defaultLabel: "OverWater"
+                };
+
+                //Kept the old tempate of renderer for reference of how the render fields are organized
+                var templateOld = {
+                    title: "Buildings",
+                    content: [{
+                        type: "fields",
+                        fieldInfos: [{
+                            fieldName: "Z_Min",
+                            label: "Z_Min"
+                        }, {
+                            fieldName: "FIRST_CATEGORY",
+                            label: "FIRST_CATEGORY"
+                        }, {
+                            fieldName: "Flood_5C",
+                            label: "Water Level State:"
+                        }]
+                    }]
+                };
+
+                //popup template  to allow custom messages
+                var popupTemplate = {
+                    title: "Building ID: {BLDGID}",
+                    content: "<p>The building's height above Mean Sea Level<br> is about {Min_gridco} meters.</p>" +
+                        "<ul>" +
+                        "<li>Building type: {CATEGORY}</li>" +
+                        "<li>Building zone ID: {ZONE_NAME}</li>" +
+                        "<li>Underwater at temperature: {FloodThreshold}&#8451;</li>" +
+                        "<li>Number of residents: {Building_Pop}</li>" +
+                        "<li>Estimated building value ($): {Building_cost}</li>" +
+                        "</ul>"
+                };
+
+                //Feature Layer for 2D buildings
+                var buildingsFlat = new FeatureLayer({
+                    url: serviceLinks.buildingsFlat,
+                    id: "studyArea",
+                    renderer: rendererBuildingsFlat,
+                    //Below are fields of the layer requested by us from the hosted layer service
+                    outFields: ["Building_Pop", "Building_cost", "FloodThreshold ", "FloodingLevelSum ", "ZONE_NAME", "Min_gridco", "BLDGID", "Flood_5C", "Flood_4C", "Flood_3C", "Flood_2C", "Flood_1C"],
+                    popupTemplate: popupTemplate
+                });
+
+                //template of consistent elevation settings for 3D waterbodies
+                var elevationInfo = {
+                    mode: "absolute-height",
+                    offset: 0,
+                    unit: "meters"
+                };
+
+                var waterOpacity3D = 0.7;
+                var waterOpacity = 0.4;
+
+                //HEX colors for the 2D waterbodies
+                var waterColorFlat = {
+                    flood5dc: "#01579B",
+                    flood4dc: "#29B6F6",
+                    flood3dc: "#00BCD4",
+                    flood2dc: "#26A69A",
+                    flood1dc: "#004D40"
+                }
+
+                //CREATE WATERBODY FEATURE LAYERS
+                //The code below has hard-coded all the waterbody layers
+                //I needed to have two versions of all waterbodies because a feature layer
+                // could only be added to one Scene at a time.
+                //I also needed to create a seperate renderer for every 3D waterbody
+                // because they were all at different heights and copying the same
+                // renderer and applying them to all others would not work because
+                // it would take the first isntance of the renderer and apply it to
+                // all the others, essentially it would point to the first instance
+                // instead of making a full copy of it
+                var renderer3Dflood5dc = {
+                    type: "unique-value",
+                    defaultSymbol: {
+                        type: "polygon-3d",
+                        symbolLayers: [{
+                            type: "extrude",
+                            material: {
+                                color: "#3F51B5"
+                            }
+                        }]
+                    },
+                    defaultLabel: "Water Height 11.5m",
+                    visualVariables: [{
+                        type: "size",
+                        valueExpression: "11.5",
+                        valueUnit: "meters"
+                    }]
+                };
+
+                var flood5dc = new FeatureLayer({
+                    url: serviceLinks.flood5dc,
+                    id: "flood5dc",
+                    opacity: waterOpacity3D,
+                    renderer: renderer3Dflood5dc,
+                    elevationInfo: elevationInfo,
+                    popupEnabled: false
+                });
+
+                var rendererflood5dc = {
+                    type: "simple",
+                    symbol: {
+                        type: "simple-fill",
+                        color: waterColorFlat.flood5dc,
+                        outline: {
+                            width: 1,
+                            color: "white"
+                        }
+                    },
+                    label: "Water Height 11.5m"
+                };
+
+                var flood5dc_map2 = new FeatureLayer({
+                    url: serviceLinks.flood5dc,
+                    id: "flood5dc_map2",
+                    opacity: waterOpacity,
+                    renderer: rendererflood5dc
+                });
+
+                var renderer3Dflood4dc = {
+                    type: "unique-value",
+                    defaultSymbol: {
+                        type: "polygon-3d",
+                        symbolLayers: [{
+                            type: "extrude",
+                            material: {
+                                color: "#3F51B5"
+                            }
+                        }]
+                    },
+                    defaultLabel: "Water Height 9.2m",
+                    visualVariables: [{
+                        type: "size",
+                        valueExpression: "9.2",
+                        valueUnit: "meters"
+                    }]
+                };
+
+                var flood4dc = new FeatureLayer({
+                    url: serviceLinks.flood4dc,
+                    id: "flood4dc",
+                    opacity: waterOpacity3D,
+                    renderer: renderer3Dflood4dc,
+                    elevationInfo: elevationInfo,
+                    visible: false
+                });
+
+                var rendererflood4dc = {
+                    type: "simple",
+                    symbol: {
+                        type: "simple-fill",
+                        color: waterColorFlat.flood4dc,
+                        outline: {
+                            width: 1,
+                            color: "white"
+                        }
+                    },
+                    label: "Water Height 9.2m"
+                };
+
+                var flood4dc_map2 = new FeatureLayer({
+                    url: serviceLinks.flood4dc,
+                    id: "flood4dc_map2",
+                    opacity: waterOpacity,
+                    visible: false,
+                    renderer: rendererflood4dc
+                });
+
+                var renderer3Dflood3dc = {
+                    type: "unique-value",
+                    defaultSymbol: {
+                        type: "polygon-3d",
+                        symbolLayers: [{
+                            type: "extrude",
+                            material: {
+                                color: "#3F51B5"
+                            }
+                        }]
+                    },
+                    defaultLabel: "Water Height 6.9m",
+                    visualVariables: [{
+                        type: "size",
+                        valueExpression: "6.9",
+                        valueUnit: "meters"
+                    }]
+                };
+
+                var flood3dc = new FeatureLayer({
+                    url: serviceLinks.flood3dc,
+                    id: "flood3dc",
+                    opacity: waterOpacity3D,
+                    renderer: renderer3Dflood3dc,
+                    elevationInfo: elevationInfo,
+                    visible: false
+                });
+
+                var rendererflood3dc = {
+                    type: "simple",
+                    symbol: {
+                        type: "simple-fill",
+                        color: waterColorFlat.flood3dc,
+                        outline: {
+                            width: 1,
+                            color: "white"
+                        }
+                    },
+                    label: "Water Height 6.9m"
+                };
+
+                var flood3dc_map2 = new FeatureLayer({
+                    url: serviceLinks.flood3dc,
+                    id: "flood3dc_map2",
+                    opacity: waterOpacity,
+                    visible: false,
+                    renderer: rendererflood3dc
+                });
+
+                var renderer3Dflood2dc = {
+                    type: "unique-value",
+                    defaultSymbol: {
+                        type: "polygon-3d",
+                        symbolLayers: [{
+                            type: "extrude",
+                            material: {
+                                color: "#3F51B5"
+                            }
+                        }]
+                    },
+                    defaultLabel: "Water Height 4.6m",
+                    visualVariables: [{
+                        type: "size",
+                        valueExpression: "4.6",
+                        valueUnit: "meters"
+                    }]
+                };
+
+                var flood2dc = new FeatureLayer({
+                    url: serviceLinks.flood2dc,
+                    id: "flood2dc",
+                    opacity: waterOpacity3D,
+                    renderer: renderer3Dflood2dc,
+                    elevationInfo: elevationInfo,
+                    visible: false
+                });
+
+                var rendererflood2dc = {
+                    type: "simple",
+                    symbol: {
+                        type: "simple-fill",
+                        color: waterColorFlat.flood2dc,
+                        outline: {
+                            width: 1,
+                            color: "white"
+                        }
+                    },
+                    label: "Water Height 4.6m"
+                };
+
+                var flood2dc_map2 = new FeatureLayer({
+                    url: serviceLinks.flood2dc,
+                    id: "flood2dc_map2",
+                    opacity: waterOpacity,
+                    visible: false,
+                    renderer: rendererflood2dc
+                });
+
+                var renderer3Dflood1dc = {
+                    type: "unique-value",
+                    defaultSymbol: {
+                        type: "polygon-3d",
+                        symbolLayers: [{
+                            type: "extrude",
+                            material: {
+                                color: "#3F51B5"
+                            }
+                        }]
+                    },
+                    defaultLabel: "Water Height 2.3m",
+                    visualVariables: [{
+                        type: "size",
+                        valueExpression: "2.3",
+                        valueUnit: "meters"
+                    }]
+                };
+
+                var flood1dc = new FeatureLayer({
+                    url: serviceLinks.flood1dc,
+                    id: "flood1dc",
+                    opacity: waterOpacity3D,
+                    renderer: renderer3Dflood1dc,
+                    elevationInfo: elevationInfo,
+                    visible: false
+                });
+
+                var rendererflood1dc = {
+                    type: "simple",
+                    symbol: {
+                        type: "simple-fill",
+                        color: waterColorFlat.flood1dc,
+                        outline: {
+                            width: 1,
+                            color: "white"
+                        }
+                    },
+                    label: "Water Height 2.3m"
+                };
+
+                var flood1dc_map2 = new FeatureLayer({
+                    url: serviceLinks.flood1dc,
+                    id: "flood1dc_map2",
+                    opacity: waterOpacity,
+                    visible: false,
+                    renderer: rendererflood1dc
+                });
+
+                //CREATE SCENES
+                //two different maps for the two different types of content being shown
+                var map1 = new Map({
+                    basemap: 'topo',
+                    ground: 'world-elevation',
+                    layers: [buildings3D, flood5dc, flood4dc, flood3dc, flood2dc, flood1dc]
+                });
+
+                var map2 = new Map({
+                    basemap: 'dark-gray',
+                    ground: 'world-elevation',
+                    layers: [flood5dc_map2, flood4dc_map2, flood3dc_map2, flood2dc_map2, flood1dc_map2, buildingsFlat]
+                });
+
+                //Two different views had to be configured becuase one of 3D and the other was 2D
+                var view1 = new SceneView({
+                    id: 'view1',
+                    container: 'view1Div',
+                    map: map1,
+                    camera: {
+                        position: {
+                            x: -13705088,
+                            y: 6309234,
+                            z: 8000,
+                            spatialReference: {
+                                wkid: 3857
+                            }
+                        },
+                        heading: 0,
+                        tilt: 45
+                    }
+                });
+
+                var view2 = new MapView({
+                    id: 'view2',
+                    container: 'view2Div',
+                    map: map2,
+                    constraints: {
+                        //"Disable zoom snapping to get the best synchonization"
+                        //The above text was written in the example for syncing two maps but I disagree
+                        // and I changed the value to true
+                        snapToZoom: true
+                    },
+                    popup: {
+                        dockEnabled: true,
+                        dockOptions: {
+                            position: "bottom-left"
+                        }
+                    }
+                });
+
+                //CREATE MAP UI COMPONENTS
+                //Below is code for all the widgets added to the map, again, two seperate
+                // versions had to be created to allow the maps to have their own instance of the widget
+
+                //Creating legends
+                var legend = new Legend({
+                    view: view1,
+                    layerInfos: [{
+                        layer: flood5dc,
+                        title: "Temperature +5C"
+                    }, {
+                        layer: flood4dc,
+                        title: "Temperature +4C"
+                    }, {
+                        layer: flood3dc,
+                        title: "Temperature +3C"
+                    }, {
+                        layer: flood2dc,
+                        title: "Temperature +2C"
+                    }, {
+                        layer: flood1dc,
+                        title: "Temperature +1C"
+                    }, {
+                        layer: buildings3D,
+                        title: "Buildings (3D)"
+                    }]
+                });
+
+                var legend2 = new Legend({
+                    view: view2,
+                    layerInfos: [{
+                        layer: flood5dc_map2,
+                        title: "Temperature +5C"
+                    }, {
+                        layer: flood4dc_map2,
+                        title: "Temperature +4C"
+                    }, {
+                        layer: flood3dc_map2,
+                        title: "Temperature +3C"
+                    }, {
+                        layer: flood2dc_map2,
+                        title: "Temperature +2C"
+                    }, {
+                        layer: flood1dc_map2,
+                        title: "Temperature +1C"
+                    }, {
+                        layer: buildingsFlat,
+                        title: "Buildings (2D)"
+                    }]
+                });
+
+                //For all UI elements, they had to be manually added for them to show up on the map
+                view1.ui.add(legend, "top-right");
+                view2.ui.add(legend2, "top-right");
+
+                //Although I could have had the legend added into an expandable widget, I choose to specifically
+                // show the legend as it's own entity and track it myself to sync them for both the maps
+                var legendsVisible = true;
+
+                view1.when(function () {
+                    on(dom.byId("doBtn"), "click", doQuery);
+                });
+
+                //BIND the button click to the legend showing and hiding
+                $('#toggleLegend').on('click', function () {
+                    toggleLegend();
+                });
+
+                function toggleLegend() {
+                    if (legendsVisible) {
+                        view1.ui.remove(legend);
+                        view2.ui.remove(legend2);
+                        legendsVisible = false;
+                        document.getElementById("toggleLegend").innerText = "Show Legend";
+                    } else {
+                        view1.ui.add(legend, "top-right");
+                        view2.ui.add(legend2, "top-right");
+                        legendsVisible = true;
+                        document.getElementById("toggleLegend").innerText = "Hide Legend";
+                    };
+                };
+
+                //Record the button IDs for the different flood scenarios and their initial states
+                var floodToggle = {
+                    flood1dc: {
+                        id: $("#flood1dc"),
+                        state: false
+                    },
+                    flood2dc: {
+                        id: $("#flood2dc"),
+                        state: false
+                    },
+                    flood3dc: {
+                        id: $("#flood3dc"),
+                        state: false
+                    },
+                    flood4dc: {
+                        id: $("#flood4dc"),
+                        state: false
+                    },
+                    flood5dc: {
+                        id: $("#flood5dc"),
+                        state: true
+                    }
+                };
+
+                //BIND each flood scenario button to show/hide the flooding feature layers appripriately
+                //I know that this code is very repetitive but in the moment of writing it this seemed like the best option
+                //Honestly it would be great if there was something such as a global FeatureLayer manager library where 
+                // I could just give it links for the feature services and it would take care of adding them to all of my maps
+                // and configuring symbology and visibility
+
+                floodToggle.flood5dc.id.change(function () {
+                    floodToggle.flood5dc.state = !floodToggle.flood5dc.state;
+                    flood5dc.visible = floodToggle.flood5dc.state;
+                    flood5dc_map2.visible = floodToggle.flood5dc.state;
+                    updateBuildingSumbology();
+                });
+
+                floodToggle.flood4dc.id.change(function () {
+                    floodToggle.flood4dc.state = !floodToggle.flood4dc.state;
+                    flood4dc.visible = floodToggle.flood4dc.state;
+                    flood4dc_map2.visible = floodToggle.flood4dc.state;
+                    updateBuildingSumbology();
+                });
+
+                floodToggle.flood3dc.id.change(function () {
+                    floodToggle.flood3dc.state = !floodToggle.flood3dc.state;
+                    flood3dc.visible = floodToggle.flood3dc.state;
+                    flood3dc_map2.visible = floodToggle.flood3dc.state;
+                    updateBuildingSumbology();
+                });
+
+                floodToggle.flood2dc.id.change(function () {
+                    floodToggle.flood2dc.state = !floodToggle.flood2dc.state;
+                    flood2dc.visible = floodToggle.flood2dc.state;
+                    flood2dc_map2.visible = floodToggle.flood2dc.state;
+                    updateBuildingSumbology();
+                });
+
+                floodToggle.flood1dc.id.change(function () {
+                    floodToggle.flood1dc.state = !floodToggle.flood1dc.state;
+                    flood1dc.visible = floodToggle.flood1dc.state;
+                    flood1dc_map2.visible = floodToggle.flood1dc.state;
+                    updateBuildingSumbology();
+                });
+
+                //This function updates the field used to sumbolize the buildings over/under water
+                function updateBuildingSumbology() {
+                    if (floodToggle.flood5dc.state) {
+                        buildingsFlat.renderer.field = "Flood_5C";
+                    } else if (floodToggle.flood4dc.state) {
+                        buildingsFlat.renderer.field = "Flood_4C";
+                    } else if (floodToggle.flood3dc.state) {
+                        buildingsFlat.renderer.field = "Flood_3C";
+                    } else if (floodToggle.flood2dc.state) {
+                        buildingsFlat.renderer.field = "Flood_2C";
+                    } else if (floodToggle.flood1dc.state) {
+                        buildingsFlat.renderer.field = "Flood_1C";
+                    } else {
+                        buildingsFlat.renderer.field = "";
+                    }
+                    legend2.renderNow();
+                };
+
+                //BIND the HTML Div to where the full-screen can collapse into.
+                // This step was extremely important for getting full screen to work
+                // and should be really emphasized in the documentation. If this step
+                // was not done, then when the user tries to get out of full-screen
+                // the map will shrink into a height of 0px.
+                var applicationDiv1 = document.getElementById("applicationDiv1");
+                view1.ui.add(new Fullscreen({
+                    view: view1,
+                    element: applicationDiv1
+                }), "top-left");
+
+                var applicationDiv2 = document.getElementById("applicationDiv2");
+                view2.ui.add(new Fullscreen({
+                    view: view2,
+                    element: applicationDiv2
+                }), "top-left");
+
+                //Adding search widgets
+                var searchWidget1 = new Search({
+                    view: view1
+                });
+
+                view1.ui.add(searchWidget1, {
+                    position: "bottom-right"
+                });
+
+                var searchWidget2 = new Search({
+                    view: view2
+                });
+
+                view2.ui.add(searchWidget2, {
+                    position: "bottom-right"
+                });
+
+                //Adding Locate buttons
+                // I know that having these locate buttons is kind of redundant now that
+                // the search widget can do that by default anyways
+                var locateBtn1 = new Locate({
+                    view: view1
+                });
+
+                view1.ui.add(locateBtn1, {
+                    position: "bottom-right"
+                });
+
+                var locateBtn2 = new Locate({
+                    view: view2
+                });
+
+                view2.ui.add(locateBtn2, {
+                    position: "bottom-right"
+                });
+
+                //Adding scale bar to 2D map
+                //I choose to only add this to the 2D map because in the documentation
+                // it said that it was a beta feature and only compatiable with 2D scenes
+                //NOTE: SOMETIMES THE SCALE BAR CLASS TENDS TO NOT LOAD AND CRASHES THE APP
+                var scaleBar = new ScaleBar({
+                    view: view2,
+                    unit: "dual" // The scale bar displays both metric and non-metric units.
+                });
+
+                // Add the widget to the bottom left corner of the view
+                view2.ui.add(scaleBar, {
+                    position: "bottom-left"
+                });
+
+                // This was tricky to do because the basemap Gallery is quite large
+                // and it had to place it inside a expanding menu
+                var basemapGallery1 = new BasemapGallery({
+                    view: view1,
+                    container: document.createElement("div")
+                });
+
+                var bgExpand1 = new Expand({
+                    view: view1,
+                    content: basemapGallery1.container,
+                    expandIconClass: "esri-icon-basemap"
+                });
+
+                view1.ui.add(bgExpand1, "top-left");
+
+                var basemapGallery2 = new BasemapGallery({
+                    view: view2,
+                    container: document.createElement("div")
+                });
+
+                var bgExpand2 = new Expand({
+                    view: view2,
+                    content: basemapGallery2.container,
+                    expandIconClass: "esri-icon-basemap"
+                });
+
+                view2.ui.add(bgExpand2, "top-left");
+
+                //NOTE: A LARGE CHUNK OF THE CODE BELOW WAS TAKEN FRON THE ESRI ARCGIS 4.6 JS API PAGE
+                //      FOR HOW TO LINK/SYNC TWO MAPS TOGETHER
+                //      https://developers.arcgis.com/javascript/latest/sample-code/views-synchronize/index.html
+
+                /**
+                 * utility method that synchronizes the viewpoint of a view to other views
+                 */
+                var synchronizeView = function (view, others) {
+                    others = Array.isArray(others) ? others : [others];
+
+                    var viewpointWatchHandle;
+                    var viewStationaryHandle;
+                    var otherInteractHandlers;
+                    var scheduleId;
+
+                    var clear = function () {
+                        if (otherInteractHandlers) {
+                            otherInteractHandlers.forEach(function (handle) {
+                                handle.remove();
+                            });
+                        }
+                        viewpointWatchHandle && viewpointWatchHandle.remove();
+                        viewStationaryHandle && viewStationaryHandle.remove();
+                        scheduleId && clearTimeout(scheduleId);
+                        otherInteractHandlers = viewpointWatchHandle =
+                            viewStationaryHandle = scheduleId = null;
+                    };
+
+                    var interactWatcher = view.watch('interacting,animation',
+                        function (newValue) {
+                            if (!newValue) {
+                                return;
+                            }
+                            if (viewpointWatchHandle || scheduleId) {
+                                return;
+                            }
+
+                            // start updating the other views at the next frame
+                            scheduleId = setTimeout(function () {
+                                scheduleId = null;
+                                viewpointWatchHandle = view.watch('viewpoint',
+                                    function (newValue) {
+                                        others.forEach(function (otherView) {
+                                            otherView.viewpoint = newValue;
+                                        });
+                                    });
+                            }, 0);
+
+                            // stop as soon as another view starts interacting, like if the user starts panning
+                            otherInteractHandlers = others.map(function (otherView) {
+                                return watchUtils.watch(otherView,
+                                    'interacting,animation',
+                                    function (
+                                        value) {
+                                        if (value) {
+                                            clear();
+                                        }
+                                    });
+                            });
+
+                            // or stop when the view is stationary again
+                            viewStationaryHandle = watchUtils.whenTrue(view,
+                                'stationary', clear);
+                        });
+
+                    return {
+                        remove: function () {
+                            this.remove = function () { };
+                            clear();
+                            interactWatcher.remove();
+                        }
+                    }
+                };
+
+                /**
+                 * utility method that synchronizes the viewpoints of multiple views
+                 */
+
+                var synchronizeViews = function (views) {
+                    var handles = views.map(function (view, idx, views) {
+                        var others = views.concat();
+                        others.splice(idx, 1);
+                        return synchronizeView(view, others);
+                    });
+
+                    return {
+                        remove: function () {
+                            this.remove = function () { };
+                            handles.forEach(function (h) {
+                                h.remove();
+                            });
+                            handles = null;
+                        }
+                    }
+                }
+
+                // bind the views
+                synchronizeViews([view1, view2]);
+
+                // NOTE: THE CODE ABOVE ABOUT SYNCHRONIZING VIEWS WAS TAKEN FROM THE ESRI
+                //       ARCGIS 4.6 JS API PAGE
+                //       https://developers.arcgis.com/javascript/latest/sample-code/views-synchronize/index.html                
+
+                //A zoomToStudyArea function was added because in reality our study area
+                // is quite small and if the user zooms out or away from it too fast then
+                // they would not know how to get back to the same area
+                function zoomToStudyArea() {
+                    view1.goTo(buildings3D.fullExtent);
+                };
+
+                //BIND the ui button the the zoom functionality
+                $("#zoomToStudyArea").on('click', function () {
+                    zoomToStudyArea();
+                });
+
+                buildings3D.when(function () {
+                    zoomToStudyArea();
+                });
+
+                buildingsFlat.when(function () {
+                    zoomToStudyArea();
+                });
+
+                //Introductory message model to show some initial information
+                // about the app and give the user some content
+                $(window).on('load', function () {
+                    //$('#myModal').modal('show');
+                });
+            });
+    </script>
+</head>
+
+<body>
+    <div id="myModal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Modal body text goes here.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">
+            <img src="https://image.ibb.co/cLy5xc/ECCE_Azure.png"
+                width="30" height="30" class="d-inline-block align-top" alt="FRE"> Azure - Water Level Rises
+        </a>
+    </nav>
+
+    <ul class="nav nav-tabs mt-1" id="myTab" role="tablist">
+        <li class="nav-item ml-1">
+            <a class="nav-link active px-2" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">App</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link  px-2" id="instructions-tab" data-toggle="tab" href="#instructions" role="tab" aria-controls="instructions"
+                aria-selected="false">How-to</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link  px-2" id="purpose-tab" data-toggle="tab" href="#purpose" role="tab" aria-controls="purpose" aria-selected="false">Mission</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link  px-2" id="feedback-tab" data-toggle="tab" href="#feedback" role="tab" aria-controls="feedback" aria-selected="false">Feedback</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link  px-2" id="team-tab" data-toggle="tab" href="#team" role="tab" aria-controls="team" aria-selected="false">Team</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div class="container">
+                <h1 class="display-4 text-center">Water Level Rise: Vancouver, Canada</h1>
+                <p class="font-italic">Pick a water level scenario based on global average temperature rise and see its impact* on Vancouver City
+                    in the maps below. Click on the 2D buildings to get more information.</p>
+                <div class="row mt-4">
+                    <div class="col">
+                        <h6>Water Level Scenario:</h6>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-outline-primary btn-lg">
+                                <input id="flood1dc" type="checkbox" autocomplete="off" class="checkBoxed "> 1 &#8451;
+                            </label>
+                            <label class="btn btn-outline-primary btn-lg">
+                                <input id="flood2dc" type="checkbox" autocomplete="off" class="checkBoxed"> 2 &#8451;
+                            </label>
+                            <label class="btn btn-outline-primary btn-lg">
+                                <input id="flood3dc" type="checkbox" autocomplete="off" class="checkBoxed"> 3 &#8451;
+                            </label>
+                            <label class="btn btn-outline-primary btn-lg">
+                                <input id="flood4dc" type="checkbox" autocomplete="off" class="checkBoxed"> 4 &#8451;
+                            </label>
+                            <label class="btn btn-outline-primary btn-lg active">
+                                <input id="flood5dc" type="checkbox" autocomplete="off" class="checkBoxed" checked> 5 &#8451;
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <h6>Map Settings</h6>
+                        <button id="toggleLegend" type="button" class="btn btn-outline-secondary btn-lg">Hide Legend</button>
+                        <button id="zoomToStudyArea" type="button" class="btn btn-outline-secondary btn-lg">Go to Study Area</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-fluid">
+                <div class="row" style="height: 600px;">
+                    <div id="applicationDiv1" class="col-md">
+                        <div id="view1Div" style="width: 100%; height: 100%;" class="border border-secondary rounded"></div>
+                    </div>
+                    <div id="applicationDiv2" class="col-md">
+                        <div id="view2Div" style="width: 100%; height: 100%;" class="border border-secondary rounded"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <p class="font-weight-light">Note: Both the maps are linked together. Left-click to pan the map. Right-click to rotate the view. Full
+                    screen option also available.</p>
+            </div>
+
+            <div class="container mt-5">
+                <h4>Vancouver Flood Risk Summary Statistics*</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Change #&#8451;</th>
+                            <th scope="col">Water Level Rise (m)</th>
+                            <th scope="col"># People Affected</th>
+                            <th scope="col"># Buildings Affected</th>
+                            <th scope="col">Economic Loss ($)</th>
+                            <th scope="col">Land Under Water (m
+                                <sup>2</sup>)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-right">
+                        <tr>
+                            <th scope="row">1</th>
+                            <td>2.3</td>
+                            <td>1,719</td>
+                            <td>23</td>
+                            <td>330,746,698</td>
+                            <td>238,779</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2</th>
+                            <td>4.6</td>
+                            <td>14,349</td>
+                            <td>135</td>
+                            <td>2,129,646,964</td>
+                            <td>1,375,719</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">3</th>
+                            <td>6.9</td>
+                            <td>22,942</td>
+                            <td>212</td>
+                            <td>3,372,854,856</td>
+                            <td>2,286,849</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">4</th>
+                            <td>9.2</td>
+                            <td>32,317</td>
+                            <td>318</td>
+                            <td>4,935,719,817</td>
+                            <td>2,932,915</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">5</th>
+                            <td>11.5</td>
+                            <td>37,847</td>
+                            <td>400</td>
+                            <td>5,590,507,008</td>
+                            <td>3,680,450</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="font-weight-light font-italic">*The information provided in this web-app does not constitute as formally approved boundaries for sea level
+                    rise. These maps depict a generalized representation of sea level rise scenarios and should not be relied
+                    upon for precise estimates of water level rise, economic loss, and people affected. All figures are estimates
+                    based on assumptions and limited research restricted by availability of Open Data.
+                </p>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="instructions" role="tabpanel" aria-labelledby="instructions-tab">
+            <div class="container">
+                <h1 class="display-4 text-center">How-to Use</h1>
+                <ol class="list-styled">
+                    <li>
+                        <p class="font-weight-bold">When the app opens, you are presented with two maps</p>
+                        <ul>
+                            <li>The top/left one is a 3D scene</li>
+                            <li>The bottom/right one is 2D map</li>
+                            <li>Both are linked together, and moving one will move the other</li>
+                            <li>Both the maps show the downtown core of Vancouver City, Canada</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <p class="font-weight-bold mt-2">Above the maps, you are presented with buttons to change the water level rise scenarios</p>
+                        <ul>
+                            <li>By default, 5 degrees celsius is active</li>
+                            <li>You can turn on as many or as few scenarios as you want to see</li>
+                            <li>If the button is colored as white, the scenario is not visible on the maps</li>
+                            <li>If the button is colored as blue, the scenario is visible on the maps</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <p class="font-weight-bold mt-2">To interact with the map, you can just Left-Click to drag the view around, zoom in/out</p>
+                        <ul>
+                            <li>If you Right-Click the 3D map, you can rotate its compass direction, and angle of view</li>
+                            <li>Additionally you can expand either of the maps to see a more detailed view</li>
+                            <li>Use the address locator, to search for a place of interest or your own address</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <p class="font-weight-bold mt-2">What to see?</p>
+                        <ul>
+                            <li>As you change the scenarios, both the 3D and 2D maps will update appropriately</li>
+                            <li>You can zoom in the 3D scene and exactly see how high the water level could rise, how much land
+                                goes under water, and how many buildings could go under water</li>
+                            <li>You can compare the 3D scene with the 2D scene, which shows the exact outline of where the water could rise up to. The buildings are color coded for which ones will be affected by the highest water level visible</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <p class="font-weight-bold mt-2">To know more about the buildings, you can click them on the 2D map to see a pop-up of information
+                            which includes:</p>
+                        <ul>
+                            <li>Building ID</li>
+                            <li>Building Deveopment Type</li>
+                            <li>Building Zone ID</li>
+                            <li>The temperature that the water level has to rise to for it to get affected</li>
+                            <li>An approximate number of residents that could be affected</li>
+                            <li>An approximate total cost of the building value considered as economic loss</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <p class="font-weight-bold mt-2">Go too far away from the study area?</p>
+                        <ul>
+                            <li>You can click the “Go to Study Area” button to bring you right back to where the affected buildings
+                                are
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <p class="font-weight-bold mt-2">Below both the maps, there are summary statistics for important information grouped by each water
+                            level scenario</li>
+                    </p>
+                </ol>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="purpose" role="tabpanel" aria-labelledby="purpose-tab">
+            <div class="container">
+                <h1 class="display-4 text-center">Why Water Level Rise Matters?</h1>
+                <img class="img-fluid img-thumbnail" alt="Sea Level Rise The Star" src="https://www.thestar.com/content/dam/thestar/business/2015/11/14/prince-edward-island-coastal-real-estate-and-the-impact-of-climate-change/fi-sea-level-propertypei.jpg.size.custom.crop.1086x724.jpg">
+                <p>Image Source:
+                    <a href="https://www.thestar.com/business/2015/11/14/prince-edward-island-coastal-real-estate-and-the-impact-of-climate-change.html"
+                        class="badge badge-info">The Star</a>
+                </p>
+                <p class="text-justify">Sea level rise is a major global issue. On recent news published by the United Nations Framework Convention
+                    on Climate Change, the sea level rising rate is accelerating and it may increase by 65cm by the end of
+                    the century
+                    <a href="https://cop23.unfccc.int/news/global-sea-level-rise-is-accelerating-study" class="badge badge-light">Source</a>. Scientists at the U.S. Geological Survey calculated that around 500 million people will
+                    be affected by the year 2100 around the world
+                    <a href="https://cegis.usgs.gov/sea_level_rise.html" class="badge badge-light">Source</a>. Two major drivers are cause this phenomenon, ice melting in polar regions and atmosphere
+                    warming. Both of them closely related with global warming.</p>
+                <p class="text-justify">Fortunately, not everything is bad news. Several international organizations and governments are currently
+                    working on strategies to prevent and mitigate the effects of sea level rise. More and more non-government
+                    organizations and citizen groups are engaging into decision making process and taking action on climate
+                    change. The citizen is now recognized as a key player who can positively contribute in many ways to mitigate
+                    climate change
+                    <a href="http://climatecommunication.yale.edu/wp-content/uploads/2016/02/2010_04_Citizen%E2%80%99s-Guide-to-Taking-Action-on-Climate-Change.pdf"
+                        class="badge badge-light">Source</a>. Over last years, we have seen plenty of examples on how the so called “citizen science”
+                    leverages geographic knowledge to support citizens in their initiatives
+                    <a href="https://blogs.esri.com/esri/arcgis/2015/09/22/citizen-science-resources/?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%253A+MappingCenter+(Mapping+Center)"
+                        class="badge badge-light">Source</a>.</p>
+                <h5>For the ECCE 2018 Challenge, our team created an ArcGIS Web App called Azure. Its main goals are listed below:</h5>
+                <ul>
+                    <li>Provide geographic insights to citizens about the sea level rise issue due to climate change.</li>
+                    <li>Allow users to see two simultaneous 2D and 3D visualizations of how their urban environment might be
+                        affected by several scenarios of sea level rise.</li>
+                    <li>Offer querying capabilities to look if a specific address location will be affected, as well as the estimated
+                        number of people and economic losses per building.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="feedback" role="tabpanel" aria-labelledby="nav-feedback-tab">
+            <div class="container">
+                <h1 class="display-4 text-center">Community Feedback</h1>
+                <p>We would greatly appreciate any feedback you could give about Water Level Rise and the experience of using
+                    this app.</p>
+                <div class="row justify-content-lg-center">
+                    <div class="col-xl">
+                        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSc7SY37yZx5FA-FQAByNm8cj9Y82Sb6bnFfyOXO834P-HMELA/viewform?embedded=true"
+                            style="width: 100%; min-width: 300px;" height="600" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+                    </div>
+                </div>
+                <a class="btn btn-link" href="https://docs.google.com/forms/d/e/1FAIpQLSc7SY37yZx5FA-FQAByNm8cj9Y82Sb6bnFfyOXO834P-HMELA/viewform"
+                    role="button">Share Feedback Form</a>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="team" role="tabpanel" aria-labelledby="team-tab">
+            <div class="container">
+                <h1 class="display-4 text-center">Team Water<sup >3D</sup></h1>
+                <blockquote class="blockquote text-center">
+                    <p class="mb-0">We are a team of enthusiastic students at the the University of Waterloo. We decided to participate in
+                        the ECCE App Challenge because it is an opportunity for us to learn, strengthen our skills, and have
+                        fun together!</p>
+                </blockquote>
+                <img class="rounded float-left img-thumbnail teamMemberImg mt-4" alt="TeamPhoto" src="https://image.ibb.co/g3pvxc/Group_Photo_1.jpg">
+                <h6>Team Members (Left to Right): Juan Garcia, Anam Rahman, Jaydeep Mistry, Stephanie Wen</h6>
+                <div class="container">
+                    <div class="row mt-5">
+                        <div class="col-4">
+                            <h4 class="text-right">Juan Garcia</h4>
+                        </div>
+                        <div class="col-8">
+                            <p>I am a geomatics engineer currently studying a Master of Science in Geography at the University
+                                of Waterloo. With more than five years of work experience in geomatics and project management,
+                                I am convinced about the key role of geographic information science and technology to help
+                                us mitigate climate change.</p>
+                        </div>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-4">
+                            <h4 class="text-right">Jaydeep Mistry</h4>
+                        </div>
+                        <div class="col-8">
+                            <p>I am a Masters of Environmental Studies student at the University of Waterloo. I did my Undergrad
+                                in Geomatics with Computer Science Minor. My education and experiences have made me very
+                                passionate about GIS, Open Data, Data Science, and app development. I’ve helped develop various
+                                apps, but the spatial apps such as this one have been the most exciting to work on.</p>
+                        </div>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-4">
+                            <h4 class="text-right">Anam Rahman</h4>
+                        </div>
+                        <div class="col-8">
+                            <p>I am an Environment & Business student, pursuing the GIS Diploma at the University of Waterloo.
+                                My work in the insurance industry exposed me to flood risk management, and the need to adapt
+                                for climate change in cities. I love how web mapping tools can be used to educate and visualise
+                                highly impactful phenomena regarding climate change. I learnt a lot through this challenge
+                                and I’m excited to see how GIS can be used as a communication and decision making tool.</p>
+                        </div>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-4">
+                            <h4 class="text-right">Stephanie Wen</h4>
+                        </div>
+                        <div class="col-8">
+                            <p>Hi! I am in my 4th year of Geomatics at the University of Waterloo. I enjoy creating maps of
+                                places I’ve never been to. Creating bucket lists in that city, so that one day when I visit
+                                I can plan my trips, and accomplish them in the time allotted. I also enjoy sleeping, eating,
+                                instagramming, and snapchatting. If we get to go to San Diego I promise a vlog of our experience!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>
