@@ -1,0 +1,12 @@
+Bios
+
+
+Ross McCandless (middle) is a 4B Geomatics student at University of Waterloo who has had GIS jobs in all levels of government. Experienced in a wide range ESRI software (Desktop, Catalog, Collector, Survey123, ArcPad, Online), FME, and programming languages such as; Python, VBA, Javascript, HTML,  and CSS. He is excited to learn more ESRI software, particularly Operations Dashboard.
+
+
+Mieszko Fydrych (right) is a 4B Geomatics students at the University of Waterloo of Eastern European origin who is displeased with the lack of Eastern European restaurants in the area of Waterloo. Experienced with front-end design, OpenStreetMap crowdsourced data and various GIS software and APIs such as ArcGIS, FME workbench and Leaflet through co-op and GIS Day presentations. Through school work and personal projects, experience several programming languages such as Python, VBA, Javascript, HTML, CSS and C has been worked upon. In a past co-op position, a new campus map for the University of Waterloo was developed utilizing these skills. 
+
+
+
+
+Hadi Fahimnia (left) is an undergraduate Geomatics student at the University of Waterloo with intend to graduate this April with a Computer Science minor. I have passion for Remote Sensing and GIS projects. Utilizing my programming skills and experience to enhance and speed-up the project deliverables. Experienced with ESRI’s ArcGIS Desktop, I aim to familiarize myself with ESRI’s web applications through front-end and back-end development. Throughout ESRI’s 2018 App Challenge I wish to compare ESRI’s Javascript API, Web Appbuilder and Operations Dashboard with other open source web application platforms such as Leaflet and OpenLayers.
