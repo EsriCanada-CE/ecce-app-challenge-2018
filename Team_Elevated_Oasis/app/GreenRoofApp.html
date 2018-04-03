@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <title>Elevated Oasis</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.6/esri/themes/light/main.css">
+    <link rel="stylesheet" href="styles/css.css" />
+    <script src="https://js.arcgis.com/4.6/"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    <script src="scripts/widgitJS.js"></script>
+    <script>
+        $(function () {
+            $("#dialog").dialog({
+                height: 300,
+                width: 500,
+                buttons: [
+                    {
+                        text: "OK",
+                        click: function () {
+                            $(this).dialog("close");
+                        }
+                    }
+                ]});
+        });
+    </script>
+</head>
+
+<body>
+    <section id="page">
+        <header>
+            Elevated Oasis
+        </header>
+        <info>
+            <div class="btnContainer">
+                <button class="btnInfo" onclick="openCity('About')">About</button>
+                <button class="btnInfo" onclick="openCity('Companies')">Companies</button>
+                <button class="btnInfo" onclick="openCity('LearnMore')">Learn More</button>
+            </div>
+            <div id="About" class="button">
+                <h2>About</h2>
+                <p id="subtitle" style="text-align:center">Explore West End Vancouver in 3D!</p>
+                <h4>Evaluate Your Building for Roof Top Garden Potential</h4>
+                <p>View the 3D map, zooming in or out, panning, and rotating from the buttons located on the top left corner in order to locate the building of your choice. Click on the building polygon to enable a pop-up providing information pertinent  to the installation or retrofit of a green roof on this building.</p>
+                <p>Use the drop-down menu located on the bottom right corner of the page to investigate sun angle at different times of the day. This can further determine the potential of green roof installation and depending on such, which vegetation types may be suitable. You can also click the 'Learn More' tab to find a link that provides further information about suitable roof-top plant types.</p>
+            </div>
+
+            <div id="Companies" class="button" style="display:none">
+                <h2>Companies</h2>
+                <p>Companies in your area that can be contacted for green roofing projects!</p>
+                <table>
+                    <tr>
+                        <th width="17"><a href="http://www.bcgreenroof.ca/">BC Greenroof</a></th>
+                        <td>(250) 220 0239</td>
+                        <td>info@bcgreenroof.ca</td>
+                    </tr>
+                    <tr>
+                        <th><a href="http://architek.ca/">Architek</a></th>
+                        <td>(604)-714-0028</td>
+                        <td>info@architek.com</td>
+                    </tr>
+                    <tr>
+                        <th><a href="http://www.designroofing.ca">Design Roofing</a></th>
+                        <td>(604)-944-2977</td>
+                        <td>design@designroofing.ca</td>
+                    </tr>
+                    <tr>
+                        <th><a href="http://www.laurentianroofing.com">Laurentian Roofing</a></th>
+                        <td>(604)-345-7663</td>
+                        <td>alex@laurentianroofing.com</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div id="LearnMore" class="button" style="display:none">
+                <p id="subtitle">Extend your Roofs Life & Increase Property Value</p>
+                <p>
+                    Green roofs last longer than conventional roofs as a result of protection given by the substrate and vegetation, eliminating thermos
+                    stresses by reducing the exposure of roofing material to extreme temperatures and ultraviolet light. Green roofs also eliminate the pooling
+                    of water, decrease the total volume of storm water run off and improve the fluidity of the remaining run off. It is estimated that installing
+                    a green roof should extent the life of the roof 2-3 times of a conventional roof lifespan.
+                </p>
+                <p id="subtitle">Incentives</p>
+                <p>
+                    Save on your power bill and receive several incentives from tax reductions and programs such as the High Performance Building Program.
+                    For more information and details on who you can contact in order to move forward, click on the BC Hydro link below.
+                </p>
+                <ul>
+                    <li><a href="https://www.bchydro.com/news/conservation/2011/green_building_growth.html">BC Hydro Information</a></li>
+                    <li><a href="http://www.centimarkltd.ca/green-roofing/tax-incentives ">BC Green Roof Tax Incentive Information</a></li>
+                </ul>
+                <p id="subtitle">Benefits</p>
+                <p>Green roofs have many environmental, social and health benefits. Click on the link below to learn more.</p>
+                <ul>
+                    <li><a href="https://www.crd.bc.ca/education/green-stormwater-infrastructure/green-roofs">Green Roof Benefits</a></li>
+                </ul>
+                <p id="subtitle">Further Information</p>
+                <ul>
+                    <li><a href="http://www.bcgreenroof.ca/">BC Green Roofs</a></li>
+                    <li><a href="http://www.intercoast-building-solutions.com/green-roof-systems-vancouver-bc-ab-sk-mb.html">Suitable Systems for BC</a></li>
+                    <li><a href="http://natsnursery.com/what-is-a-green-roof/installing-a-green-roof/">Ideal Plant Information</a></li>
+                </ul>
+                </div>
+</info>
+            <main id="viewDiv">
+                <div id="environmentDiv">
+                    <table>
+                        <tr>
+                            <td>Time of day:</td>
+                            <td>
+                                <select id="timeOfDaySelect">
+                                    <option value="Sun Mar 15 2015 09:00:00 GMT+1600 (EST)">Morning</option>
+                                    <option value="Sun Mar 15 2015 12:00:00 GMT+1600 (EST)">Noon</option>
+                                    <option value="Sun Mar 15 2015 16:00:00 GMT+1600 (EST)">Afternoon</option>
+                                    <option value="Sun Mar 15 2015 18:00:00 GMT+1600 (EST)">Evening</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Direct shadows:</td>
+                            <td><input id="directShadowsInput" type="checkbox" checked="yes"></td>
+                        </tr>
+                    </table>
+                </div>
+            </main>
+        <footer>Produced by Students at <img id="cogs" src="images/COGS_Small2Colour.jpg"></footer>
+    </section>
+    <div id="dialog" title="Welcome">
+        <table>
+            <tr>
+                <td><img src="images/Logo.jpg" alt="Logo" /></td>
+                <td><p>Welcome to Vancouver's Roof-top garden accesor.</p>
+                <p>Find your building and click on it to view roof-top garden potential information.</p></td>
+            </tr>
+        </table>
+        
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,5 @@
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+define(["dojo/_base/array","dojo/_base/declare","./SettingContainer","./SettingObject","./SettingOptionsTable"],function(d,e,f,g,h){return e(g,{_inputControl:null,constructor:function(b,a,c){this._inputControl=new h(null,"half-width","",a.propertyLabels.description,null,a.hints.selectionListOfOptionsToDisplay);this._mainDiv=(new f(null,"flexbox "+(c||""),"majorTrailingHorizGap",a.groupingLabels.labelFormats,"full-width",[this._inputControl])).div()},setConfig:function(){var b,a;b=[this._config[0]];
+a=this._config.slice(1);a=d.map(a,function(a){return a.name});a=0<a.length?[].concat(b,a):[b];this._inputControl.setValue(a)},getConfig:function(){var b,a=this._config.slice(1),c;b=this._inputControl.getValue();c=[b[0]];d.forEach(b.slice(1),function(b){d.some(a,function(a){b===a.name&&c.push(a)})});this._config=c}})});

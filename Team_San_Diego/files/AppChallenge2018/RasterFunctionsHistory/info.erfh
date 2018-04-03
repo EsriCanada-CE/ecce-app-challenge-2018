@@ -1,0 +1,46 @@
+{
+  "version" : 1,
+  "name" : "Raster Functions History",
+  "historyItems" : [
+    {
+      "id" : "{9D9644B8-8D40-4E3E-9353-168B9296C4E8}",
+      "type" : 1,
+      "status" : 2,
+      "name" : "Clip",
+      "description" : "Sets the extent of a raster using coordinates or another dataset.",
+      "rftPath" : "Clip_{9D9644B8-8D40-4E3E-9353-168B9296C4E8}.rft.xml",
+      "startTime" : "636555400280000000",
+      "endTime" : "636555400280000000"
+    },
+    {
+      "id" : "{9760E932-D773-4865-8C66-597D9B5B5A23}",
+      "type" : 1,
+      "status" : 2,
+      "name" : "Grayscale",
+      "description" : "Converts a multiband raster into a grayscale raster.",
+      "rftPath" : "Grayscale_{9760E932-D773-4865-8C66-597D9B5B5A23}.rft.xml",
+      "startTime" : "636555320800000000",
+      "endTime" : "636555320800000000"
+    },
+    {
+      "id" : "{BBD0BD3E-A74A-40C0-BB5C-E0CF0272A1A6}",
+      "type" : 1,
+      "status" : 2,
+      "name" : "Grayscale",
+      "description" : "Converts a multiband raster into a grayscale raster.",
+      "rftPath" : "Grayscale_{BBD0BD3E-A74A-40C0-BB5C-E0CF0272A1A6}.rft.xml",
+      "startTime" : "636555399220000000",
+      "endTime" : "636555399220000000"
+    },
+    {
+      "id" : "{A80687AA-8D76-45AB-8A48-252E356D5C8D}",
+      "type" : 1,
+      "status" : 2,
+      "name" : "Clip",
+      "description" : "Sets the extent of a raster using coordinates or another dataset.",
+      "rftPath" : "Clip_{A80687AA-8D76-45AB-8A48-252E356D5C8D}.rft.xml",
+      "startTime" : "636555399850000000",
+      "endTime" : "636555399850000000"
+    }
+  ]
+}

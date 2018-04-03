@@ -1,0 +1,5 @@
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+define(["dojo/_base/array","dojo/_base/declare","dojo/_base/lang","./settingComponents","./SettingObject"],function(b,e,d,g,h){return e(h,{_contents:[],constructor:function(c,a,b,f,d,e){Array.isArray(f)?(this._contents=f,this._mainDiv=g.container(a||"",b,this._getContentDivs(this._contents))):(this._contents=e,this._mainDiv=g.fieldsetContainer(f,d,a||"",b,this._getContentDivs(this._contents)))},setConfig:function(c){b.forEach(this._contents,d.hitch(this,function(a){a.setConfig(this._config||c)}))},
+getConfig:function(c){this._name&&(this._config={});b.forEach(this._contents,d.hitch(this,function(a){a.getConfig(this._config||c)}))},_getContentDivs:function(c){return b.map(c,function(a){return a.div?a.div():a})}})});

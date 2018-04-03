@@ -1,0 +1,4 @@
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+define({"widgets/LayerList/setting/nls/strings":{showLegend:"Poka\u017ei legendo",controlPopupMenuTitle:"Izberi, katera dejanja bodo prikazana v meniju konteksta sloja.",zoomto:"Pribli\u017eaj na",transparency:"Prosojnost",controlPopup:"Omogo\u010di/onemogo\u010di pojavno okno",moveUpAndDown:"Premakni gor/premakni dol",attributeTable:"Poglej v atributni tabeli",url:"Opis/Poka\u017ei podrobnosti elementa/Prenos",layerSelectorTitle:"Izberite, kateri sloji bodo prikazani na seznamu.",_localized:{}}});
