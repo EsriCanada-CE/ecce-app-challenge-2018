@@ -1,0 +1,36 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.logo {
+    height: 30px;
+    margin-top: 5px;
+}
+
+.goelectric {
+    margin-left: 15px;
+}
+
+.mapit {
+    height: 20px;
+    margin-top: 2px;
+}
+
+.bytext {
+    color: #707070;
+    margin-left: 10px;
+    margin-right: 5px;
+}
+
+.content {
+    padding-top: 50px;
+}
+
+body p {
+    line-height: 25px;
+    margin-bottom: 15px;
+    padding: 0;
+}

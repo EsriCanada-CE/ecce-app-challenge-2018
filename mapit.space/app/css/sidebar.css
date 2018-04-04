@@ -1,0 +1,212 @@
+html, body {
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar {
+    padding-top: 50px;
+    width: 24em;
+    height: 100%;
+    z-index: 100;
+    position: absolute;
+    background-color: #f2f2f2;
+    overflow:scroll;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f2f2f2; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+}
+
+.nav-pills > .active > a {
+    color: #fff !important;
+}
+
+.nav-pills a {
+    color: #000 !important;
+}
+
+.nav-pills > .active > a, .nav-pills > .active > a:hover {
+    background-color: #808080 !important;
+}
+
+.colouredpill {
+    font-size: 12px;
+    text-align: center;
+}
+
+.colouredpill .active a,
+.colouredpill .active a:hover {
+    background-color: #808080 !important;    
+}
+
+
+.iconpilltext {
+    top: 1px !important;
+}
+
+.well {
+    background-color: #fff;
+    margin: 7.5px 15px;
+    padding: 10px;
+    -webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.175);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.175);
+    text-align: left;
+    font-size: 14px;
+}
+
+.titlewell {
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.wellheading {
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+.redwell {
+    border-right: solid #f85857;
+    border-width: 0 4px;    
+}
+
+.greenwell {
+    border-right: solid #69de6f;
+    border-width: 0 4px;
+}
+
+.bluewell {
+    border-right: solid #5bc0de;
+    border-width: 0 4px;        
+}
+
+.subtext {    
+    font-weight: 800;
+    font-size: 12px;
+}
+
+.notetext {
+    font-size: 10px;
+}
+
+.totalsavingsvalue {
+    font-weight: 800;
+    font-size: 40px;
+}
+
+.totalsavingsmeasure {
+    font-weight: 800;
+    font-size: 20px;
+}
+
+.vehicleselection {
+    font-weight: 800;
+    font-size: 20px;    
+}
+
+div.sidebar {
+    -webkit-box-shadow: 0 1px 6px rgba(0,0,0,0.175);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.175);
+}
+
+.mappanel {
+    margin-left: 24em;
+    position: relative;        
+}
+
+
+.drawicons {
+    margin-bottom: 10px;
+    /*float: right;
+    margin-right: 50px;*/
+}
+
+.drawpanel {
+    /*height: 150px;*/
+}
+
+.calculate, .setlocation, .drawicons {
+    text-align: center;
+}
+
+.setlocation {
+    margin-bottom: 20px;
+}
+
+.action-button {
+    font-size: 16px;
+    background-color: transparent;
+    border: 1px solid #D3D3D3;
+    color: #6e6e6e;
+    height: 32px;
+    width: 32px;
+    text-align: center;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.action-button:hover,
+.action-button:focus {
+    background: #0079c1;
+    color: #e4e4e4;
+}
+
+button:disabled,
+button[disabled]{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #e4e4e4;
+  pointer-events: none;
+}
+
+.slidecontainer {
+    width: 100%;
+}
+
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    outline: none;
+    background: #d3d3d3;
+    background: linear-gradient(to right, #d3d3d3, #69de6f); 
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    border-radius: 50%;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #4c4c4c;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    background: #4c4c4c;
+    cursor: pointer;
+}

@@ -1,0 +1,6 @@
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+define({"widgets/Edit/setting/nls/strings":{enableUndoRedo:"Onemogo\u010di razveljavi/uveljavi",toolbarVisible:"Orodna vrstica vidna",toolbarOptions:"Mo\u017enosti orodne vrstice",mergeVisible:"Zdru\u017ei",cutVisible:"Izre\u017ei",reshapeVisible:"Preoblikuj",back:"Nazaj",label:"Sloj",edit:"Za urejanje",update:"Onemogo\u010di posodobitev geometrije",fields:"Polja",actions:"Dejanja",editpageName:"Ime",editpageAlias:"Vzdevek",editpageVisible:"Vidno",editpageEditable:"Za urejanje",noLayers:"Geoobjektni sloji za urejanje niso na voljo",
+configureFields:"Konfigurirajte polja slojev",useFilterEdit:"Uporabite filter za predloge geoobjektov",display:"Prikaz",autoApplyEditWhenGeometryIsMoved:"Uporabi samodejno urejanje, ko je geometrija premaknjena",snappingTolerance:"Nastavite doseg magnetenja v pikslih",popupTolerance:"Nastavite pojavno okno dovoljenega odstopanja urejanja atributov v pikslih",stickyMoveTolerance:"Nastavite dovoljeno odstopanje lepljivega premika v pikslih",usingSaveButton:"Ne uporabite sprememb na atributih, dokler ne pritisnete Shrani",
+_localized:{}}});

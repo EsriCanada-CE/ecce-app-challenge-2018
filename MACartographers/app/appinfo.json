@@ -1,0 +1,9 @@
+{
+  "name": "DayCare Finder",
+  "description": "The locations of child day care centres compiled in the DayCare Finder application are from the Early Years Centres point coordinate data submitted to the City of Toronto’s open data catalogue.",
+  "createdTime": 1521753419116,
+  "lastUpdated": 1521823987061,
+  "creator": "ubhir_McMaster",
+  "icon": "images/icon.jpeg",
+  "thumbnail": "images/thumbnail.jpeg"
+}

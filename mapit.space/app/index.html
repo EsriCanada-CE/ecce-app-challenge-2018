@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>goElectric by mapit.space</title>
+    <!-- Calcite Bootstrap -->
+    <link rel="stylesheet" href="https://esri.github.io/calcite-maps/dist/css/calcite-bootstrap.min-v0.2.css">
+    <!-- Calcite Maps -->
+    <link rel="stylesheet" href="https://esri.github.io/calcite-maps/dist/css/calcite-maps-arcgis-4.x.min-v0.2.css">
+
+    <!-- ArcGIS JS 4.0 -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.6/esri/css/main.css">
+
+    <!-- Skeleton CSS-->
+    <link rel="stylesheet" href="./css/skeleton.css">
+    <link rel="stylesheet" href="./css/normalize.css">
+
+    <!-- Custom CSS-->
+    <link rel="stylesheet" href="./css/homestyle.css">
+
+    <!-- Web Fonts  -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,500,600,700,800%7CShadows+Into+Light" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+
+    <nav class="navbar calcite-nav-top calcite-navbar navbar-fixed-top calcite-text-light calcite-bg-dark">
+        <!-- Title -->
+        <div class="calcite-title calcite-overflow-hidden">
+            <img class="goelectric logo" src="imgs/go-electric-white.png" alt="logo" />
+            <span class="bytext">created by</span>
+            <a href="http://mapit.space" target="_blank"><img class="w3-opacity-min mapit" src="imgs/mapit-space-w.png" alt="logo" /></a>
+        </div>
+        <!-- Nav -->
+        <ul class="nav navbar-nav calcite-nav">
+            <div class="calcite-navbar-search calcite-search-expander">
+                <div id="searchWidgetDiv"></div>
+            </div>
+            <li><a role="button" href="index.html" aria-haspopup="true"><span class="glyphicon glyphicon-home"></span>&nbsp;Home</a></li>
+            <li><a role="button" href="goelectric.html" aria-haspopup="true"><span class="glyphicon glyphicon-map-marker"></span>&nbsp;Explore</a></li>
+        </ul>
+    </nav>
+    <!--/.calcite-navbar -->
+
+    <div class="content">
+        <div class="two columns">&nbsp;</div>
+        <div class="eight columns ">
+            <img src="./imgs/go-electric-white.png" class="logo-head" alt="">
+            <!--<span class="jumbo-text">Be the change you want to see in the world.</span>-->
+            <div class="paper">
+                <h2>Mission Statement</h2>
+                <p>The current paradigm of climate change mitigation has been heavily focused on eliminating the world’s dependence on fossil fuels and promoting cleaner air in major urban areas. The use of fossil fuels adds greenhouse gas emissions, exacerbating climate change processes. They also add several pollutants to the air, dirtying the air which can result in health complications for locals. In urban areas around the world, the use of gasoline-powered vehicles contributes significantly to these problems. Recognizing this, the City of Vancouver (BC) released the <a href="http://vancouver.ca/green-vancouver/greenest-city-action-plan.aspx">2020 Greenest City Action Plan</a> in 2012. The plan outlines 10 goals that the city will aim to reach by 2020 to become the ‘world’s greenest city’. Two of their goals (Goal 1 &amp; 8) involve eliminating the city’s dependence on fossil fuels and to “breathe the cleanest air of any major city in the world.”</p>
+
+                <p>The city identified that promoting the switch from fuel-powered vehicles to electric vehicles would be a substantial step in the right direction to making Vancouver the ‘world’s greenest city’. Fully electric vehicles (EVs) have no tailpipe carbon emissions and have the potential to rely solely on clean, renewable energy to run. The typical lifespan of EVs are expected to exceed that of traditional gas-powered vehicles. The city adopted the Electric Vehicle Ecosystem Strategy in 2016 which sought to improve the accessibility of charging stations for electric vehicles within Vancouver. This initiated the city’s push toward switching to electric vehicles.</p>
+
+                <p>The goal of our application, goElectric, aims to support the City of Vancouver's Electric Vehicle Ecosystem Strategy by showcasing to residents of Vancouver the benefits of making the switch to EVs. Our application will demonstrate how much Vancouverites can save in terms of fuel costs and how much carbon emissions they would prevent by switching to an EV. Our application not only allows users to observe charging stations locations, but to explore multiple EV models that are currently available in British Columbia with their typical travel routes with start and end markers. Our application will provide custom annual values based on the EV model they select and the customized route they provide. Our application can show where closest charging stations in Vancouver are with a user-specified proximity to the route previously specified. We also illustrate how far EVs can go on one charge or less to demystify misconceptions about EV travel ranges. </p>
+
+                <a href="./goelectric.html" class="map-button hvr-shutter-out-horizontal">Click Here to Explore the Map!</a>
+
+                <div style="position:relative;height:0;padding-bottom:56.25%"><iframe src="https://www.youtube.com/embed/K9m9WDxmSN8?ecver=2" style="position:absolute;width:100%;height:100%;left:0" width="640" height="360" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
+                <p class="right-align italic">Union of Concerned Scientists</p>
+
+                <!--
+                <div class="eight">
+                    <div class="six columns boxed">
+                        <img class="images" src="http://knowledge.wharton.upenn.edu/wp-content/uploads/2017/01/Nissan-Leaf.jpeg" alt="" width="100%">
+                        <p class="right-align">Wow what a great car</p>
+                    </div>
+                    <div class="six columns boxed">
+                        <img class="images" src="http://knowledge.wharton.upenn.edu/wp-content/uploads/2017/01/Nissan-Leaf.jpeg" alt="" width="100%">
+                        <p class="right-align">This car is dee wae</p>
+                    </div>
+                </div>
+                -->
+                <hr>
+                <h2>Nitty Gritty</h2>
+
+                <h3>Data Sources</h3>
+                <p>Data used in the creation of our web application came solely from open data sources. The City of Vancouver's municipal boundary and the locations of electric vehicle charging stations were obtained from the  <a href="(http://vancouver.ca/your-government/open-data-catalogue.aspx">City of Vancouver’s Open Data Catalogue</a>. The calculations we used to calculate electricity costs and our comparisons with fuel costs &amp; carbon dioxide emission was developed using a variety of sources which consisted of government sources &amp; consultant reports (see “Calculation Explanations” section).</p>
+
+                <h3>Calculation Explanations:</h3>
+                <p>The Average Electricity Economy (AEE) values for each of our chosen vehicles were obtained from the Canadian Automobile Association’s (CAA) Driving Costs Calculator in kWh/100km. The AEE values for each vehicle were then divided by 100km to obtain a rate per kilometer. The AEE value for the Tesla Model S vehicle was not in the CAA’s calculator and was obtained using information from fueleconomy.gov. To obtain an approximate annual cost to use your electric vehicle, the following formula was used:</p>
+
+                <h3>Approximate Annual Cost (AAC) = 2 x d x nt x AEE x CEBC x 52</h3>
+                <table class="u-full-width">
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Definition</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>d</td>
+                            <td>Distance, as specified by end-user based on the locations of their start and end placements. This was multiplied by 2 to indicate a round trip</td>
+                        </tr>
+                        <tr>
+                            <td>nt</td>
+                            <td>number of trips per, value to be specified by end-user</td>
+                        </tr>
+                        <tr>
+                            <td>AEE</td>
+                            <td>Average Electricity Economy, each vehicle has their respective AEE value, will be chosen based on the vehicle chosen from the drop-down list</td>
+                        </tr>
+                        <tr>
+                            <td>CEBC</td>
+                            <td>Cost of Electricity in BC at Step 2 ($0.1287/kWh), which is the highest rate that BC Hydro can charge its customers per hour</td>
+                        </tr>
+                        <tr>
+                            <td>52</td>
+                            <td>this value represents how many weeks there are in a year, it was chosen to make the whole equation representative of annual costs</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    The EPA reported that the average gasoline-using vehicle typically emits about 411 grams of carbon dioxide per mile. We converted this value into kilograms per kilometer and obtained a rate of 0.25538kg/km. We will be using this rate to calculate approximately how much end-users will be avoid emitting by using electric vehicles, which have no tailpipe emissions. The following formula was used:</p>
+                <h3>Approximate CO2 Emissions Not Emitted = 2 x d x nt x 0.25538 kg/km x 52</h3>
+                <table class="u-full-width">
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Definition</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>d</td>
+                            <td>Distance, as specified by end-user based on the locations of their start and end placements. This was multiplied by 2 to indicate a round trip</td>
+                        </tr>
+                        <tr>
+                            <td>nt</td>
+                            <td>number of trips per, value to be specified by end-user</td>
+                        </tr>
+                        <tr>
+                            <td>52</td>
+                            <td>this value represents how many weeks there are in a year, it was chosen to make the whole equation representative of annual costs</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>We also want to compare how much you save annually by using an electric vehicle in terms of fuel savings. To do this, we need the amount the average person spends on a vehicle a year. We found an average fuel consumption rate of 10.8L/100km and an average price of gasoline in Vancouver, BC (144162963 cent per liter; prices from January 1, 2018 – March 16, 2018). Both values are representative of 2018 and were found from Natural Resources Canada and from a report by Pacific Analytics. The values were used to calculate an average rate that consumers spend on gasoline in 2018 which was $0.155696/km then used to calculate annual fuel costs. The following formula was used:</p>
+                <h3>Average Fuel (Gasoline) Costs in Vancouver (2018) = 2 x d x nt x $0.155696/km x 52</h3>
+
+                <table class="u-full-width">
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Definition</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>xd</td>
+                            <td>Distance, as specified by end-user based on the locations of their start and end placements. This was multiplied by 2 to indicate a round trip</td>
+                        </tr>
+                        <tr>
+                            <td>nt</td>
+                            <td>number of trips per, value to be specified by end-user</td>
+                        </tr>
+                        <tr>
+                            <td>52</td>
+                            <td>this value represents how many weeks there are in a year, it was chosen to make the whole equation representative of annual costs</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Limitations</h3>
+                <p>The calculations that our web application uses were created under the several ‘worst-case’ assumptions. We assumed that end-users would be making a round trip and that electricity costs in British Columbia would be at <a href="https://www.bchydro.com/accounts-billing/rates-energy-use/electricity-rates/residential-rates.html">step 2, the higher rate</a>. This was done to prevent our application from providing users with underestimations. Additionally, due to a lack of localized research, parts of our calculations made use of national averages or came from American sources of information.</p>
+                
+                <hr>
+                <h2>About Us</h2>
+                <p>Alysha, Anthony, and Chris are fourth year students at Simon Fraser University. Alysha is working on completing a Computer Science Degree, Spatial Information System Certificate, and has already completed the Co-op Education Designation. Anthony and Chris are both working on completing a Geography Degree, Spatial Information Systems Certificate, and have completed the Co-op Education Designation. Together, these 3 students make up team <a href="http://mapit.space" target="_blank">mapit.space</a>.</p>
+                <div class="row">
+                    <div class="four columns nested">
+                        <img class="rounded-circle" src="./imgs/alysha.jpg" alt="" width="60%">
+                        <h5>Alysha van Duynhoven</h5>
+                        <h6>Lead Developer</h6>
+                        <p>Alysha has had several internships which have provided her with diverse experiences in front-end and back-end software development. Alysha loves programming, GIScience, and technology. When away from her computer, she enjoys hiking, kayaking, stargazing, photography, playing soccer, and creating things.
+                        </p>
+                    </div>
+                    <div class="four columns nested">
+                        <img class="rounded-circle" src="./imgs/1.jpg" alt="" width="60%">
+                        <h5>Chris Yee</h5>
+                        <h6>Project Lead &amp; Designer</h6>
+                        <p>Chris is currently a GIS Technician at the Fire Underwriters Survey and has previously worked with the Department of Fisheries and Oceans as a GIS Coordinator. Outside of academics and work, Chris spends his time snowboarding, mountain biking, and practicing photography.</p>
+                    </div>
+                    <div class="four columns nested">
+                        <img class="rounded-circle" src="./imgs/3.jpg" alt="" width="60%">
+                        <h5>Anthony Lee</h5>
+                        <h6>Lead Researcher</h6>
+                        <p>Anthony is currently working as a GIS Technician for TransLink and was previously a research assistant for SFU’s Spatial Analysis &amp; Modeling Lab. In his spare time, Anthony works as a lifeguard &amp; swimming instructor for the City of Burnaby and loves to take his Boston Terrier out for walks.</p>
+                    </div>
+                </div>
+                <br>
+                <a href="./goelectric.html" class="map-button hvr-shutter-out-horizontal">Click Here to Explore the Map!</a>
+            </div>
+        </div>
+
+        <div class="two columns">&nbsp;</div>
+        <br/><br/><br/>
+    </div>
+
+
+
+    <script type="text/javascript">
+        var dojoConfig = {
+            packages: [{
+                    name: "bootstrap",
+                    location: "https://esri.github.io/calcite-maps/dist/vendor/dojo-bootstrap"
+                },
+                {
+                    name: "calcite-maps",
+                    location: "https://esri.github.io/calcite-maps/dist/js/dojo"
+                }
+            ]
+        };
+
+    </script>
+
+    <!-- ArcGIS JS 4.0 -->
+    <script src="https://js.arcgis.com/4.6/"></script>
+</body>
+
+</html>
