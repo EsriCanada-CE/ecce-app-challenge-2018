@@ -4,4 +4,4 @@ Hosted on ArcGIS Online:
 
 Hosted on GitHub:
 
-- [https://esricanada-ce.github.io/ecce-app-challenge-2018/Team_GISavvy/app/](https://esricanada-ce.github.io/ecce-app-challenge-2018/Team_GISavvy/app/)
+- [https://esricanada-ce.github.io/ecce-app-challenge-2018/Team_GISavvy/app/?appid=58b592069e9f49f5aca50d93db6dca14](https://esricanada-ce.github.io/ecce-app-challenge-2018/Team_GISavvy/app/?appid=58b592069e9f49f5aca50d93db6dca14)
