@@ -1,0 +1,5 @@
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+define({"widgets/GridOverlay/setting/nls/strings":{serviceUrl:"Postavi URL adresu servisa:",minIntSpacingLabel:"Najmanji razmak izme\u0111u intervala",lineOpacityLabel:"Neprozirnost linije",labelOpacityLabel:"Neprozirnost oznake",centerLabelOpacityLabel:"Neprozirnost centralne oznake",gridZonePlacementLabel:"Raspored oznaka na mre\u017ei",verticalLineLabels:"Oznake vertikalnih linija",styleHeaderLabel:"Stil",indexHeaderLabel:"Indeks",colorHeaderLabel:"Boja",fontSizeHeaderLabel:"Veli\u010dina fonta",
+lineWidthHeaderLabel:"\u0160irina linije",horizontalLabel:"Horizontalno",verticalLabel:"Vertikalno",upperLeftLabel:"Gore levo",upperRightLabel:"Gore desno",lowerLeftLabel:"Dole levo",lowerRightLabel:"Dole desno",centerLabel:"Centar",errorMessage:"Stranica za konfigurisanje ima gre\u0161ke. Popravite pre \u010duvanja.",checkBoxLabel:"Prika\u017ei mre\u017eu kada je vid\u017eet zatvoren",_localized:{}}});

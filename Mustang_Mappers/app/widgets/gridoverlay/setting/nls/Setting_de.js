@@ -1,0 +1,5 @@
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+define({"widgets/GridOverlay/setting/nls/strings":{serviceUrl:"Service-URL festlegen:",minIntSpacingLabel:"Mindestabstand zwischen Linien",lineOpacityLabel:"Linientransparenz",labelOpacityLabel:"Beschriftungstransparenz",centerLabelOpacityLabel:"Transparenz der mittigen Beschriftung",gridZonePlacementLabel:"Platzierung der Gitter-Zonenbeschriftung",verticalLineLabels:"Beschriftungen f\u00fcr vertikale Linien",styleHeaderLabel:"Style",indexHeaderLabel:"Index",colorHeaderLabel:"Farbe",fontSizeHeaderLabel:"Schriftgr\u00f6\u00dfe",
+lineWidthHeaderLabel:"Linienbreite",horizontalLabel:"Horizontal",verticalLabel:"Vertikal",upperLeftLabel:"Oben links",upperRightLabel:"Oben rechts",lowerLeftLabel:"Unten links",lowerRightLabel:"Unten rechts",centerLabel:"Zentriert",errorMessage:"Die Konfigurationsseite enth\u00e4lt Fehler. Beheben Sie sie vor dem Speichern.",checkBoxLabel:"Gitternetz anzeigen, wenn das Widget geschlossen wird",_localized:{}}});
