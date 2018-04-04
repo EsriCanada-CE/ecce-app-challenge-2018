@@ -1,7 +1,9 @@
-Hosted on ArcGIS Online:
+Hosted on custom domain (alyshav.com):
 
-- [https://www.arcgis.com/apps/Shortlist/index.html?appid=58b592069e9f49f5aca50d93db6dca14](https://www.arcgis.com/apps/Shortlist/index.html?appid=58b592069e9f49f5aca50d93db6dca14)
+- Homepage: [https://alyshav.com/app/](https://alyshav.com/app/)
+- goElectric App: [https://alyshav.com/app/goelectric.html](https://alyshav.com/app/goelectric.html)
 
 Hosted on GitHub:
 
-- [https://esricanada-ce.github.io/ecce-app-challenge-2018/Team_GISavvy/app/?appid=58b592069e9f49f5aca50d93db6dca14](https://esricanada-ce.github.io/ecce-app-challenge-2018/Team_GISavvy/app/?appid=58b592069e9f49f5aca50d93db6dca14)
+- Homepage: [https://esricanada-ce.github.io/ecce-app-challenge-2018/mapit.space/app/](https://esricanada-ce.github.io/ecce-app-challenge-2018/mapit.space/app/)
+- goElectric App: [https://esricanada-ce.github.io/ecce-app-challenge-2018/mapit.space/app/goelectric.html](https://esricanada-ce.github.io/ecce-app-challenge-2018/mapit.space/app/goelectric.html)
