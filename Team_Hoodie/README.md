@@ -1,4 +1,4 @@
-![Hoodie Logo](imgs/logo.png "Hoodie Logo")
+![Hoodie Logo](source/imgs/logo.png "Hoodie Logo")
 
 # The Problem
 Toronto is a **BIG** city. With over 6 million people in the GTA, every year thousands of people move into rentals in the city.
@@ -73,7 +73,7 @@ To edit the app using ESRI's web builder SDK:
 * Download the Zip file and upload it from the app builder's interface
 
 To host the website or edit the app's code directly:
-* Download the the directory called `2/` and place it in a server
+* Download the the directory called `source/2/` and place it in a server
 
 To run the GIS analytics:
 * See the python script located in `data/` for more details
