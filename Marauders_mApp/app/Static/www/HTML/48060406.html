@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+	<meta charset = "utf-8">
+	<meta name = "viewport" content = 'width=device-width, initial-scale=1, shrink-to-fit=no'>
+	<meta name = "description" content = "">
+	<title>Energy Revolution</title>
+	<script src = "../JS/leaflet.js"></script>
+	<script src = "../JS/esri_leaflet.js"></script>
+	<script src = "../JS/esri-leaflet-geocoder.js"></script>
+	<script src = "../JS/leaflet_measure.js"></script>
+	<script src = "../JS/custom.js"></script>
+	<link rel = "stylesheet" href = "../CSS/leaflet.css">
+	<link rel = "stylesheet" href = "../CSS/leaflet_measure.css">
+	<link rel = "stylesheet" href = "../CSS/esri-leaflet-geocoder.css">
+	<script src = 'https://s3.us-east-2.amazonaws.com/boundariescalgary/48060406_OD.js'></script>
+	<script src = 'https://s3.us-east-2.amazonaws.com/buildingscalgary/48060406_OD.js'></script>
+	<style>
+	html, body, #map {
+			width: 100%;
+			height: 100%;
+			z-index: 9999;
+		}
+	</style>
+</head>
+<body>
+	<div id = 'map'></div>
+	<script>
+		var defaultStyle = {
+			color: '#5719d3',
+			weight: 2,
+			opacity: 0.5,
+			fillOpacity: 0.5,
+			fillColor: 'blue'
+		};
+
+		var clearStyle = {
+			color: 'red',
+			weight: 3,
+			fillOpacity: 0
+		};
+		
+	var cartoDB = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_nolabels/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'});
+		var esriDark = L.esri.basemapLayer('DarkGray');
+		var esriSat = L.esri.basemapLayer('Imagery');
+		var Topo = L.esri.basemapLayer('Topographic');
+
+		var baseLayers = {
+			'Carto-Dark': cartoDB,
+			'Esri-Dark': esriDark,
+			'Esri-Satellite': esriSat,
+			'Esri-Topo': Topo
+		};
+
+var map = L.map('map', {layers: [cartoDB], measureControl: true, minZoom: 11}).setView([51.1160315
+, -114.07518], 15);
+
+
+		L.geoJSON(boundary, {
+			style: clearStyle
+		}).addTo(map);
+
+		
+	var infoFt = function(feature, layer){
+			layer.bindPopup("<center><h3><strong>Your Rooftop's Solar Potential</strong></h3></center><h3>Roof Area: <font color ='#768fe2'><strong>" + parseInt(feature.properties.Area) + " sq. meters</strong></font></h3><h3># of Panels: <font color = '#768fe2'><strong>" + parseInt(feature.properties.Solarpanel) + "</strong></font></h3><h3>Current Solar Energy: <font color = '#768fe2'><strong>" + (feature.properties.Solarout).toFixed(2) + " kWh</strong></font></h3><h3>Max Solar (per sq.m): <strong><font color = '#768fe2'><strong>" + (feature.properties.Maxsolar).toFixed(2) + " kWh</strong></font></h3><h3>Potential Solar Energy: <font color = '#768fe2'><strong>" + (feature.properties.Mxsolarout).toFixed(2) + " kWh</strong></font></h3>");
+		};	
+
+		/* Load Building Here */
+		L.geoJSON(buildings, {
+			style: defaultStyle, 
+			onEachFeature: infoFt
+		}).addTo(map);
+
+
+		L.control.layers(baseLayers).addTo(map);
+
+	</script>
+</body>	
+</html>
+	

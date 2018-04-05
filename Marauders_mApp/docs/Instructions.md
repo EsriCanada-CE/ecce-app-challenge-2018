@@ -1,0 +1,58 @@
+**Goals of App**
+
+1. Demonstrate the potential of decentralized energy in Calgary, with each DA as it’s own micro gridded system, to help promote a future of renewable energy in Canada.
+2. Provide estimates of the number of solar panels that can be installed per building, their output in kilowatt hours, the Return of Investment and the total solar energy produced by DA. 
+3. Allow users to interact with the app with a Draw Tool, allowing custom areas to be created with solar statistics generated on the fly.
+4. Display the total potential energy generation of biogas and solar by DA using estimates of food waste production and solar panel efficiency.
+
+**Execute the App**
+1. Download or clone the repository
+2. Once complete, go to 'Static' folder and click on 'index.html' and from there shows the landing page with direct links to the two apps developed. 
+3. In the landing page, under "Explore" tab, there are two app services - one written in R via the Shiny package and the other in pure HTML, CSS, JavaScript. 
+
+**1st Service: Explore Neighborhood Matrices**
+1. Hover over the blue centroids, click on it, and a popup will disclose the DA information. 
+2. Copy the DA information and paste it in the 'Pick Your DA First!' panel. The app will direct you to the specific neighborhood. 
+3. You will now see a matrix of lines connecting to the addresses in the DA. The default field - 'Panels' - displays the potential amount of panels that may be installed on the rooftops. You can change the field to "Current Output", which displays the potential amount of solar energy that may be produced with current solar technology (265 watts per panel). The other field - "Max. Potential" - illustrates the maximum amount of solar energy that can be produced based on solar maximum of watts per sq. meter, assuming solar panels are more efficient (i.e > 1 kWh per panel). Any of these fields will change the display and you can click on a line to get a more precise estimate value. 
+
+**2nd Service: Explore Building Potential**
+1. The mainpage displays a choropleth map of potential energy produced with solar and biogas combined in megawatt hours (MWh). Hover over the map and a popup will automatically display the following information: DAUID, Population, Biogas & Solar output, and the potential energy ratio (%).
+2. On the hover popup, click on the DAUID url link and it will directly link you to the selected neighborhood. 
+3. The selected DA will show the DA boundary and buildings. For micro-details, click on any of the rooptop buildings and a popup will disclose statistics such as roof area, # of solar panels that can be installed, current potential solar energy, maximum solar energy per sq. meter, and potential solar energy to be captured with very efficient solar panels (i.e. > 1 kWh per panel). 
+4. Another cool feature is to use the draw tool and create your own area in your backyard. Click on the draw tool and follow the graphical instructions. 
+5. Once done, click 'Finish Measurement' or double-click over the area and a popup will display the solar area, the amount of solar panels, current solar energy output (kWh), and the return of investment (ROI).  
+
+**Assumptions and Calculations**
+
+The application uses assumptions and averages to estimate the number of solar panels a building can support, the energy generated from these panels, installation costs and the Return Of Investment. For biogas, the average waste a person produces was used to calculate the total waste of a DA.
+
+**Solar Panels**
+
+The average area of a single solar panel was found to be 1.64 square meters. The total number of solar panels a building can support was then calculated by dividing the area of the building by the area of a single solar panel.
+
+**Solar  Energy Output** 
+Based on the solar panel dimensions used, a single solar panel typically produces 0.265 kilowatt hours (kWh). The total output per hour was calculated by multiplying the number of solar panels on a building by 0.265 kwh.
+
+**Return Of Investment**
+
+The equation used to determine the Return of Investment of solar panels was:
+Total System Cost / Value of Electricity Generated / Average Electricity Usage
+
+The total system cost was calculated by multiplying the average installation cost ($1750/kW) by the efficiency of a single panel (0.265kW) and the total number of panels installed. As of February 2017, the Alberta government created a rebate for solar panel installations on residential and commercial buildings that cut costs by 30%. This lowered the average installation costs from $2500/kW to $1750/kW.
+
+The average value of electricity generated was found to be about $0.045/kWh for Alberta in March 2017. 
+
+The average electricity consumption for a single detached home in Alberta was 8292 kWh per year.  
+
+**Waste Output**
+
+The average person produces 0.75 kilograms of waste per day. This value was multiplied by the population of each DA to determine the total waste generated by per day. 
+
+**Biogas Conversion**
+
+On average, 1 kg of biodegradable material can produce 0.4 cubic meters of biogas. The total biogas produced by a DA was calculated by multiplying the total daily waste of a DA by 0.4 cubic meters.
+
+**Energy from Biogas**
+
+1 cubic meter of biogas can generate 6 kWh of usable energy. The total usable energy from biogas of each DA was calculated by multiplying the total biogas of that DA by 6 kWh. 
+

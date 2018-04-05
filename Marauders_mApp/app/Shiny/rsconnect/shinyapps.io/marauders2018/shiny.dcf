@@ -1,0 +1,10 @@
+name: shiny
+title:
+username:
+account: marauders2018
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 306490
+bundleId: 1285390
+url: https://marauders2018.shinyapps.io/shiny/
+when: 1521859895.10032
