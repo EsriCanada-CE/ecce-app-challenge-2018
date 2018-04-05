@@ -1,0 +1,5 @@
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+define(["dojo/_base/array","jimu/LayerInfos/LayerInfos"],function(c,f){var g=function(b){var d=[];b=f.getInstanceSync().getLayerInfoArray();c.forEach(b,function(a){var b=[];a.getShowLegendOfWebmap()&&(!a.layerObject||"esri.layers.ArcGISDynamicMapServiceLayer"!==a.layerObject.declaredClass&&"esri.layers.ArcGISTiledMapServiceLayer"!==a.layerObject.declaredClass||c.forEach(a.layerObject.dynamicLayerInfos||a.layerObject.layerInfos,function(e){var c=null;a.traversal(function(a){if(a.subId===e.id)return a.isLeaf()&&
+!a.getShowLegendOfWebmap()&&b.push(a.originOperLayer.mapService.subId),c=a,!0});c||b.push(e.id)}),a.isMapNotesLayerInfo()?c.forEach(a.getSubLayers(),function(a){a.getShowLegendOfWebmap()&&d.push({layer:a.layerObject,title:"Map Notes - "+a.title})}):d.push({hideLayers:b,layer:a.layerObject,title:a.title}))});return d.reverse()};return{getLayerInfosParam:function(b){return g(b)}}});

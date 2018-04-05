@@ -1,0 +1,6 @@
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+define("dojo/_base/declare dojo/_base/array dojo/_base/lang dojo/Deferred jimu/BaseFeatureAction jimu/Role jimu/WidgetManager".split(" "),function(f,g,e,h,k,l,m){return f(k,{map:null,iconClass:"icon-edit",isFeatureSupported:function(b,a){b=!1;var c=a||e.getObject("_wabProperties.popupInfo.layerForActionWithEmptyFeatures",!1,this.map.infoWindow);if(!c)return b;var d=!1;a=this.appConfig.getConfigElementById(this.widgetId).config;a.editor.layerInfos?0===a.editor.layerInfos.length?d=!0:g.forEach(a.editor.layerInfos.concat(a.editor.tableInfos||
+[]),function(a){c.id===a.featureLayer.id&&(d=!0)}):d=!1;return b=d&&c.isEditable&&c.isEditable()?!0:!1},onExecute:function(b,a){var c=a||e.getObject("_wabProperties.popupInfo.layerForActionWithEmptyFeatures",!1,this.map.infoWindow);a=new h;m.getInstance().triggerWidgetOpen(this.widgetId).then(function(a){a.beginEditingByFeatures(b.features,c)});return a.promise},_checkEditPrivilege:function(b){var a=!0;b&&(a=new l({id:b.roleId?b.roleId:b.role,role:b.role}),b.privileges&&a.setPrivileges(b.privileges),
+a=a.canEditFeatures());return a}})});
