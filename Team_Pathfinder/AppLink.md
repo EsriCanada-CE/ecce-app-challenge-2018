@@ -1,6 +1,6 @@
-Hosted on ArcGIS Online:
+Hosted on online:
 
-- [http://mikko.maps.arcgis.com/apps/webappviewer/index.html?id=48ad2eb7d97c4ec3a5ff6cb17a36e212](http://mikko.maps.arcgis.com/apps/webappviewer/index.html?id=48ad2eb7d97c4ec3a5ff6cb17a36e212)
+- [http://one.dayoneapp.gwiddle.co.uk/](http://one.dayoneapp.gwiddle.co.uk/)
 
 
 Hosted on GitHub:

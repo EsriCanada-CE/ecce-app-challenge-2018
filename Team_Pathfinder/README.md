@@ -1,4 +1,4 @@
-Link to working demo of app: http://mikko.maps.arcgis.com/apps/webappviewer/index.html?id=48ad2eb7d97c4ec3a5ff6cb17a36e212 
+Link to working demo of app: http://one.dayoneapp.gwiddle.co.uk/
 
 Day One by Team Pathfinder
 ======

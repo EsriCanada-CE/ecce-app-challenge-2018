@@ -1,16 +1,7 @@
 {
   "theme": {
     "name": "FoldableTheme",
-    "styles": [
-      "default",
-      "black",
-      "blue",
-      "cyan",
-      "green",
-      "purple",
-      "red",
-      "yellow"
-    ],
+    "styles": [ "blue", "purple", "black", "green", "cyan", "default", "red", "yellow" ],
     "version": "2.7",
     "sharedTheme": {
       "isPortalSupport": false,
@@ -18,13 +9,13 @@
       "useLogo": false
     }
   },
-  "portalUrl": "https://mikko.maps.arcgis.com",
-  "appId": "",
+  "portalUrl": "http://mikko.maps.arcgis.com",
+  "appId": "5GlSFvP4Q0bUvscq",
   "authorizedCrossOriginDomains": [],
   "title": "Day One",
   "subtitle": "ECCE App Challenge 2018 - University of Calgary",
   "keepAppState": true,
-  "logo": "images/app-logo.png",
+  "logo": "",
   "geometryService": "https://utility.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer",
   "links": [],
   "widgetOnScreen": {
@@ -36,6 +27,7 @@
           "top": 0,
           "right": 0,
           "height": 40,
+          "paddingRight": 275,
           "relativeTo": "browser"
         },
         "version": "2.7",
@@ -45,32 +37,148 @@
       {
         "uri": "widgets/Scalebar/Widget",
         "position": {
-          "left": 7,
-          "bottom": 25,
+          "left": 288,
+          "bottom": 5,
           "relativeTo": "map"
         },
         "version": "2.7",
         "id": "widgets_Scalebar_Widget_2",
-        "name": "Scalebar",
-        "config": "configs/Scalebar/config_widgets_Scalebar_Widget_2.json",
-        "visible": false
+        "name": "Scalebar"
       },
       {
         "uri": "widgets/Search/Widget",
         "position": {
-          "left": 55,
-          "top": 5,
-          "relativeTo": "map"
+          "right": 2,
+          "top": 2,
+          "relativeTo": "browser",
+          "zIndex": 1
         },
         "version": "2.7",
         "id": "widgets_Search_Widget_3",
         "name": "Search",
-        "config": "configs/Search/config_widgets_Search_Widget_3.json"
+        "config": {
+          "allPlaceholder": "Search By Place Name",
+          "showInfoWindowOnSelect": true,
+          "sources": [
+            {
+              "layerId": "Employment_and_Careers_716",
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Employment_and_Careers/FeatureServer/0",
+              "name": "Employment and Careers",
+              "placeholder": "",
+              "searchFields": [ "Sub_Category", "Name", "Address", "Postal_Code", "Phone_Number", "Description" ],
+              "displayField": "Name",
+              "exactMatch": false,
+              "searchInCurrentMapExtent": false,
+              "zoomScale": 50000,
+              "maxSuggestions": 6,
+              "maxResults": 6,
+              "type": "query"
+            },
+            {
+              "layerId": "Recreation_8794",
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Recreation/FeatureServer/0",
+              "name": "Recreation",
+              "placeholder": "",
+              "searchFields": [ "Sub_Category", "Name", "Address", "Postal_Code", "Phone_Number", "Description" ],
+              "displayField": "Name",
+              "exactMatch": false,
+              "searchInCurrentMapExtent": false,
+              "zoomScale": 50000,
+              "maxSuggestions": 6,
+              "maxResults": 6,
+              "type": "query"
+            },
+            {
+              "layerId": "Transportation_8935",
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Transportation/FeatureServer/0",
+              "name": "Transportation",
+              "placeholder": "",
+              "searchFields": [ "Sub_Category", "Name", "Address", "Postal_Code", "Phone_Number", "Description" ],
+              "displayField": "Sub_Category",
+              "exactMatch": false,
+              "searchInCurrentMapExtent": false,
+              "zoomScale": 50000,
+              "maxSuggestions": 6,
+              "maxResults": 6,
+              "type": "query"
+            },
+            {
+              "layerId": "Childcare_2253",
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Childcare/FeatureServer/0",
+              "name": "Childcare",
+              "placeholder": "",
+              "searchFields": [ "Sub_Category", "Name", "Address", "Postal_Code", "Phone_Number", "Age", "Description" ],
+              "displayField": "Name",
+              "exactMatch": false,
+              "searchInCurrentMapExtent": false,
+              "zoomScale": 50000,
+              "maxSuggestions": 6,
+              "maxResults": 6,
+              "type": "query"
+            },
+            {
+              "layerId": "Immigration_6479",
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Immigration/FeatureServer/0",
+              "name": "Immigration",
+              "placeholder": "",
+              "searchFields": [ "Sub_Category", "Name", "Address", "Postal_Code", "Phone_Number", "Description" ],
+              "displayField": "Name",
+              "exactMatch": false,
+              "searchInCurrentMapExtent": false,
+              "zoomScale": 50000,
+              "maxSuggestions": 6,
+              "maxResults": 6,
+              "type": "query"
+            },
+            {
+              "layerId": "Daily_Needs_7774",
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Daily_Needs/FeatureServer/0",
+              "name": "Daily Needs",
+              "placeholder": "",
+              "searchFields": [ "Sub_Category", "Name", "Address", "Postal_Code", "Phone_Number", "Ethnicity__Region" ],
+              "displayField": "Name",
+              "exactMatch": false,
+              "searchInCurrentMapExtent": false,
+              "zoomScale": 50000,
+              "maxSuggestions": 6,
+              "maxResults": 6,
+              "type": "query"
+            },
+            {
+              "layerId": "English_Language_4895",
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/English_Language/FeatureServer/0",
+              "name": "English Language",
+              "placeholder": "",
+              "searchFields": [ "Sub_Category", "Name", "Address", "Postal_Code", "Phone_Number", "Description" ],
+              "displayField": "Name",
+              "exactMatch": false,
+              "searchInCurrentMapExtent": false,
+              "zoomScale": 50000,
+              "maxSuggestions": 6,
+              "maxResults": 6,
+              "type": "query"
+            },
+            {
+              "layerId": "Health_Services_5010",
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Health_Services/FeatureServer/0",
+              "name": "Health Services",
+              "placeholder": "",
+              "searchFields": [ "Sub_Category", "Name", "Phone_Number", "Address", "Postal_Code", "Information" ],
+              "displayField": "Name",
+              "exactMatch": false,
+              "searchInCurrentMapExtent": false,
+              "zoomScale": 50000,
+              "maxSuggestions": 6,
+              "maxResults": 6,
+              "type": "query"
+            }
+          ]
+        }
       },
       {
         "uri": "widgets/Coordinate/Widget",
         "position": {
-          "left": 7,
+          "left": 463,
           "bottom": 5,
           "relativeTo": "map"
         },
@@ -80,22 +188,286 @@
       },
       {
         "position": {
-          "left": 55,
-          "top": 45,
+          "left": 14,
+          "top": 12,
           "relativeTo": "map"
         },
         "placeholderIndex": 1,
         "id": "_5",
+        "name": "Bookmark",
         "version": "2.7",
         "closeable": true,
         "uri": "widgets/Bookmark/Widget",
-        "name": "Bookmark",
-        "config": "configs/Bookmark/config__5.json"
+        "config": {
+          "bookmarks2D": [
+            {
+              "displayName": "Downtown Calgary",
+              "name": "Downtown Calgary",
+              "extent": {
+                "type": "extent",
+                "xmin": -1.2702999089310275E7,
+                "ymin": 6626028.152942907,
+                "xmax": -1.2692680090491792E7,
+                "ymax": 6631760.930064287,
+                "spatialReference": { "wkid": 102100 },
+                "cache": {
+                  "_parts": [
+                    {
+                      "extent": {
+                        "type": "extent",
+                        "xmin": -1.2702999089310275E7,
+                        "ymin": 6626028.152942907,
+                        "xmax": -1.2692680090491792E7,
+                        "ymax": 6631760.930064287,
+                        "spatialReference": { "wkid": 102100 }
+                      },
+                      "frameIds": [ 0 ]
+                    }
+                  ]
+                }
+              },
+              "thumbnail": "http://mikko.maps.arcgis.com/sharing/rest/content/items/${itemId}/resources/inConfig/36505841951214535.jpeg",
+              "isInWebmap": false,
+              "isSaveLayers": true,
+              "layerOptions": {
+                "Buffer of Health Services_9440": { "selected": false },
+                "Buffer of Employment and Careers_580": { "selected": false },
+                "Buffer of Recreation_8507": { "selected": false },
+                "Buffer of Transportation_5883": { "selected": false },
+                "Buffer of Childcare_1674": { "selected": false },
+                "Buffer of Immigration_1322": { "selected": false },
+                "Buffer of Daily Needs_893": { "selected": false },
+                "Buffer of English Language_7131": { "selected": false },
+                "Health_Services_5010": { "selected": true },
+                "English_Language_4895": { "selected": true },
+                "Daily_Needs_7774": { "selected": true },
+                "Immigration_6479": { "selected": true },
+                "Childcare_2253": { "selected": true },
+                "Transportation_8935": { "selected": true },
+                "Recreation_8794": { "selected": true },
+                "Employment_and_Careers_716": { "selected": true }
+              },
+              "_uID": 10,
+              "isSaveExtent": true
+            },
+            {
+              "displayName": "University of Calgary",
+              "name": "University of Calgary",
+              "extent": {
+                "type": "extent",
+                "xmin": -1.2707862395234931E7,
+                "ymin": 6633671.855771422,
+                "xmax": -1.2702702895825688E7,
+                "ymax": 6636538.244332112,
+                "spatialReference": { "wkid": 102100 },
+                "cache": {
+                  "_parts": [
+                    {
+                      "extent": {
+                        "type": "extent",
+                        "xmin": -1.2707862395234931E7,
+                        "ymin": 6633671.855771422,
+                        "xmax": -1.2702702895825688E7,
+                        "ymax": 6636538.244332112,
+                        "spatialReference": { "wkid": 102100 }
+                      },
+                      "frameIds": [ 0 ]
+                    }
+                  ]
+                }
+              },
+              "thumbnail": "http://mikko.maps.arcgis.com/sharing/rest/content/items/${itemId}/resources/inConfig/16239086926198176.png",
+              "isInWebmap": false,
+              "isSaveLayers": false,
+              "layerOptions": {
+                "Buffer of Health Services_9440": { "selected": true },
+                "Buffer of Employment and Careers_580": { "selected": true },
+                "Buffer of Recreation_8507": { "selected": true },
+                "Buffer of Transportation_5883": { "selected": true },
+                "Buffer of Childcare_1674": { "selected": true },
+                "Buffer of Immigration_1322": { "selected": true },
+                "Buffer of Daily Needs_893": { "selected": true },
+                "Buffer of English Language_7131": { "selected": true },
+                "Health_Services_5010": { "selected": true },
+                "English_Language_4895": { "selected": true },
+                "Daily_Needs_7774": { "selected": true },
+                "Immigration_6479": { "selected": true },
+                "Childcare_2253": { "selected": true },
+                "Transportation_8935": { "selected": true },
+                "Recreation_8794": { "selected": true },
+                "Employment_and_Careers_716": { "selected": true }
+              },
+              "_uID": 11,
+              "isSaveExtent": true
+            },
+            {
+              "displayName": "Harry Hays Building",
+              "name": "Harry Hays Building",
+              "extent": {
+                "type": "extent",
+                "xmin": -1.269731786526341E7,
+                "ymin": 6629929.488362756,
+                "xmax": -1.2696672927837308E7,
+                "ymax": 6630287.786932813,
+                "spatialReference": { "wkid": 102100 },
+                "cache": {
+                  "_parts": [
+                    {
+                      "extent": {
+                        "type": "extent",
+                        "xmin": -1.269731786526341E7,
+                        "ymin": 6629929.488362756,
+                        "xmax": -1.2696672927837308E7,
+                        "ymax": 6630287.786932813,
+                        "spatialReference": { "wkid": 102100 }
+                      },
+                      "frameIds": [ 0 ]
+                    }
+                  ]
+                }
+              },
+              "thumbnail": "http://mikko.maps.arcgis.com/sharing/rest/content/items/${itemId}/resources/inConfig/884866486218272.jpeg",
+              "isInWebmap": false,
+              "isSaveLayers": false,
+              "layerOptions": {
+                "Buffer of Health Services_9440": { "selected": true },
+                "Buffer of Employment and Careers_580": { "selected": true },
+                "Buffer of Recreation_8507": { "selected": true },
+                "Buffer of Transportation_5883": { "selected": true },
+                "Buffer of Childcare_1674": { "selected": true },
+                "Buffer of Immigration_1322": { "selected": true },
+                "Buffer of Daily Needs_893": { "selected": true },
+                "Buffer of English Language_7131": { "selected": true },
+                "Health_Services_5010": { "selected": true },
+                "English_Language_4895": { "selected": true },
+                "Daily_Needs_7774": { "selected": true },
+                "Immigration_6479": { "selected": true },
+                "Childcare_2253": { "selected": true },
+                "Transportation_8935": { "selected": true },
+                "Recreation_8794": { "selected": true },
+                "Employment_and_Careers_716": { "selected": true }
+              },
+              "_uID": 12,
+              "isSaveExtent": true
+            },
+            {
+              "displayName": "Bow Valley College",
+              "name": "Bow Valley College",
+              "extent": {
+                "type": "extent",
+                "xmin": -1.269701152065099E7,
+                "ymin": 6629560.530173615,
+                "xmax": -1.2696366583224889E7,
+                "ymax": 6629918.828743672,
+                "spatialReference": { "wkid": 102100 },
+                "cache": {
+                  "_parts": [
+                    {
+                      "extent": {
+                        "type": "extent",
+                        "xmin": -1.269701152065099E7,
+                        "ymin": 6629560.530173615,
+                        "xmax": -1.2696366583224889E7,
+                        "ymax": 6629918.828743672,
+                        "spatialReference": { "wkid": 102100 }
+                      },
+                      "frameIds": [ 0 ]
+                    }
+                  ]
+                }
+              },
+              "thumbnail": "http://mikko.maps.arcgis.com/sharing/rest/content/items/${itemId}/resources/inConfig/988698328823844.jpeg",
+              "isInWebmap": false,
+              "isSaveLayers": true,
+              "layerOptions": {
+                "Buffer of Health Services_9440": { "selected": false },
+                "Buffer of Employment and Careers_580": { "selected": false },
+                "Buffer of Recreation_8507": { "selected": false },
+                "Buffer of Transportation_5883": { "selected": false },
+                "Buffer of Childcare_1674": { "selected": false },
+                "Buffer of Immigration_1322": { "selected": false },
+                "Buffer of Daily Needs_893": { "selected": false },
+                "Buffer of English Language_7131": { "selected": false },
+                "Health_Services_5010": { "selected": true },
+                "English_Language_4895": { "selected": true },
+                "Daily_Needs_7774": { "selected": true },
+                "Immigration_6479": { "selected": true },
+                "Childcare_2253": { "selected": true },
+                "Transportation_8935": { "selected": true },
+                "Recreation_8794": { "selected": true },
+                "Employment_and_Careers_716": { "selected": true }
+              },
+              "_uID": 13,
+              "isSaveExtent": true
+            },
+            {
+              "displayName": "Calgary International Airport",
+              "name": "Calgary International Airport",
+              "extent": {
+                "type": "extent",
+                "xmin": -1.2702327884073906E7,
+                "ymin": 6637402.797681041,
+                "xmax": -1.2681689886436936E7,
+                "ymax": 6648868.351923803,
+                "spatialReference": { "wkid": 102100 },
+                "cache": {
+                  "_parts": [
+                    {
+                      "extent": {
+                        "type": "extent",
+                        "xmin": -1.2702327884073906E7,
+                        "ymin": 6637402.797681041,
+                        "xmax": -1.2681689886436936E7,
+                        "ymax": 6648868.351923803,
+                        "spatialReference": { "wkid": 102100 }
+                      },
+                      "frameIds": [ 0 ]
+                    }
+                  ]
+                }
+              },
+              "thumbnail": "http://mikko.maps.arcgis.com/sharing/rest/content/items/${itemId}/resources/inConfig/3526020025558063.jpeg",
+              "isInWebmap": false,
+              "isSaveLayers": false,
+              "layerOptions": {
+                "Buffer of Health Services_9440": { "selected": true },
+                "Buffer of Employment and Careers_580": { "selected": true },
+                "Buffer of Recreation_8507": { "selected": true },
+                "Buffer of Transportation_5883": { "selected": true },
+                "Buffer of Childcare_1674": { "selected": true },
+                "Buffer of Immigration_1322": { "selected": true },
+                "Buffer of Daily Needs_893": { "selected": true },
+                "Buffer of English Language_7131": { "selected": true },
+                "Health_Services_5010": { "selected": true },
+                "English_Language_4895": { "selected": true },
+                "Daily_Needs_7774": { "selected": true },
+                "Immigration_6479": { "selected": true },
+                "Childcare_2253": { "selected": true },
+                "Transportation_8935": { "selected": true },
+                "Recreation_8794": { "selected": true },
+                "Employment_and_Careers_716": { "selected": true }
+              },
+              "_uID": 14
+            }
+          ],
+          "bookmarks3D": [],
+          "layout": {
+            "cards": true,
+            "list": true,
+            "defaultMode": "list"
+          },
+          "editable": true,
+          "syncMode": {
+            "webmap": false,
+            "custom": true
+          },
+          "isSaveLayerVisibility": true
+        }
       },
       {
         "position": {
-          "left": 105,
-          "top": 45,
+          "left": 14,
+          "top": 62,
           "relativeTo": "map"
         },
         "placeholderIndex": 1,
@@ -103,28 +475,1883 @@
         "name": "NearMe",
         "version": "2.7",
         "closeable": true,
+        "IsController": false,
         "uri": "widgets/NearMe/Widget",
-        "config": "configs/NearMe/config__6.json",
-        "IsController": false
+        "config": {
+          "fontColor": "#000000",
+          "searchLayers": [
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Health_Services/FeatureServer/0",
+              "geometryType": "esriGeometryPoint",
+              "id": "Health_Services_5010",
+              "layerId": "0",
+              "baseURL": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Health_Services/FeatureServer/",
+              "isMapServer": false,
+              "title": "Health Services",
+              "visibility": true,
+              "popupInfo": {
+                "title": "Health_Services",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Information",
+                    "label": "Information",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "isEditable": false,
+                    "tooltip": "",
+                    "visible": false,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": true,
+                "mediaInfos": []
+              },
+              "renderer": {
+                "type": "simple",
+                "symbol": {
+                  "angle": 0,
+                  "xoffset": 0,
+                  "yoffset": 0,
+                  "type": "esriPMS",
+                  "url": "http://static.arcgis.com/images/Symbols/Shapes/YellowCircleLargeB.png",
+                  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZdEVYdFNvZnR3YXJlAEFkb2JlIEltYWdlUmVhZHlxyWU8AAADImlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpEQURDNDEwQ0QyOTkxMUUwQUU5NUVFMEYwMTY0NzUwNSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpEQURDNDEwREQyOTkxMUUwQUU5NUVFMEYwMTY0NzUwNSI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkRBREM0MTBBRDI5OTExRTBBRTk1RUUwRjAxNjQ3NTA1IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkRBREM0MTBCRDI5OTExRTBBRTk1RUUwRjAxNjQ3NTA1Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQg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",
+                  "contentType": "image/png",
+                  "width": 14.25,
+                  "height": 14.25
+                }
+              }
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/English_Language/FeatureServer/0",
+              "geometryType": "esriGeometryPoint",
+              "id": "English_Language_4895",
+              "layerId": "0",
+              "baseURL": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/English_Language/FeatureServer/",
+              "isMapServer": false,
+              "title": "English Language",
+              "visibility": true,
+              "popupInfo": {
+                "title": "English_Language",
+                "fieldInfos": [
+                  {
+                    "fieldName": "ID",
+                    "label": "ID",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "isEditable": false,
+                    "tooltip": "",
+                    "visible": false,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": true,
+                "mediaInfos": []
+              },
+              "renderer": {
+                "type": "simple",
+                "symbol": {
+                  "angle": 0,
+                  "xoffset": 0,
+                  "yoffset": 0,
+                  "type": "esriPMS",
+                  "url": "http://static.arcgis.com/images/Symbols/Shapes/BlackCircleLargeB.png",
+                  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZdEVYdFNvZnR3YXJlAEFkb2JlIEltYWdlUmVhZHlxyWU8AAADImlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpCQTUzNTQzQkQyNkYxMUUwQUU5NUVFMEYwMTY0NzUwNSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpCQTUzNTQzQ0QyNkYxMUUwQUU5NUVFMEYwMTY0NzUwNSI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkJBNTM1NDM5RDI2RjExRTBBRTk1RUUwRjAxNjQ3NTA1IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkJBNTM1NDNBRDI2RjExRTBBRTk1RUUwRjAxNjQ3NTA1Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQg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",
+                  "contentType": "image/png",
+                  "width": 14.25,
+                  "height": 14.25
+                }
+              }
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Daily_Needs/FeatureServer/0",
+              "geometryType": "esriGeometryPoint",
+              "id": "Daily_Needs_7774",
+              "layerId": "0",
+              "baseURL": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Daily_Needs/FeatureServer/",
+              "isMapServer": false,
+              "title": "Daily Needs",
+              "visibility": true,
+              "popupInfo": {
+                "title": "Daily_Needs",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Ethnicity__Region",
+                    "label": "Ethnicity/ Region",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "isEditable": false,
+                    "tooltip": "",
+                    "visible": false,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": true,
+                "mediaInfos": []
+              },
+              "renderer": {
+                "type": "simple",
+                "symbol": {
+                  "angle": 0,
+                  "xoffset": 0,
+                  "yoffset": 0,
+                  "type": "esriPMS",
+                  "url": "http://static.arcgis.com/images/Symbols/Shapes/BlueCircleLargeB.png",
+                  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZdEVYdFNvZnR3YXJlAEFkb2JlIEltYWdlUmVhZHlxyWU8AAADImlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1NkRDMzYxRUQzMjIxMUUwQUU5NUVFMEYwMTY0NzUwNSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo3ODNFRUI4QUQzMjIxMUUwQUU5NUVFMEYwMTY0NzUwNSI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjU2REMzNjFDRDMyMjExRTBBRTk1RUUwRjAxNjQ3NTA1IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU2REMzNjFERDMyMjExRTBBRTk1RUUwRjAxNjQ3NTA1Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQg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",
+                  "contentType": "image/png",
+                  "width": 15,
+                  "height": 15
+                }
+              }
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Immigration/FeatureServer/0",
+              "geometryType": "esriGeometryPoint",
+              "id": "Immigration_6479",
+              "layerId": "0",
+              "baseURL": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Immigration/FeatureServer/",
+              "isMapServer": false,
+              "title": "Immigration",
+              "visibility": true,
+              "popupInfo": {
+                "title": "Immigration",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "isEditable": false,
+                    "tooltip": "",
+                    "visible": false,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": true,
+                "mediaInfos": []
+              },
+              "renderer": {
+                "type": "simple",
+                "symbol": {
+                  "angle": 0,
+                  "xoffset": 0,
+                  "yoffset": 0,
+                  "type": "esriPMS",
+                  "url": "http://static.arcgis.com/images/Symbols/Shapes/OrangeCircleLargeB.png",
+                  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZdEVYdFNvZnR3YXJlAEFkb2JlIEltYWdlUmVhZHlxyWU8AAADImlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpGOTY4NzM3NUQyN0YxMUUwQUU5NUVFMEYwMTY0NzUwNSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpGOTY4NzM3NkQyN0YxMUUwQUU5NUVFMEYwMTY0NzUwNSI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkY5Njg3MzczRDI3RjExRTBBRTk1RUUwRjAxNjQ3NTA1IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkY5Njg3Mzc0RDI3RjExRTBBRTk1RUUwRjAxNjQ3NTA1Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQg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",
+                  "contentType": "image/png",
+                  "width": 15,
+                  "height": 15
+                }
+              }
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Childcare/FeatureServer/0",
+              "geometryType": "esriGeometryPoint",
+              "id": "Childcare_2253",
+              "layerId": "0",
+              "baseURL": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Childcare/FeatureServer/",
+              "isMapServer": false,
+              "title": "Childcare",
+              "visibility": true,
+              "popupInfo": {
+                "title": "Childcare",
+                "fieldInfos": [
+                  {
+                    "fieldName": "ID",
+                    "label": "ID",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Age",
+                    "label": "Age",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "isEditable": false,
+                    "tooltip": "",
+                    "visible": false,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": true,
+                "mediaInfos": []
+              },
+              "renderer": {
+                "type": "simple",
+                "symbol": {
+                  "angle": 0,
+                  "xoffset": 0,
+                  "yoffset": 0,
+                  "type": "esriPMS",
+                  "url": "http://static.arcgis.com/images/Symbols/Shapes/RedCircleLargeB.png",
+                  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZdEVYdFNvZnR3YXJlAEFkb2JlIEltYWdlUmVhZHlxyWU8AAADImlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo5RENEMEEyRkQyN0ExMUUwQUU5NUVFMEYwMTY0NzUwNSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo5RENEMEEzMEQyN0ExMUUwQUU5NUVFMEYwMTY0NzUwNSI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjFGMTYyNTRBRDI3OTExRTBBRTk1RUUwRjAxNjQ3NTA1IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjlEQ0QwQTJFRDI3QTExRTBBRTk1RUUwRjAxNjQ3NTA1Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQg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",
+                  "contentType": "image/png",
+                  "width": 15,
+                  "height": 15
+                }
+              }
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Transportation/FeatureServer/0",
+              "geometryType": "esriGeometryPoint",
+              "id": "Transportation_8935",
+              "layerId": "0",
+              "baseURL": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Transportation/FeatureServer/",
+              "isMapServer": false,
+              "title": "Transportation",
+              "visibility": true,
+              "popupInfo": {
+                "title": "Transportation",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "isEditable": false,
+                    "tooltip": "",
+                    "visible": false,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": true,
+                "mediaInfos": []
+              },
+              "renderer": {
+                "type": "simple",
+                "symbol": {
+                  "angle": 0,
+                  "xoffset": 0,
+                  "yoffset": 0,
+                  "type": "esriPMS",
+                  "url": "http://static.arcgis.com/images/Symbols/Shapes/GreenCircleLargeB.png",
+                  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZdEVYdFNvZnR3YXJlAEFkb2JlIEltYWdlUmVhZHlxyWU8AAADImlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo3MTYxN0FBN0QzMUQxMUUwQUU5NUVFMEYwMTY0NzUwNSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo3MTYxN0FBOEQzMUQxMUUwQUU5NUVFMEYwMTY0NzUwNSI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjcxNjE3QUE1RDMxRDExRTBBRTk1RUUwRjAxNjQ3NTA1IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjcxNjE3QUE2RDMxRDExRTBBRTk1RUUwRjAxNjQ3NTA1Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQg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",
+                  "contentType": "image/png",
+                  "width": 15,
+                  "height": 15
+                }
+              }
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Recreation/FeatureServer/0",
+              "geometryType": "esriGeometryPoint",
+              "id": "Recreation_8794",
+              "layerId": "0",
+              "baseURL": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Recreation/FeatureServer/",
+              "isMapServer": false,
+              "title": "Recreation",
+              "visibility": true,
+              "popupInfo": {
+                "title": "Recreation",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "isEditable": false,
+                    "tooltip": "",
+                    "visible": false,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": true,
+                "mediaInfos": []
+              },
+              "renderer": {
+                "type": "simple",
+                "symbol": {
+                  "angle": 0,
+                  "xoffset": 0,
+                  "yoffset": 0,
+                  "type": "esriPMS",
+                  "url": "http://static.arcgis.com/images/Symbols/Shapes/PurpleCircleLargeB.png",
+                  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZdEVYdFNvZnR3YXJlAEFkb2JlIEltYWdlUmVhZHlxyWU8AAADImlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpFQ0ZGOEMxNEQzM0ExMUUwQUU5NUVFMEYwMTY0NzUwNSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpFQ0ZGOEMxNUQzM0ExMUUwQUU5NUVFMEYwMTY0NzUwNSI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjc5OEYzNzE1RDMzQTExRTBBRTk1RUUwRjAxNjQ3NTA1IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjc5OEYzNzE2RDMzQTExRTBBRTk1RUUwRjAxNjQ3NTA1Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQg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",
+                  "contentType": "image/png",
+                  "width": 14.25,
+                  "height": 14.25
+                }
+              }
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Employment_and_Careers/FeatureServer/0",
+              "geometryType": "esriGeometryPoint",
+              "id": "Employment_and_Careers_716",
+              "layerId": "0",
+              "baseURL": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Employment_and_Careers/FeatureServer/",
+              "isMapServer": false,
+              "title": "Employment and Careers",
+              "visibility": true,
+              "popupInfo": {
+                "title": "Employment_and_Careers",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "isEditable": true,
+                    "tooltip": "",
+                    "visible": true,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "isEditable": false,
+                    "tooltip": "",
+                    "visible": false,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": true,
+                "mediaInfos": []
+              },
+              "renderer": {
+                "type": "simple",
+                "symbol": {
+                  "angle": 0,
+                  "xoffset": 0,
+                  "yoffset": 0,
+                  "type": "esriPMS",
+                  "url": "http://static.arcgis.com/images/Symbols/Shapes/YellowCircleLargeB.png",
+                  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZdEVYdFNvZnR3YXJlAEFkb2JlIEltYWdlUmVhZHlxyWU8AAADImlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpEQURDNDEwQ0QyOTkxMUUwQUU5NUVFMEYwMTY0NzUwNSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpEQURDNDEwREQyOTkxMUUwQUU5NUVFMEYwMTY0NzUwNSI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkRBREM0MTBBRDI5OTExRTBBRTk1RUUwRjAxNjQ3NTA1IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkRBREM0MTBCRDI5OTExRTBBRTk1RUUwRjAxNjQ3NTA1Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQg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",
+                  "contentType": "image/png",
+                  "width": 14.25,
+                  "height": 14.25
+                }
+              }
+            }
+          ],
+          "bufferInfo": { "isVisible": false },
+          "defaultBufferDistance": 5,
+          "maxBufferDistance": 15,
+          "bufferDistanceUnit": {
+            "bufferUnit": "UNIT_KILOMETER",
+            "routeUnit": "KILOMETERS",
+            "distanceUnit": "kilometers",
+            "label": "Kilometers",
+            "acronym": "km",
+            "value": "kilometers"
+          },
+          "zoomToFeature": false,
+          "intersectSearchedLocation": false,
+          "enableProximitySearch": true,
+          "routeService": "https://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World",
+          "directionLengthUnit": {
+            "bufferUnit": "UNIT_STATUTE_MILE",
+            "routeUnit": "MILES",
+            "distanceUnit": "miles",
+            "label": "Miles",
+            "acronym": "mi",
+            "value": "miles"
+          },
+          "selectedSearchLayerOnly": false,
+          "isGeodesic": false,
+          "showLocationTool": false,
+          "symbols": {
+            "routeSymbol": {
+              "color": [ 21, 99, 184, 255 ],
+              "width": 3.75,
+              "type": "esriSLS",
+              "style": "esriSLSSolid"
+            },
+            "graphicLocationSymbol": {
+              "angle": 0,
+              "xoffset": 0,
+              "yoffset": 12,
+              "type": "esriPMS",
+              "url": "http://static.arcgis.com/images/Symbols/Basic/RedStickpin.png",
+              "imageData": "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",
+              "contentType": "image/png",
+              "width": 22.5,
+              "height": 22.5
+            },
+            "polylineSymbol": {
+              "color": [ 21, 99, 184, 255 ],
+              "width": 3.75,
+              "type": "esriSLS",
+              "style": "esriSLSSolid"
+            },
+            "polygonSymbol": {
+              "color": [ 255, 189, 1, 0 ],
+              "outline": {
+                "color": [ 255, 189, 1, 255 ],
+                "width": 2.25,
+                "type": "esriSLS",
+                "style": "esriSLSSolid"
+              },
+              "type": "esriSFS",
+              "style": "esriSFSSolid"
+            },
+            "bufferSymbol": {
+              "color": [ 255, 0, 0, 0 ],
+              "outline": {
+                "color": [ 255, 189, 1, 255 ],
+                "width": 2.25,
+                "type": "esriSLS",
+                "style": "esriSLSSolid"
+              },
+              "type": "esriSFS",
+              "style": "esriSFSSolid"
+            }
+          },
+          "maxResultCount": null,
+          "searchSourceSettings": {
+            "allPlaceholder": "",
+            "showInfoWindowOnSelect": true,
+            "sources": [
+              {
+                "url": "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer",
+                "name": "Esri World Geocoder",
+                "singleLineFieldName": "SingleLine",
+                "placeholder": "Esri World Geocoder",
+                "countryCode": "CAN",
+                "zoomScale": 50000,
+                "maxSuggestions": 6,
+                "maxResults": 6,
+                "searchInCurrentMapExtent": false,
+                "enableLocalSearch": true,
+                "localSearchMinScale": 300000,
+                "localSearchDistance": 50000,
+                "type": "locator"
+              }
+            ]
+          },
+          "attributeSymbology": {},
+          "filterSettings": {
+            "collapse": false,
+            "filters": []
+          }
+        }
       },
       {
         "position": {
-          "left": 155,
-          "top": 45,
+          "left": 14,
+          "top": 112,
           "relativeTo": "map"
         },
         "placeholderIndex": 1,
         "id": "_7",
+        "name": "Query",
+        "label": "Query (Search by Sub-Category)",
         "version": "2.7",
         "closeable": true,
         "uri": "widgets/Query/Widget",
-        "name": "Query",
-        "config": "configs/Query/config__7.json"
+        "config": {
+          "hideLayersAfterWidgetClosed": true,
+          "labelTasks": "",
+          "labelResults": "",
+          "queries": [
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Health_Services/FeatureServer/0",
+              "name": "Health Services",
+              "icon": "",
+              "filter": {
+                "logicalOperator": "OR",
+                "parts": [
+                  {
+                    "fieldObj": {
+                      "name": "Sub_Category",
+                      "label": "Sub_Category",
+                      "shortType": "string",
+                      "type": "esriFieldTypeString"
+                    },
+                    "operator": "stringOperatorContains",
+                    "valueObj": {
+                      "isValid": true,
+                      "type": "value",
+                      "value": null
+                    },
+                    "interactiveObj": {
+                      "prompt": "Sub-Category (Health Services)",
+                      "hint": "Enter \"Hospital\", \"Walk-in Clinics\", \"Family Clinics\"",
+                      "cascade": "none"
+                    },
+                    "caseSensitive": false
+                  }
+                ],
+                "expr": ""
+              },
+              "showSQL": true,
+              "spatialFilter": {
+                "currentMapExtent": null,
+                "drawing": null,
+                "useFeatures": null,
+                "fullLayerExtent": null
+              },
+              "popupInfo": {
+                "title": "{Name}",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Information",
+                    "label": "Information",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": false,
+                "mediaInfos": [],
+                "readFromWebMap": false
+              },
+              "orderByFields": [],
+              "useLayerSymbol": false,
+              "resultsSymbol": {
+                "color": [ 0, 0, 128, 128 ],
+                "size": 18,
+                "angle": 0,
+                "xoffset": 0,
+                "yoffset": 0,
+                "type": "esriSMS",
+                "style": "esriSMSCircle",
+                "outline": {
+                  "color": [ 0, 0, 128, 255 ],
+                  "width": 0.75,
+                  "type": "esriSLS",
+                  "style": "esriSLSSolid"
+                }
+              },
+              "canModifySymbol": false,
+              "enableExport": false,
+              "singleResultLayer": true,
+              "webMapLayerId": "Health_Services_5010"
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/English_Language/FeatureServer/0",
+              "name": "English Language",
+              "icon": "",
+              "filter": {
+                "logicalOperator": "OR",
+                "parts": [
+                  {
+                    "fieldObj": {
+                      "name": "Sub_Category",
+                      "label": "Sub_Category",
+                      "shortType": "string",
+                      "type": "esriFieldTypeString"
+                    },
+                    "operator": "stringOperatorContains",
+                    "valueObj": {
+                      "isValid": true,
+                      "type": "value",
+                      "value": null
+                    },
+                    "interactiveObj": {
+                      "prompt": "Sub-Category (English Language / Education)",
+                      "hint": "Enter \"University/College\", \"Public Schools\", \"Community Centre\", \"Library\"",
+                      "cascade": "none"
+                    },
+                    "caseSensitive": false
+                  }
+                ],
+                "expr": ""
+              },
+              "showSQL": true,
+              "spatialFilter": {
+                "currentMapExtent": null,
+                "drawing": null,
+                "useFeatures": null,
+                "fullLayerExtent": null
+              },
+              "popupInfo": {
+                "title": "{Name}",
+                "fieldInfos": [
+                  {
+                    "fieldName": "ID",
+                    "label": "ID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": false,
+                "mediaInfos": [],
+                "readFromWebMap": false
+              },
+              "orderByFields": [],
+              "useLayerSymbol": false,
+              "resultsSymbol": {
+                "color": [ 0, 0, 128, 128 ],
+                "size": 18,
+                "angle": 0,
+                "xoffset": 0,
+                "yoffset": 0,
+                "type": "esriSMS",
+                "style": "esriSMSCircle",
+                "outline": {
+                  "color": [ 0, 0, 128, 255 ],
+                  "width": 0.75,
+                  "type": "esriSLS",
+                  "style": "esriSLSSolid"
+                }
+              },
+              "canModifySymbol": false,
+              "enableExport": false,
+              "singleResultLayer": true,
+              "webMapLayerId": "English_Language_4895"
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Daily_Needs/FeatureServer/0",
+              "name": "Daily Needs",
+              "icon": "",
+              "filter": {
+                "logicalOperator": "AND",
+                "parts": [
+                  {
+                    "fieldObj": {
+                      "name": "Sub_Category",
+                      "label": "Sub_Category",
+                      "shortType": "string",
+                      "type": "esriFieldTypeString"
+                    },
+                    "operator": "stringOperatorContains",
+                    "valueObj": {
+                      "isValid": true,
+                      "type": "value",
+                      "value": null
+                    },
+                    "interactiveObj": {
+                      "prompt": "Sub-Category (Daily Needs)",
+                      "hint": "Enter \"Restaurants\", \"Grocery Stores\", Shopping Mall\", \"Banking\"",
+                      "cascade": "none"
+                    },
+                    "caseSensitive": false
+                  }
+                ],
+                "expr": ""
+              },
+              "showSQL": true,
+              "spatialFilter": {
+                "currentMapExtent": null,
+                "drawing": null,
+                "useFeatures": null,
+                "fullLayerExtent": null
+              },
+              "popupInfo": {
+                "title": "{Name}",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Ethnicity__Region",
+                    "label": "Ethnicity/ Region",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": false,
+                "mediaInfos": [],
+                "readFromWebMap": false
+              },
+              "orderByFields": [],
+              "useLayerSymbol": false,
+              "resultsSymbol": {
+                "color": [ 0, 0, 128, 128 ],
+                "size": 18,
+                "angle": 0,
+                "xoffset": 0,
+                "yoffset": 0,
+                "type": "esriSMS",
+                "style": "esriSMSCircle",
+                "outline": {
+                  "color": [ 0, 0, 128, 255 ],
+                  "width": 0.75,
+                  "type": "esriSLS",
+                  "style": "esriSLSSolid"
+                }
+              },
+              "canModifySymbol": false,
+              "enableExport": false,
+              "singleResultLayer": true,
+              "webMapLayerId": "Daily_Needs_7774"
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Immigration/FeatureServer/0",
+              "name": "Immigration",
+              "icon": "",
+              "filter": {
+                "logicalOperator": "AND",
+                "parts": [
+                  {
+                    "fieldObj": {
+                      "name": "Sub_Category",
+                      "label": "Sub_Category",
+                      "shortType": "string",
+                      "type": "esriFieldTypeString"
+                    },
+                    "operator": "stringOperatorContains",
+                    "valueObj": {
+                      "isValid": true,
+                      "type": "value",
+                      "value": null
+                    },
+                    "interactiveObj": {
+                      "prompt": "Sub-Category (Immigration)",
+                      "hint": "Enter \"Immigration Services\", \"Canadian Documents\" or \"Registry\"",
+                      "cascade": "none"
+                    },
+                    "caseSensitive": false
+                  }
+                ],
+                "expr": ""
+              },
+              "showSQL": true,
+              "spatialFilter": {
+                "currentMapExtent": null,
+                "drawing": null,
+                "useFeatures": null,
+                "fullLayerExtent": null
+              },
+              "popupInfo": {
+                "title": "{Name}",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": false,
+                "mediaInfos": [],
+                "readFromWebMap": false
+              },
+              "orderByFields": [],
+              "useLayerSymbol": false,
+              "resultsSymbol": {
+                "color": [ 0, 0, 128, 128 ],
+                "size": 18,
+                "angle": 0,
+                "xoffset": 0,
+                "yoffset": 0,
+                "type": "esriSMS",
+                "style": "esriSMSCircle",
+                "outline": {
+                  "color": [ 0, 0, 128, 255 ],
+                  "width": 0.75,
+                  "type": "esriSLS",
+                  "style": "esriSLSSolid"
+                }
+              },
+              "canModifySymbol": false,
+              "enableExport": false,
+              "singleResultLayer": true,
+              "webMapLayerId": "Immigration_6479"
+            },
+            {
+              "url": "",
+              "name": "Childcare",
+              "icon": "",
+              "filter": {
+                "logicalOperator": "OR",
+                "parts": [
+                  {
+                    "fieldObj": {
+                      "name": "Sub_Category",
+                      "label": "Sub_Category",
+                      "shortType": "string",
+                      "type": "esriFieldTypeString"
+                    },
+                    "operator": "stringOperatorContains",
+                    "valueObj": {
+                      "isValid": true,
+                      "type": "value",
+                      "value": null
+                    },
+                    "interactiveObj": {
+                      "prompt": "Sub-Category (Childcare)",
+                      "hint": "Enter \"Family Daycare\"",
+                      "cascade": "none"
+                    },
+                    "caseSensitive": false
+                  }
+                ],
+                "expr": ""
+              },
+              "showSQL": true,
+              "spatialFilter": {
+                "currentMapExtent": null,
+                "drawing": null,
+                "useFeatures": null,
+                "fullLayerExtent": null
+              },
+              "popupInfo": {
+                "title": "{Name}",
+                "fieldInfos": [
+                  {
+                    "fieldName": "ID",
+                    "label": "ID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Age",
+                    "label": "Age",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": false,
+                "mediaInfos": [],
+                "readFromWebMap": false
+              },
+              "orderByFields": [],
+              "useLayerSymbol": false,
+              "resultsSymbol": {
+                "color": [ 0, 0, 128, 128 ],
+                "size": 18,
+                "angle": 0,
+                "xoffset": 0,
+                "yoffset": 0,
+                "type": "esriSMS",
+                "style": "esriSMSCircle",
+                "outline": {
+                  "color": [ 0, 0, 128, 255 ],
+                  "width": 0.75,
+                  "type": "esriSLS",
+                  "style": "esriSLSSolid"
+                }
+              },
+              "canModifySymbol": false,
+              "enableExport": false,
+              "singleResultLayer": true,
+              "webMapLayerId": "Childcare_2253"
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Transportation/FeatureServer/0",
+              "name": "Transportation",
+              "icon": "",
+              "filter": {
+                "logicalOperator": "OR",
+                "parts": [
+                  {
+                    "fieldObj": {
+                      "name": "Sub_Category",
+                      "label": "Sub_Category",
+                      "shortType": "string",
+                      "type": "esriFieldTypeString"
+                    },
+                    "operator": "stringOperatorContains",
+                    "valueObj": {
+                      "isValid": true,
+                      "type": "value",
+                      "value": null
+                    },
+                    "interactiveObj": {
+                      "prompt": "Sub-Category (Transportation)",
+                      "hint": "Enter \"Public Transit\", \"Airport\", \"Taxis\"",
+                      "cascade": "none"
+                    },
+                    "caseSensitive": false
+                  }
+                ],
+                "expr": ""
+              },
+              "showSQL": true,
+              "spatialFilter": {
+                "currentMapExtent": null,
+                "drawing": null,
+                "useFeatures": null,
+                "fullLayerExtent": null
+              },
+              "popupInfo": {
+                "title": "{Name}",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": false,
+                "mediaInfos": [],
+                "readFromWebMap": false
+              },
+              "orderByFields": [],
+              "useLayerSymbol": false,
+              "resultsSymbol": {
+                "color": [ 0, 0, 128, 128 ],
+                "size": 18,
+                "angle": 0,
+                "xoffset": 0,
+                "yoffset": 0,
+                "type": "esriSMS",
+                "style": "esriSMSCircle",
+                "outline": {
+                  "color": [ 0, 0, 128, 255 ],
+                  "width": 0.75,
+                  "type": "esriSLS",
+                  "style": "esriSLSSolid"
+                }
+              },
+              "canModifySymbol": false,
+              "enableExport": false,
+              "singleResultLayer": true,
+              "webMapLayerId": "Transportation_8935"
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Employment_and_Careers/FeatureServer/0",
+              "name": "Employment and Careers",
+              "icon": "",
+              "filter": {
+                "logicalOperator": "AND",
+                "parts": [
+                  {
+                    "fieldObj": {
+                      "name": "Sub_Category",
+                      "label": "Sub_Category",
+                      "shortType": "string",
+                      "type": "esriFieldTypeString"
+                    },
+                    "operator": "stringOperatorContains",
+                    "valueObj": {
+                      "isValid": true,
+                      "type": "value",
+                      "value": null
+                    },
+                    "interactiveObj": {
+                      "prompt": "Sub-Category (Employment)",
+                      "hint": "Enter \"Immigrant Bridging\", \"Women's Programs\", \"Career Centres\"",
+                      "cascade": "none"
+                    },
+                    "caseSensitive": false
+                  }
+                ],
+                "expr": ""
+              },
+              "showSQL": true,
+              "spatialFilter": {
+                "currentMapExtent": null,
+                "drawing": null,
+                "useFeatures": null,
+                "fullLayerExtent": null
+              },
+              "popupInfo": {
+                "title": "{Name}",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": false,
+                "mediaInfos": [],
+                "readFromWebMap": false
+              },
+              "orderByFields": [],
+              "useLayerSymbol": false,
+              "resultsSymbol": {
+                "color": [ 0, 0, 128, 128 ],
+                "size": 18,
+                "angle": 0,
+                "xoffset": 0,
+                "yoffset": 0,
+                "type": "esriSMS",
+                "style": "esriSMSCircle",
+                "outline": {
+                  "color": [ 0, 0, 128, 255 ],
+                  "width": 0.75,
+                  "type": "esriSLS",
+                  "style": "esriSLSSolid"
+                }
+              },
+              "canModifySymbol": false,
+              "enableExport": false,
+              "singleResultLayer": true,
+              "webMapLayerId": "Employment_and_Careers_716"
+            },
+            {
+              "url": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Recreation/FeatureServer/0",
+              "name": "Recreation",
+              "icon": "",
+              "filter": {
+                "logicalOperator": "OR",
+                "parts": [
+                  {
+                    "fieldObj": {
+                      "name": "Sub_Category",
+                      "label": "Sub_Category",
+                      "shortType": "string",
+                      "type": "esriFieldTypeString"
+                    },
+                    "operator": "stringOperatorContains",
+                    "valueObj": {
+                      "isValid": true,
+                      "type": "value",
+                      "value": null
+                    },
+                    "interactiveObj": {
+                      "prompt": "Sub-Category (Recreation)",
+                      "hint": "Enter \"Tourist Attraction\", \"Cultural Centre\"",
+                      "cascade": "none"
+                    },
+                    "caseSensitive": false
+                  }
+                ],
+                "expr": ""
+              },
+              "showSQL": true,
+              "spatialFilter": {
+                "currentMapExtent": null,
+                "drawing": null,
+                "useFeatures": null,
+                "fullLayerExtent": null
+              },
+              "popupInfo": {
+                "title": "{Name}",
+                "fieldInfos": [
+                  {
+                    "fieldName": "Sub_Category",
+                    "label": "Sub-Category",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "label": "Name",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Address",
+                    "label": "Address",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Postal_Code",
+                    "label": "Postal Code",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Phone_Number",
+                    "label": "Phone Number",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "Description",
+                    "label": "Description",
+                    "tooltip": "",
+                    "visible": true,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  },
+                  {
+                    "fieldName": "FID",
+                    "label": "FID",
+                    "tooltip": "",
+                    "visible": false,
+                    "format": null,
+                    "stringFieldOption": "textbox"
+                  }
+                ],
+                "description": null,
+                "showAttachments": false,
+                "mediaInfos": [],
+                "readFromWebMap": false
+              },
+              "orderByFields": [],
+              "useLayerSymbol": false,
+              "resultsSymbol": {
+                "color": [ 0, 0, 128, 128 ],
+                "size": 18,
+                "angle": 0,
+                "xoffset": 0,
+                "yoffset": 0,
+                "type": "esriSMS",
+                "style": "esriSMSCircle",
+                "outline": {
+                  "color": [ 0, 0, 128, 255 ],
+                  "width": 0.75,
+                  "type": "esriSLS",
+                  "style": "esriSLSSolid"
+                }
+              },
+              "canModifySymbol": false,
+              "enableExport": false,
+              "singleResultLayer": true,
+              "webMapLayerId": "Recreation_8794"
+            }
+          ]
+        }
       },
       {
         "position": {
-          "left": 205,
-          "top": 45,
+          "left": 14,
+          "top": 162,
           "relativeTo": "map"
         },
         "placeholderIndex": 1,
@@ -133,22 +2360,56 @@
         "version": "2.7",
         "closeable": true,
         "uri": "widgets/LayerList/Widget",
-        "config": "configs/LayerList/config__8.json",
-        "openAtStart": false
+        "config": {
+          "showLegend": true,
+          "contextMenu": {
+            "ZoomTo": true,
+            "Transparency": true,
+            "EnableOrDisablePopup": false,
+            "MoveupOrMovedown": false,
+            "OpenAttributeTable": false,
+            "DescriptionOrShowItemDetailsOrDownload": true
+          },
+          "layerOptions": {
+            "Buffer of Health Services_9440": { "display": false },
+            "Buffer of Employment and Careers_580": { "display": false },
+            "Buffer of Recreation_8507": { "display": false },
+            "Buffer of Transportation_5883": { "display": false },
+            "Buffer of Childcare_1674": { "display": false },
+            "Buffer of Immigration_1322": { "display": false },
+            "Buffer of Daily Needs_893": { "display": false },
+            "Buffer of English Language_7131": { "display": false },
+            "Health_Services_5010": { "display": true },
+            "English_Language_4895": { "display": true },
+            "Daily_Needs_7774": { "display": true },
+            "Immigration_6479": { "display": true },
+            "Childcare_2253": { "display": true },
+            "Transportation_8935": { "display": true },
+            "Recreation_8794": { "display": true },
+            "Employment_and_Careers_716": { "display": true }
+          }
+        }
       },
       {
         "position": {
-          "left": 255,
-          "top": 45,
+          "left": 14,
+          "top": 212,
           "relativeTo": "map"
         },
         "placeholderIndex": 1,
         "id": "_9",
+        "name": "Share",
         "version": "2.7",
         "closeable": true,
         "uri": "widgets/Share/Widget",
-        "name": "Share",
-        "config": "configs/Share/config__9.json"
+        "config": {
+          "socialMedias": {
+            "email": true,
+            "facebook": true,
+            "twitter": true,
+            "googlePlus": true
+          }
+        }
       },
       {
         "uri": "widgets/OverviewMap/Widget",
@@ -160,14 +2421,13 @@
         },
         "version": "2.7",
         "id": "widgets_OverviewMap_Widget_10",
-        "name": "OverviewMap",
-        "config": "configs/OverviewMap/config_widgets_OverviewMap_Widget_10.json"
+        "name": "OverviewMap"
       },
       {
         "uri": "widgets/HomeButton/Widget",
         "position": {
-          "left": 7,
-          "top": 75,
+          "left": 124,
+          "bottom": 14,
           "relativeTo": "map"
         },
         "version": "2.7",
@@ -177,8 +2437,8 @@
       {
         "uri": "widgets/MyLocation/Widget",
         "position": {
-          "left": 7,
-          "top": 110,
+          "left": 164,
+          "bottom": 14,
           "relativeTo": "map"
         },
         "version": "2.7",
@@ -187,29 +2447,25 @@
       },
       {
         "uri": "widgets/AttributeTable/Widget",
-        "position": {
-          "relativeTo": "browser"
-        },
+        "position": { "relativeTo": "browser" },
         "version": "2.7",
         "id": "widgets_AttributeTable_Widget_13",
         "name": "AttributeTable"
       },
       {
         "uri": "widgets/Splash/Widget",
-        "position": {
-          "relativeTo": "browser"
-        },
+        "visible": false,
+        "position": { "relativeTo": "browser" },
         "version": "2.7",
         "id": "widgets_Splash_Widget_14",
-        "name": "Splash",
-        "config": "configs/Splash/config_widgets_Splash_Widget_14.json",
-        "visible": false
+        "name": "Splash"
       },
       {
         "uri": "widgets/ZoomSlider/Widget",
         "position": {
-          "top": 5,
-          "left": 7,
+          "left": 54,
+          "bottom": 14,
+          "height": 30,
           "relativeTo": "map"
         },
         "version": "2.7",
@@ -220,8 +2476,9 @@
         "uri": "widgets/ExtentNavigate/Widget",
         "visible": false,
         "position": {
-          "top": 150,
-          "left": 7,
+          "left": 203,
+          "bottom": 14,
+          "height": 30,
           "relativeTo": "map"
         },
         "id": "widgets_ExtentNavigate_Widget_16",
@@ -230,6 +2487,7 @@
       },
       {
         "uri": "widgets/FullScreen/Widget",
+        "visible": false,
         "position": {
           "right": 8,
           "top": 8,
@@ -242,9 +2500,7 @@
     ],
     "panel": {
       "uri": "jimu/OnScreenWidgetPanel",
-      "position": {
-        "relativeTo": "map"
-      }
+      "position": { "relativeTo": "map" }
     }
   },
   "map": {
@@ -257,26 +2513,14 @@
       "bottom": 0
     },
     "itemId": "c71d7fa21b214f86a83a375bedd378c0",
-    "mapOptions": {
-      "extent": {
-        "xmin": -12715766.229443984,
-        "ymin": 6618777.838842095,
-        "xmax": -12672349.997378064,
-        "ymax": 6642091.132469042,
-        "spatialReference": {
-          "wkid": 102100
-        }
-      }
-    },
+    "mapOptions": {},
     "id": "map",
-    "portalUrl": "https://mikko.maps.arcgis.com",
+    "portalUrl": "http://mikko.maps.arcgis.com",
     "appProxy": {
-      "mapItemId": "b834a68d7a484c5fb473d4ba90d35e71",
+      "mapItemId": "c71d7fa21b214f86a83a375bedd378c0",
       "proxyItems": []
     },
-    "mapRefreshInterval": {
-      "useWebMapRefreshInterval": true
-    }
+    "mapRefreshInterval": { "useWebMapRefreshInterval": true }
   },
   "widgetPool": {
     "panel": {
@@ -295,16 +2539,15 @@
         "version": "2.7",
         "id": "widgets_Legend_Widget_18",
         "name": "Legend",
-        "index": 2,
-        "config": "configs/Legend/config_widgets_Legend_Widget_18.json"
+        "index": 2
       },
       {
         "name": "About",
         "version": "2.7",
         "uri": "widgets/About/Widget",
-        "config": "configs/About/config_widgets_About_Widget_20.json",
-        "index": 3,
-        "id": "widgets_About_Widget_20",
+        "config": { "about": { "aboutContent": "<div style=\"text-align: right;\"> </div><p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><b style=\"\"><u style=\"\"><span style=\"color: rgb(34, 34, 34);\"><font size=\"3\">How to Use This App</font></span></u><span style=\"font-size: small; color: black;\"><o:p></o:p></span></b></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><span style=\"color:black\"><o:p><font size=\"2\"> </font></o:p></span></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><span style=\"color: rgb(34, 34, 34);\"><font size=\"3\" style=\"\"><b style=\"\">Basics:</b></font></span><span style=\"font-size: small;\"> </span></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"2\"><span style=\"color: rgb(34, 34, 34);\">Click and drag to pan around the map.  Pinch or scroll to\nzoom.</span><span style=\"color:black\"><o:p></o:p></span></font></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"2\"><span style=\"color: rgb(34, 34, 34);\"> </span><span style=\"color:black\"><o:p></o:p></span></font></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><span style=\"color: rgb(34, 34, 34);\"><font size=\"3\"><b>Search:</b></font></span><span style=\"font-size: small; color: black;\"><o:p></o:p></span></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"2\"><span style=\"color: rgb(34, 34, 34);\"> </span><span style=\"color:black\"><o:p></o:p></span></font></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"2\"><span style=\"color: rgb(34, 34, 34);\">To search for a place, type a name into the search bar. To search within a category, select from the drop-down\nmenu to the left of the search bar.</span><span style=\"color:black\"><o:p></o:p></span></font></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"2\"><span style=\"color: rgb(34, 34, 34);\"> </span><span style=\"color:black\"><o:p></o:p></span></font></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><span style=\"color: rgb(34, 34, 34);\"><font size=\"3\"><b>Bookmarks:</b></font></span><span style=\"font-size: small;\"> </span></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"2\"><span style=\"color: rgb(34, 34, 34);\">Areas of interest for newcomers to Canada have been bookmarked\nfor your convenience.  Click on the book icon to see where other newcomers have gone on their Day One in Canada.</span><span style=\"color:black\"><o:p></o:p></span></font></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><span style=\"color:black\"><o:p><font size=\"2\"> </font></o:p></span></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><span style=\"color: rgb(34, 34, 34);\"><b style=\"\"><font size=\"3\">Direction:</font></b></span><span style=\"font-size: small;\"> </span></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"2\"><span style=\"color: rgb(34, 34, 34);\">Directly below the book icon, the directions icon lets\nyou plot a trip to and from any of the given places on this map.</span><span style=\"color:black\"><o:p></o:p></span></font></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><span style=\"color:black\"><o:p><font size=\"2\"> </font></o:p></span></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><span style=\"color: rgb(34, 34, 34);\"><font size=\"3\"><b>Query:</b></font></span></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"2\"><span style=\"color: rgb(34, 34, 34);\">The Day One map is populated with all the essentials of getting\nsettled in Calgary, so find exactly what you need by clicking on the Query\nicon, picking a category from the drop-down menu, and typing in a specific\nsub-category such as ‘Daycare’ or ‘Walk-In Clinics’. The full list of valid entries can be found under each search bar.</span></font></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"2\"><span style=\"color: rgb(34, 34, 34);\"> </span><span style=\"color:black\"><o:p></o:p></span></font></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><font size=\"3\"><span style=\"color: rgb(34, 34, 34);\"><b style=\"\">Near Me:</b></span></font><span style=\"color: rgb(34, 34, 34); font-size: small;\"> </span></p>\n\n<p class=\"MsoNormal\" style=\"text-align: right; background: white;\"><span style=\"color: rgb(34, 34, 34);\"><font size=\"2\" style=\"\">Find the closest library, family doctor, or career centre\nto you by selecting from the categories from the drop-down menu and choosing your desired proximity in kilometres.</font></span><span style=\"color:black\"><o:p></o:p></span></p>" } },
+        "index": 4,
+        "id": "widgets_About_Widget_19",
         "openAtStart": true
       }
     ],
@@ -320,6 +2563,7 @@
             "top": 0,
             "right": 0,
             "height": 40,
+            "paddingRight": 0,
             "relativeTo": "browser"
           },
           "version": "2.7"
@@ -327,8 +2571,8 @@
         {
           "uri": "widgets/Scalebar/Widget",
           "position": {
-            "left": 7,
-            "bottom": 40,
+            "left": 12,
+            "bottom": 35,
             "relativeTo": "map"
           },
           "version": "2.7"
@@ -336,48 +2580,55 @@
         {
           "uri": "widgets/Search/Widget",
           "position": {
-            "left": 55,
-            "top": 5
+            "left": 12,
+            "right": 12,
+            "top": 10,
+            "relativeTo": "map"
           },
           "version": "2.7"
         },
         {
           "uri": "widgets/Coordinate/Widget",
           "position": {
-            "left": 7,
-            "bottom": 17,
+            "left": 12,
+            "bottom": 18,
             "relativeTo": "map"
           },
           "version": "2.7"
         },
         {
           "position": {
-            "left": 55,
-            "top": 45
+            "right": 12,
+            "top": 62,
+            "relativeTo": "map"
           }
         },
         {
           "position": {
-            "left": 105,
-            "top": 45
+            "right": 12,
+            "top": 112,
+            "relativeTo": "map"
           }
         },
         {
           "position": {
-            "left": 155,
-            "top": 45
+            "right": 12,
+            "top": 162,
+            "relativeTo": "map"
           }
         },
         {
           "position": {
-            "left": 205,
-            "top": 45
+            "right": 12,
+            "top": 212,
+            "relativeTo": "map"
           }
         },
         {
           "position": {
-            "left": 255,
-            "top": 45
+            "right": 12,
+            "top": 262,
+            "relativeTo": "map"
           }
         },
         {
@@ -393,8 +2644,9 @@
           "uri": "widgets/HomeButton/Widget",
           "inPanel": false,
           "position": {
-            "left": 7,
-            "top": 75
+            "left": 12,
+            "top": 102,
+            "relativeTo": "map"
           },
           "version": "2.7"
         },
@@ -402,32 +2654,30 @@
           "uri": "widgets/MyLocation/Widget",
           "inPanel": false,
           "position": {
-            "left": 7,
-            "top": 110
+            "left": 12,
+            "top": 62,
+            "relativeTo": "map"
           },
           "version": "2.7"
         },
         {
           "uri": "widgets/AttributeTable/Widget",
           "version": "2.7",
-          "position": {
-            "relativeTo": "browser"
-          }
+          "position": { "relativeTo": "browser" }
         },
         {
           "uri": "widgets/Splash/Widget",
           "visible": false,
-          "position": {
-            "relativeTo": "browser"
-          },
+          "position": { "relativeTo": "browser" },
           "version": "2.7"
         },
         {
           "uri": "widgets/ZoomSlider/Widget",
           "visible": true,
           "position": {
-            "top": 5,
-            "left": 7
+            "left": 12,
+            "top": 142,
+            "relativeTo": "map"
           },
           "version": "2.7"
         },
@@ -435,8 +2685,9 @@
           "uri": "widgets/ExtentNavigate/Widget",
           "visible": false,
           "position": {
-            "top": 150,
-            "left": 7
+            "top": 209,
+            "left": 12,
+            "relativeTo": "map"
           },
           "version": "2.7"
         },
@@ -473,9 +2724,7 @@
   },
   "loadingPage": {
     "backgroundColor": "#508dca",
-    "backgroundImage": {
-      "visible": false
-    },
+    "backgroundImage": { "visible": false },
     "loadingGif": {
       "visible": true,
       "uri": "configs/loading/images/predefined_loading_1.gif",
@@ -484,11 +2733,118 @@
     }
   },
   "wabVersion": "2.7",
+  "_buildInfo": { "widgetManifestsMerged": true },
   "isWebTier": false,
   "dataSource": {
     "dataSources": {
       "widget~_7~0": {
         "id": "widget~_7~0",
+        "type": "Features",
+        "label": "Health Services",
+        "dataSchema": {
+          "geometryType": "esriGeometryPoint",
+          "fields": [
+            {
+              "name": "Sub_Category",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Sub-Category",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Name",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Name",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Phone_Number",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Phone Number",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Address",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Address",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Postal_Code",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Postal Code",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 256,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "Information",
+              "type": "esriFieldTypeString",
+              "actualType": "nvarchar",
+              "alias": "Information",
+              "sqlType": "sqlTypeNVarchar",
+              "length": 289,
+              "nullable": true,
+              "editable": true,
+              "domain": null,
+              "defaultValue": null
+            },
+            {
+              "name": "FID",
+              "type": "esriFieldTypeOID",
+              "actualType": "int",
+              "alias": "FID",
+              "sqlType": "sqlTypeInteger",
+              "nullable": false,
+              "editable": false,
+              "domain": null,
+              "defaultValue": null
+            }
+          ],
+          "displayField": "",
+          "objectIdField": {
+            "name": "FID",
+            "type": "esriFieldTypeOID",
+            "actualType": "int",
+            "alias": "FID",
+            "sqlType": "sqlTypeInteger",
+            "nullable": false,
+            "editable": false,
+            "domain": null,
+            "defaultValue": null
+          },
+          "typeIdField": ""
+        }
+      },
+      "widget~_7~1": {
+        "id": "widget~_7~1",
         "type": "Features",
         "label": "English Language",
         "dataSchema": {
@@ -605,8 +2961,8 @@
           "typeIdField": ""
         }
       },
-      "widget~_7~1": {
-        "id": "widget~_7~1",
+      "widget~_7~2": {
+        "id": "widget~_7~2",
         "type": "Features",
         "label": "Daily Needs",
         "dataSchema": {
@@ -679,112 +3035,6 @@
               "alias": "Ethnicity/ Region",
               "sqlType": "sqlTypeNVarchar",
               "length": 256,
-              "nullable": true,
-              "editable": true,
-              "domain": null,
-              "defaultValue": null
-            },
-            {
-              "name": "FID",
-              "type": "esriFieldTypeOID",
-              "actualType": "int",
-              "alias": "FID",
-              "sqlType": "sqlTypeInteger",
-              "nullable": false,
-              "editable": false,
-              "domain": null,
-              "defaultValue": null
-            }
-          ],
-          "displayField": "",
-          "objectIdField": {
-            "name": "FID",
-            "type": "esriFieldTypeOID",
-            "actualType": "int",
-            "alias": "FID",
-            "sqlType": "sqlTypeInteger",
-            "nullable": false,
-            "editable": false,
-            "domain": null,
-            "defaultValue": null
-          },
-          "typeIdField": ""
-        }
-      },
-      "widget~_7~2": {
-        "id": "widget~_7~2",
-        "type": "Features",
-        "label": "Health Services",
-        "dataSchema": {
-          "geometryType": "esriGeometryPoint",
-          "fields": [
-            {
-              "name": "Sub_Category",
-              "type": "esriFieldTypeString",
-              "actualType": "nvarchar",
-              "alias": "Sub-Category",
-              "sqlType": "sqlTypeNVarchar",
-              "length": 256,
-              "nullable": true,
-              "editable": true,
-              "domain": null,
-              "defaultValue": null
-            },
-            {
-              "name": "Name",
-              "type": "esriFieldTypeString",
-              "actualType": "nvarchar",
-              "alias": "Name",
-              "sqlType": "sqlTypeNVarchar",
-              "length": 256,
-              "nullable": true,
-              "editable": true,
-              "domain": null,
-              "defaultValue": null
-            },
-            {
-              "name": "Phone_Number",
-              "type": "esriFieldTypeString",
-              "actualType": "nvarchar",
-              "alias": "Phone Number",
-              "sqlType": "sqlTypeNVarchar",
-              "length": 256,
-              "nullable": true,
-              "editable": true,
-              "domain": null,
-              "defaultValue": null
-            },
-            {
-              "name": "Address",
-              "type": "esriFieldTypeString",
-              "actualType": "nvarchar",
-              "alias": "Address",
-              "sqlType": "sqlTypeNVarchar",
-              "length": 256,
-              "nullable": true,
-              "editable": true,
-              "domain": null,
-              "defaultValue": null
-            },
-            {
-              "name": "Postal_Code",
-              "type": "esriFieldTypeString",
-              "actualType": "nvarchar",
-              "alias": "Postal Code",
-              "sqlType": "sqlTypeNVarchar",
-              "length": 256,
-              "nullable": true,
-              "editable": true,
-              "domain": null,
-              "defaultValue": null
-            },
-            {
-              "name": "Information",
-              "type": "esriFieldTypeString",
-              "actualType": "nvarchar",
-              "alias": "Information",
-              "sqlType": "sqlTypeNVarchar",
-              "length": 289,
               "nullable": true,
               "editable": true,
               "domain": null,
@@ -1162,7 +3412,7 @@
       "widget~_7~6": {
         "id": "widget~_7~6",
         "type": "Features",
-        "label": "Recreation",
+        "label": "Employment and Careers",
         "dataSchema": {
           "geometryType": "esriGeometryPoint",
           "fields": [
@@ -1268,7 +3518,7 @@
       "widget~_7~7": {
         "id": "widget~_7~7",
         "type": "Features",
-        "label": "Employment and Careers",
+        "label": "Recreation",
         "dataSchema": {
           "geometryType": "esriGeometryPoint",
           "fields": [
@@ -1374,50 +3624,56 @@
     },
     "settings": {}
   },
-  "appItemId": "0cc55c448cec4ad3bb98d218df505ab5",
+  "logoLink": "",
+  "appItemId": "48ad2eb7d97c4ec3a5ff6cb17a36e212",
   "httpProxy": {
     "useProxy": true,
     "alwaysUseProxy": false,
     "url": "",
     "rules": [
-	{
-		"urlPrefix": "http://route.arcgis.com/",
-		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
-	}
-	{
-		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/English_Language/FeatureServer/0",
-		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
-	}
-	{
-		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Immigration/FeatureServer/0",
-		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
-	}
-	{
-		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Daily_Needs/FeatureServer/0",
-		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
-	}
-	{
-		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Health_Services/FeatureServer/0",
-		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
-	}
-	{
-		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Childcare/FeatureServer/0",
-		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
-	}
-	{
-		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Transportation/FeatureServer/0",
-		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
-	}
-	{
-		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Recreation/FeatureServer/0",
-		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
-	}
-	{
-		"urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Employment_and_Careers/FeatureServer/0",
-		"proxyUrl": "http://dayoneapp.gwiddle.co.uk/PHP/proxy.php"
-	}
 
-	
-	]
+      {
+        "urlPrefix": "http://services.arcgisonline.com/ArcGIS/rest/services/",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      },
+      {
+        "urlPrefix": "http://mikko.maps.arcgis.com/sharing/rest/",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      },
+      {
+        "urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/English_Language/FeatureServer/0",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      },
+      {
+        "urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Immigration/FeatureServer/0",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      },
+      {
+        "urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Daily_Needs/FeatureServer/0",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      },
+      {
+        "urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Health_Services/FeatureServer/0",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      },
+      {
+        "urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Childcare/FeatureServer/0",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      },
+      {
+        "urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Transportation/FeatureServer/0",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      },
+      {
+        "urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Recreation/FeatureServer/0",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      },
+      {
+        "urlPrefix": "https://services8.arcgis.com/mJNCbzFL8CqcJfaX/arcgis/rest/services/Employment_and_Careers/FeatureServer/0",
+        "proxyUrl": "http://one.dayoneapp.gwiddle.co.uk/PHP/proxy.php"
+      }
+
+
+    ]
   }
 }

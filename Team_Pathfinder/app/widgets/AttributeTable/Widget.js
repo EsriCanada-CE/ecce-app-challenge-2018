@@ -1,1107 +1,244 @@
-///////////////////////////////////////////////////////////////////////////
-// Copyright © 2014 - 2017 Esri. All Rights Reserved.
-//
-// Licensed under the Apache License Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-///////////////////////////////////////////////////////////////////////////
-define([
-    'dojo/_base/declare',
-    'dojo/_base/html',
-    'dijit/_WidgetsInTemplateMixin',
-    'jimu/BaseWidget',
-    'dijit/layout/TabContainer',
-    "dijit/layout/ContentPane",
-    'jimu/utils',
-    'jimu/dijit/Message',
-    "dojo/Deferred",
-    "dojo/promise/all",
-    "esri/layers/FeatureLayer",
-    "esri/lang",
-    'dojo/_base/lang',
-    "dojo/on",
-    'dojo/touch',
-    'dojo/topic',
-    'dojo/aspect',
-    "dojo/_base/array",
-    "dojo/query",
-    'jimu/dijit/LoadingIndicator',
-    'jimu/FilterManager',
-    './_ResourceManager',
-    // './_TableFunctionController',
-    './utils'
-  ],
-  function(
-    declare,
-    html,
-    _WidgetsInTemplateMixin,
-    BaseWidget,
-    TabContainer,
-    ContentPane,
-    utils,
-    Message,
-    Deferred,
-    all,
-    FeatureLayer,
-    esriLang,
-    lang,
-    on,
-    touch,
-    topic,
-    aspect,
-    array,
-    domQuery,
-    LoadingIndicator,
-    FilterManager,
-    _ResourceManager,
-    attrUtils) {
-    var clazz = declare([BaseWidget, _WidgetsInTemplateMixin], {
-      /* global apiUrl */
-      name: 'AttributeTable',
-      baseClass: 'jimu-widget-attributetable',
-      normalHeight: 0,
-      openHeight: 0,
-      arrowDivHeight: null,
-
-      _relatedDef: null,
-
-      _resourceManager: null,
-
-      _activeLayerInfoId: null,
-
-      // TODO: layerType: FeatureLayer,  RelationshipTable
-      _layerTypes: {
-        FEATURELAYER: 'FeatureLayerTable',
-        RELATIONSHIPTABLE: 'RelationshipTable'
-      },
-
-      postMixInProperties: function() {
-        this.nls.features = this.nls.features || 'features';
-      },
-
-      postCreate: function() {
-        this.inherited(arguments);
-        utils.loadStyleLink("dgrid", apiUrl + "dgrid/css/dgrid.css");
-        this._loadInfoDef = null;
-        this.AttributeTableDiv = null;
-
-        this._delayedLayerInfos = [];
-        this.layerTabPages = [];//[ContentPane]
-        // one layer may be have multiple relationships, so we use key-value to store relationships
-        // this.relationTabPagesSet = {};
-
-        this.tabContainer = null;//TabContainer
-
-        this.moveMode = false;
-        this.moveY = 0; //currentHeight - previousDomHeight
-        this.previousDomHeight = 0;
-        this.noGridHeight = 0;
-        this.bottomPosition = 0;
-        this.layerTabPagesIndex = -1;
-
-        this.showing = false;
-
-        // set initial position
-        this.openHeight = this.normalHeight = this._getNormalHeight();
-        this.arrowDivHeight = 0;
-
-        // event handlers on draging
-        this._dragingHandlers = [];
-
-        this._activeTable = null;// _FeatureTable
-        this._activeTableHandles = [];
-
-        this.filterManager = FilterManager.getInstance();
-
-        this._createUtilitiesUI();
-
-        this._resourceManager = new _ResourceManager({
-          map: this.map,
-          nls: this.nls
-        });
-        this._resourceManager.setConfig(this.config);
-
-        //eg: TabTheme maxmize or minimize
-        this.own(topic.subscribe('changeMapPosition', lang.hitch(this, this._onMapPositionChange)));
-        attrUtils.readLayerInfosObj(this.map).then(lang.hitch(this, function(layerInfosObj) {
-          if (!this.domNode || !layerInfosObj) {
-            return;
-          }
-          this.own(on(
-            layerInfosObj,
-            'layerInfosIsShowInMapChanged',
-            lang.hitch(this, this.onLayerInfosIsShowInMapChanged)));
-          this.own(layerInfosObj.on(
-            'layerInfosChanged',
-            lang.hitch(this, this.onLayerInfosChanged)));
-          this.own(layerInfosObj.on(
-            'layerInfosFilterChanged',
-            lang.hitch(this, this.onLayerInfosFilterChanged)));
-        }));
-
-        // this.closeBtn = html.create('div', {
-        //   'class': 'esriAttributeTableCloseImage close-button'
-        // }, this.domNode);
-        // this.own(on(this.closeBtn, 'click', lang.hitch(this, '_onCloseBtnClicked')));
-      },
-
-      _createUtilitiesUI: function() {
-        this._createSwitchUI();//eg: LaunchPad Theme
-
-        this._createBarUI();
-      },
-
-      _createBarUI: function() {
-        this.arrowDiv = html.create("div");
-        html.addClass(this.arrowDiv, "jimu-widget-attributetable-move");
-        html.create('div', {
-          'class': "jimu-widget-attributetable-thumb"
-        }, this.arrowDiv);
-        html.place(this.arrowDiv, this.domNode);
-
-        if (!this.arrowDivHeight) {
-          var arrowDivBox = html.getMarginBox(this.arrowDiv);
-          this.arrowDivHeight = arrowDivBox && arrowDivBox.h ? arrowDivBox.h : 7;
-        }
-
-        this.own(on(this.arrowDiv, 'mousedown', lang.hitch(this, this._onDragStart)));
-        this.own(on(this.arrowDiv, touch.press, lang.hitch(this, this._onDragStart)));
-      },
-
-      _isOnlyTable: function() {
-        return this.closeable || !this.isOnScreen;
-      },
-
-      _createSwitchUI: function() {
-        if (!this._isOnlyTable()) {
-          this.switchBtn = html.create("div", {
-            className: "jimu-widget-attributetable-switch"
-          }, this.domNode);
-          // html.addClass(this.switchBtn, "jimu-widget-attributetable-switch");
-          // html.place(this.switchBtn, this.domNode);
-          // this.highlightLine = html.create("div", {
-          //   className: "jimu-widget-attributetable-highlight-line"
-          // }, this.domNode);
-
-          this.own(on(this.switchBtn, 'click', lang.hitch(this, this._switchTable)));
-        }
-      },
-
-      _processOpenBarUI: function() {
-        if (!this._isOnlyTable()) {
-          html.removeClass(this.switchBtn, 'close');
-          html.addClass(this.switchBtn, 'open');
-          html.setAttr(this.switchBtn, 'title', this.nls.closeTableTip);
-        }
-      },
-
-      _processCloseBarUI: function() {
-        if (!this._isOnlyTable()) {
-          html.removeClass(this.switchBtn, 'open');
-          html.addClass(this.switchBtn, 'close');
-          html.setAttr(this.switchBtn, 'title', this.nls.openTableTip);
-        }
-      },
-
-      _switchTable: function() {
-        if (!this.showing) {
-          this._openTable();
-        } else {
-          this._closeTable();
-        }
-      },
-
-      _openTable: function() {
-        if (!this._loadInfoDef) {
-          this._loadInfoDef = new Deferred();
-          this.own(this._loadInfoDef);
-          if (!this.loading) {
-            this.loading = new LoadingIndicator();
-          }
-          this.loading.placeAt(this.domNode);
-          this.loading.show();
-
-          this._resourceManager.updateLayerInfoResources(true)
-          .then(lang.hitch(this, function() {
-            if (!this.domNode) {
-              return;
-            }
-
-            this._init();
-            this.showRefreshing(false);
-
-            this.showing = true;
-            this._loadInfoDef.resolve();
-          }), lang.hitch(this, function(err) {
-            console.error(err);
-            this._loadInfoDef.reject(err);
-          }));
-        } else if (this._loadInfoDef && this._loadInfoDef.isFulfilled()) {
-          this.showing = true;
-          this._processDelayedLayerInfos();
-          if (this._activeTable) {
-            this._activeTable.active();
-          }
-        }
-
-        this._changeHeight(this.openHeight);
-        // if (this.highlightLine) {
-        //   html.setStyle(this.highlightLine, 'display', 'none');
-        // }
-        this._processOpenBarUI();
-        return this._loadInfoDef;
-      },
-
-      _onCloseBtnClicked: function() {
-        if (this.showing && this._isOnlyTable()) {
-          this.widgetManager.closeWidget(this);
-        } else if (this.showing) {
-          this._closeTable();
-        }
-
-        if (this._activeTable) {
-          this._activeTable.deactive();
-        }
-      },
-
-      _closeTable: function() {
-        this._changeHeight(0);
-        this.showRefreshing(false);
-        this._processCloseBarUI();
-        // this._tableFunctionController.deactive();
-        if (this._activeTable) {
-          this._activeTable.deactive();
-        }
-
-        this.showing = false;
-
-        // if (this.highlightLine) {
-        //   html.setStyle(this.highlightLine, 'display', '');
-        // }
-        // fix arrowDiv display bug on bottom when close table (only mobile)
-        html.setStyle(this.arrowDiv, 'display', 'none');
-        html.setStyle(this.domNode, 'overflow', 'hidden');
-        setTimeout(lang.hitch(this, function() {
-          if (!this.domNode) {
-            return;
-          }
-          html.setStyle(this.domNode, 'overflow', 'visible');
-          html.setStyle(this.arrowDiv, 'display', 'block');
-        }), 10);
-      },
-
-      _init: function() {
-        this.initDiv();
-        this._changeHeight(this.openHeight);
-        this.resize();
-
-        this.own(on(window.document, "mouseup", lang.hitch(this, this._onDragEnd)));
-        this.own(on(window.document, "mousemove", lang.hitch(this, this._onDraging)));
-        this.own(on(window.document, touch.move, lang.hitch(this, this._onDraging)));
-        this.own(on(window.document, touch.release, lang.hitch(this, this._onDragEnd)));
-      },
-
-      _processDelayedLayerInfos: function() { // must be invoke after initialize this._layerInfos
-        if (this._delayedLayerInfos.length > 0) {
-          array.forEach(this._delayedLayerInfos, lang.hitch(this, function(delayedLayerInfo) {
-            this._resourceManager.addLayerInfo(delayedLayerInfo);
-          }));
-
-          this._delayedLayerInfos = [];
-        }
-      },
-
-      onLayerInfosIsShowInMapChanged: function() {
-        if (this._activeTable) {
-          this._activeTable.changeToolbarStatus();
-        }
-      },
-
-      onLayerInfosChanged: function(layerInfo, changeType, layerInfoSelf) {
-        if (!layerInfoSelf || !layerInfo) {
-          return;
-        }
-
-        if ('added' === changeType) {
-          layerInfoSelf.getSupportTableInfo().then(lang.hitch(this, function(supportTableInfo) {
-            if (supportTableInfo.isSupportedLayer) {
-              this._resourceManager.addLayerInfo(layerInfoSelf);
-            }
-          }));
-        } else if ('removed' === changeType) {
-          var selfId = layerInfoSelf.id;
-          if (this.getExistLayerTabPage(selfId)) {
-            this.layerTabPageClose(selfId, true);
-          }
-
-          if (this._resourceManager.getLayerInfoById(selfId)) {
-            this._resourceManager.removeLayerInfo(selfId);
-          }
-          if (this._resourceManager.getConfigInfoById(selfId)) {
-            this._resourceManager.removeConfigInfo(selfId);
-          }
-        }
-      },
-
-      onLayerInfosFilterChanged: function(changedLayerInfos) {
-        array.some(changedLayerInfos, lang.hitch(this, function(info) {
-          if (this._activeTable && info.id === this._activeTable.layerInfo.id) {
-            if (!this._activeTable._relatedQuery) {
-              this._activeTable.startQuery();
-            }
-            return true;
-          }
-        }));
-      },
-
-      destroy: function() {
-        if (this._destroyed) {
-          return;
-        }
-        var len, i;
-        if (this.layerTabPages && this.layerTabPages.length > 0) {
-          len = this.layerTabPages.length;
-          for (i = 0; i < len; i++) {
-            var paneId = this.layerTabPages[i].paneId;
-            var table = lang.getObject('_resourceManager.featureTableSet.' + paneId, false, this);
-            if (table) {
-              var filterObj = table.getFilterObj();
-              if (filterObj && esriLang.isDefined(filterObj.expr)) {
-                this.filterManager.applyWidgetFilter(paneId, this.id, "");
-              }
-            }
-            this.layerTabPages[i].destroy();
-          }
-          this.layerTabPages = null;
-        }
-
-        // if (this.relationTabPagesSet) {
-        //   for (var p in this.relationTabPagesSet) {
-        //     if (this.relationTabPagesSet[p]) {
-        //       this.relationTabPagesSet[p].destroy();
-        //     }
-        //   }
-        //   this.relationTabPagesSet = null;
-        // }
-
-        if (this.tabContainer) {
-          this.tabContainer.destroy();
-          this.tabContainer = null;
-        }
-
-        this.AttributeTableDiv = null;
-        this._loadInfoDef = null;
-        this._activeLayerInfoId = null;
-        if (this._resourceManager) {
-          this._resourceManager.empty();
-        }
-        this.inherited(arguments);
-      },
-
-      onOpen: function() {
-        if (!this.showing && this._isOnlyTable()) {
-          this._openTable();
-        }
-      },
-
-      onClose: function() {
-        if (this.showing) {
-          this._closeTable();
-        }
-      },
-
-      _changeHeight: function(h) {
-        html.setStyle(this.domNode, "height", h + "px");
-        if (this.tabContainer && this.tabContainer.domNode &&
-          (h - this.arrowDivHeight >= 0)) {
-          html.setStyle(
-            this.tabContainer.domNode,
-            "height",
-            (h - this.arrowDivHeight) + "px"
-          );
-        }
-
-        if (this._activeTable) {
-          this._activeTable.changeHeight(h - this.noGridHeight);
-        }
-
-        // publish changeMapPosition to MapManager
-        topic.publish('changeMapPosition', {
-          bottom: h + this.bottomPosition
-        });
-        // publish changeMapPosition to other widgets
-        this.publishData({
-          'changeMapPosition': {
-            bottom: h + this.bottomPosition
-          }
-        });
-
-        if (h !== 0) {
-          var minOpenHeight = this.arrowDivHeight;
-
-          this.openHeight = (h >= minOpenHeight) ? h : this.normalHeight;
-        }
-      },
-
-      _onMapPositionChange: function(pos) {
-        if (isFinite(pos.left) && typeof pos.left === 'number') {
-          if (window.isRTL) {
-            html.setStyle(this.domNode, 'right', parseFloat(pos.left) + 'px');
-          } else {
-            html.setStyle(this.domNode, 'left', parseFloat(pos.left) + 'px');
-          }
-        }
-        if (isFinite(pos.right) && typeof pos.right === 'number') {
-          if (window.isRTL) {
-            html.setStyle(this.domNode, 'left', parseFloat(pos.right) + 'px');
-          } else {
-            html.setStyle(this.domNode, 'right', parseFloat(pos.right) + 'px');
-          }
-        }
-
-        if (this.tabContainer) {
-          this.tabContainer.resize();
-        }
-      },
-
-      setPosition: function(position) {
-        this.position = position;
-        if (this._isOnlyTable()) {
-          this.bottomPosition = 0;
-        } else {
-          if ("bottom" in position) {
-            this.bottomPosition = parseInt(position.bottom, 10);
-          } else {
-            this.bottomPosition = 0;
-          }
-        }
-        if (!this.domNode.parentNode || this.domNode.parentNode.id !== window.jimuConfig.layoutId) {
-          html.place(this.domNode, window.jimuConfig.layoutId);
-          this.setInitialPosition(position);
-
-          this.showRefreshing(false);
-        }
-        html.setStyle(this.domNode, "bottom", this.bottomPosition + "px");
-        if (!this._resourceManager.isEmpty()) {
-          setTimeout(lang.hitch(this, function() {
-            var ngHeight = this._getGridTopSectionHeight();
-            var domHeight = html.getStyle(this.domNode, 'height');
-            if (ngHeight > 0) {
-              this.noGridHeight = ngHeight;
-            }
-            if (domHeight > 0) {
-              this._changeHeight(domHeight);
-            }
-          }), 20);
-        }
-      },
-
-      _startQueryOnLayerTab: function(tabId, featureSet) {
-        var layerInfo = this._resourceManager.getLayerInfoById(tabId);
-        var tabPage = this.getExistLayerTabPage(tabId);
-
-        if (layerInfo && tabPage) {
-          this.showRefreshing(true);
-          this._resourceManager.getQueryTable(
-          tabId,
-          this.config.filterByMapExtent,
-          this.config.hideExportButton).then(lang.hitch(this, function(result) {
-            //prevent overwrite by another asynchronous callback
-            if (this._activeLayerInfoId !== tabId || !result) {
-              return;
-            }
-            //prevent overwrite by another asynchronous callback
-            tabPage = this.getExistLayerTabPage(tabId);
-
-            if (result.isSupportQuery) {
-              var table = result.table;
-              if (table.getParent() !== tabPage) {
-                table.placeAt(tabPage);
-              }
-
-              this.setActiveTable(table, {
-                h: this.openHeight - this.noGridHeight,
-                featureSet: featureSet
-              });
-            } else {
-              var tip = html.toDom('<div>' + this.nls.unsupportQueryWarning + '</div>');
-              tabPage.set('content', tip);
-
-              if (this._activeTable) {
-                this._activeTable.changeToolbarStatus();
-              }
-            }
-            this.showRefreshing(false);
-          }), lang.hitch(this, function(err) {
-            new Message({
-              message: err.message || err
-            });
-            this.showRefreshing(false);
-          }));
-        }
-      },
-
-      _startQueryOnRelationTab: function(infoId, relationShipKey, selectedIds, originalInfoId) {
-        var originalInfo = this._resourceManager.getLayerInfoById(originalInfoId);
-        var tabPage = this.getExistLayerTabPage(infoId);
-        if (!(originalInfo && originalInfo.layerObject) || !tabPage) {
-          return;
-        }
-
-        this._resourceManager.getRelationTable(originalInfoId, relationShipKey,
-          false, this.config.hideExportButton)
-        .then(lang.hitch(this, function(result) {
-          //prevent overwrite by another asynchronous callback
-          if (this._activeLayerInfoId !== infoId || !result) {
-            return;
-          }
-          //prevent overwrite by another asynchronous callback
-          tabPage = this.getExistLayerTabPage(infoId);
-
-          if (result.isSupportQuery) {
-            var table = result.table;
-            if (table.getParent() !== tabPage) {
-              table.placeAt(tabPage);
-            }
-
-            this.setActiveTable(table, {
-              h: this.openHeight - this.noGridHeight,
-              layer: originalInfo.layerObject,
-              selectedIds: selectedIds
-            });
-
-          } else {
-            var tip = html.toDom('<div>' + this.nls.unsupportQueryWarning + '</div>');
-            tabPage.set('content', tip);
-
-            if (this._activeTable) {
-              this._activeTable.changeToolbarStatus();
-            }
-          }
-          this.showRefreshing(false);
-        }));
-      },
-
-      tabChanged: function() {
-        if (this.tabContainer && this.tabContainer.selectedChildWidget) {
-          if (this.noGridHeight <= 0) {
-            this.noGridHeight = this._getGridTopSectionHeight() + 5;
-          }
-          var params = this.tabContainer.selectedChildWidget.params; // ContentPage.params
-
-          var layerType = params.layerType;
-          var infoId = params.paneId;
-          var relKey = params.relKey;
-
-          if (layerType === this._layerTypes.FEATURELAYER &&
-            // change tab or the lasest operate is queryRelatedRecords
-            (this._activeLayerInfoId !== infoId || params.oids || params.featureSet)) {
-            this.setActiveTable(null);
-            delete params.oids;
-            this._activeLayerInfoId = infoId;
-            this._startQueryOnLayerTab(infoId, params.featureSet);
-
-          } else if (layerType === this._layerTypes.RELATIONSHIPTABLE) {
-            // need key and oids to judgement
-            this.setActiveTable(null);
-            var selectIds = params.oids;
-            var originalInfoId = params.originalInfoId;
-            this._activeLayerInfoId = infoId;
-            this._startQueryOnRelationTab(infoId, relKey, selectIds, originalInfoId);
-          }
-        }
-      },
-
-      showRefreshing: function(refresh) {
-        if (!this.loading) {
-          return;
-        }
-
-        if (refresh) {
-          this.loading.show();
-        } else {
-          this.loading.hide();
-        }
-      },
-
-      _onDragStart: function(evt) {
-        this.moveMode = true;
-        this.moveY = evt.clientY;
-        this.previousDomHeight = html.getStyle(this.domNode, "height");
-        html.addClass(this.arrowDiv, "draging");
-
-        this._dragingHandlers = this._dragingHandlers.concat([
-          on(this.ownerDocument, 'dragstart', function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-          }),
-          on(this.ownerDocumentBody, 'selectstart', function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-          })
-        ]);
-      },
-
-      _onDraging: function(evt) {
-        if (this.moveMode && (evt.clientY >= 125)) {
-          var y = this.moveY - evt.clientY;
-          this._changeHeight(y + this.previousDomHeight);
-        }
-      },
-
-      _onDragEnd: function() {
-        this.moveMode = false;
-        html.removeClass(this.arrowDiv, "draging");
-
-        var h = this._dragingHandlers.pop();
-        while (h) {
-          h.remove();
-          h = this._dragingHandlers.pop();
-        }
-      },
-
-      _getNormalHeight: function() {
-        var h = document.body.clientHeight;
-        return window.appInfo.isRunInMobile ? h / 2 : h / 3;
-      },
-
-      setInitialPosition: function() {
-        // Attribute Table decide position by itself.
-        html.setStyle(this.domNode, "top", "auto");
-        html.setStyle(this.domNode, "left", "0px");
-        html.setStyle(this.domNode, "right", "0px");
-        html.setStyle(this.domNode, "position", "absolute");
-
-        if (!this._isOnlyTable()) {
-          if (this.config && this.config.initiallyExpand) {
-            this._openTable();
-          } else {
-            this._closeTable();
-          }
-        } // else use openAtStart by widgetManager or controller
-      },
-
-      _bindActiveTableEvents: function (){
-        var that = this;
-        if (that._activeTable) {
-          that._activeTableHandles.push(on(that._activeTable,
-            'show-related-records', function(evt) {
-              that._showRelatedRecords(evt);
-            })
-          );
-          that._activeTableHandles.push(on(that._activeTable,
-            'show-all-records', function(evt) {
-              var page = that.getExistLayerTabPage(evt.layerInfoId);
-              page.params.layerType = that._layerTypes.FEATURELAYER;
-            })
-          );
-          that._activeTableHandles.push(on(that._activeTable,
-            'refresh', function(evt) {
-              var page = that.getExistLayerTabPage(evt.layerInfoId);
-              // page.params.layerType = that._layerTypes.FEATURELAYER;
-              delete page.params.featureSet;
-            })
-          );
-          // that._activeTableHandles.push(on(that._activeTable,
-          //   'row-click', function() {
-          //     var tables = that._resourceManager.featureTableSet;
-          //     for (var p in tables) {
-          //       var t = tables[p];
-          //       if (t !== that._activeTable) {
-          //         t.clearSelection(false);
-          //       }
-          //     }
-          //   }));
-          that._activeTableHandles.push(on(that._activeTable, 'apply-filter', function(events) {
-            that.filterManager.applyWidgetFilter(events.layerInfoId, that.id, events.expr);
-            that._activeTable.startQuery();
-          }));
-        }
-      },
-
-      _unbindActiveTableEvents: function (){
-        var that = this;
-        var handlers = that._activeTableHandles;
-        while(handlers.length > 0) {
-          var h = handlers.pop();
-          if (h && h.remove) {
-            h.remove();
-          }
-        }
-      },
-
-      setActiveTable: function(table, options) {
-        if (this._activeTable) {
-          this._activeTable.cancelThread();
-          this._activeTable.deactive();
-          this._unbindActiveTableEvents();
-          this._activeTable = null;
-        }
-        if (table) {
-          this._activeTable = table;
-          this._activeTable.active();
-          this._activeTable.changeHeight(options.h);
-          if (!this._activeTable.tableCreated ||
-            (this._activeTable.tableCreated && this._activeTable.matchingMap) ||
-            (this._activeTable.tableCreated &&
-              !this._activeTable.matchingMap && options.featureSet) ||
-            (options.layer && options.selectedIds)) {// queryRecordsByRelationship
-
-            var validFeatureSet = lang.getObject('featureSet.features.length', false, options);
-            if (options.layer && options.selectedIds) {
-              this._activeTable.queryRecordsByRelationship(options);
-            } else if (validFeatureSet) {
-              var primaryId = options.featureSet.displayFieldName;
-              var featureIds = array.map(options.featureSet.features, function(f) {
-                return f.attributes[primaryId];
-              });
-              this._activeTable.startQuery(featureIds);
-            } else {
-              this._activeTable.startQuery();
-            }
-          }
-          this._bindActiveTableEvents();
-          this._activeTable.changeToolbarStatus();
-        }
-      },
-
-      initDiv: function() {
-        this.AttributeTableDiv = html.create("div", {}, this.domNode);
-        html.addClass(this.AttributeTableDiv, "jimu-widget-attributetable-main");
-
-        var tabDiv = html.create("div");
-        html.place(tabDiv, this.AttributeTableDiv);
-
-        this.tabContainer = new TabContainer({
-          style: "width: 100%;"
-        }, tabDiv);
-        html.setStyle(this.tabContainer.domNode, 'height', (this.normalHeight) + 'px');
-
-        //if(has("mozilla")){
-        //  this.tabContainer.tablist.containerNode.style.width = "50000px";
-        //}
-        //We need to startup tabContainer before call addChild method, or it will result in issue #8678
-        this.tabContainer.startup();
-
-        var configInfos = this._resourceManager.getConfigInfos();
-        var len = configInfos.length;
-        for (var j = 0; j < len; j++) {
-          var configInfo = configInfos[j];
-          if (configInfo.show) {
-            var json = lang.clone(configInfo);
-            var paneJson = {};
-
-            paneJson.paneId = json.id;
-            paneJson.title = json.name;
-            paneJson.name = json.name;
-            paneJson.layerType = this._layerTypes.FEATURELAYER;
-            paneJson.style = "height: 100%; width: 100%; overflow: visible;";
-            var cp = new ContentPane(paneJson);
-            this.layerTabPages[j] = cp;
-            this.tabContainer.addChild(cp);
-          }
-        }
-
-
-        if (len > 0) {
-          // tabListWrapperHeight + tolerance
-          this.noGridHeight = this._getGridTopSectionHeight() + 5;
-        }
-        // vertical center
-        utils.setVerticalCenter(this.tabContainer.domNode);
-        this.tabChanged();
-        this.own(aspect.after(this.tabContainer, "selectChild", lang.hitch(this, this.tabChanged)));
-      },
-
-      getLayerInfoLabel: function(layerInfo) {
-        var label = layerInfo.name || layerInfo.title;
-        return label;
-      },
-
-      getLayerInfoId: function(layerInfo) {
-        return layerInfo && layerInfo.id || "";
-      },
-
-      _getGridTopSectionHeight: function() {
-        var tabPageWrapper = domQuery('.dijitTabPaneWrapper', this.domNode)[0];
-        if (tabPageWrapper) {
-          var widgetTop = html.position(this.domNode).y;
-          var tabPaneTop = html.position(tabPageWrapper).y;
-          return tabPaneTop - widgetTop;
-        } else {
-          return 0;
-        }
-      },
-
-      _getLayerInfoByIdFromConfigJSON: function(id) {
-        var configedInfos = array.filter(this.config.layerInfos, function(linfo) {
-          return linfo.id === id;
-        });
-        return (configedInfos && configedInfos.length > 0) && configedInfos[0];
-      },
-
-
-      _showRelatedRecords: function() {
-        var activeTable = this._activeTable;
-        if (activeTable) {
-          var layerInfo = activeTable.layerInfo;
-          if (layerInfo && layerInfo.layerObject) {
-            var _layer = layerInfo.layerObject;
-            var ships = _layer.relationships;
-            var objIds = activeTable.getSelectedRows();
-
-            for (var i = 0, len = ships.length; i < len; i++) {
-              this.addNewRelationTab(objIds, ships[i], layerInfo.id);
-            }
-          }
-        }
-      },
-
-      addNewLayerTab: function(infoId, featureSet) {
-        var layerInfo = this._resourceManager.getLayerInfoById(infoId);
-        if (!layerInfo) {
-          return;
-        }
-        var page = this.getExistLayerTabPage(infoId);
-        var json = {};
-        json.title = this.getLayerInfoLabel(layerInfo);
-        json.name = json.title;
-        json.paneId = this.getLayerInfoId(layerInfo);
-        json.closable = true;
-        json.layerType = this._layerTypes.FEATURELAYER;
-        json.featureSet = featureSet;
-        if (page) {
-          lang.mixin(page.params, json);
-          this.onOpen();
-          // this.tabContainer.selectChild(page);
-        } else {
-          if (!this._resourceManager.getConfigInfoById(layerInfo.id)) {
-            this._resourceManager.addConfigInfo(layerInfo);
-          }
-          if (!this._resourceManager.getLayerInfoById(layerInfo.id)) {
-            this._resourceManager.addLayerInfo(layerInfo);
-          }
-          this.onOpen();
-
-          json.style = "height: 100%; width: 100%; overflow: visible";
-          page = new ContentPane(json);
-          this.layerTabPages.push(page);
-
-          page.set("title", json.name);
-          // tabContainer will remove the page and destroy the page by itself.
-          this.own(on(page, "close", lang.hitch(this, this.layerTabPageClose, json.paneId)));
-          this.tabContainer.addChild(page);
-        }
-        this.tabContainer.selectChild(page); // goto tabChanged
-      },
-
-      addNewRelationTab: function(oids, relationShip, originalInfoId) {
-        var lInfo = relationShip && relationShip.shipInfo;
-        if (!lInfo) {
-          return;
-        }
-        var page = this.getExistLayerTabPage(relationShip.shipInfo.id);
-
-        var json = {};
-        json.oids = oids;
-        var paneTitle = lInfo.title || lInfo.name || relationShip.name;
-        json.title = paneTitle;
-        json.name = json.title;
-        json.paneId = lInfo.id;
-        json.relKey = relationShip._relKey;
-        json.originalInfoId = originalInfoId;
-        json.closable = true;
-        json.layerType = this._layerTypes.RELATIONSHIPTABLE;
-
-        if (page) {
-          lang.mixin(page.params, json);
-        } else {
-          if (!this._resourceManager.getConfigInfoById(lInfo.id)) {
-            this._resourceManager.addConfigInfo(lInfo);
-          }
-          if (!this._resourceManager.getLayerInfoById(lInfo.id)) {
-            this._resourceManager.addLayerInfo(lInfo);
-          }
-          json.style = "height: 100%; width: 100%; overflow: visible";
-          page = new ContentPane(json);
-          this.layerTabPages.push(page);
-          page.set("title", json.name);
-          // tabContainer will remove the page and destroy the page by itself.
-          this.own(on(page, "close", lang.hitch(this, this.layerTabPageClose, json.paneId)));
-
-          this.tabContainer.addChild(page);
-        }
-        this.tabContainer.selectChild(page); // goto tabChanged
-      },
-
-      onReceiveData: function(name, source, params) {
-        /*jshint unused:vars*/
-        if (params && params.target === "AttributeTable") {
-          if (this._isOnlyTable()) {
-            if (this.state === 'closed') {
-              console.warn('Please open Attribute Table!');
-              return;
-            }
-          }
-          params.layer = params.layer || params.layerInfo;
-
-          if (!this.showing) {
-            this._openTable().then(lang.hitch(this, function() {
-              var isInResources = !!this._resourceManager.getLayerInfoById(params.layer.id);
-              if (!isInResources) {
-                this._resourceManager.updateLayerInfoResources(false)
-                .then(lang.hitch(this, function() {
-                  this._addLayerToTable(params);
-                }));
-              } else {
-                this._addLayerToTable(params);
-              }
-            }));
-          } else {
-            this._resourceManager.updateLayerInfoResources(false)
-            .then(lang.hitch(this, function() {
-              this._addLayerToTable(params);
-            }));
-          }
-        }
-      },
-
-      _addLayerToTable: function(params) {
-        var layer = null;
-        if (!(lang.getObject('layer.id', false, params) ||
-          lang.getObject('layerInfo.id', false, params))) {
-          return;
-        }
-        var layerInfo = this._resourceManager
-          .getLayerInfoById(
-            (params.layerInfo && params.layerInfo.id) ||
-            (params.layer && params.layer.id)
-          );
-        layerInfo.getLayerObject().then(lang.hitch(this, function(layerObject) {
-          if (layerObject) {
-            layerObject.id = params.layer.id;
-            if (layerObject.loaded) {
-              this.addNewLayerTab(layerInfo.id, params.featureSet);
-            } else {
-              this.own(on(layerObject, "load",
-                lang.hitch(this, this.addNewLayerTab, layerInfo.id, params.featureSet)));
-            }
-          } else if (params.url) {
-            layer = new FeatureLayer(params.url);
-            this.own(
-              on(layer, "load",
-                lang.hitch(this, this.addNewLayerTab, layerInfo.id, params.featureSet))
-            );
-          }
-        }), lang.hitch(this, function(err) {
-          new Message({
-            message: err.message || err
-          });
-        }));
-      },
-
-      getExistLayerTabPage: function(paneId) {
-        var len = this.layerTabPages.length;
-        for (var i = 0; i < len; i++) {
-          if (this.layerTabPages[i] && this.layerTabPages[i].get('paneId') === paneId) {
-            return this.layerTabPages[i];
-          }
-        }
-        return null;
-      },
-
-      layerTabPageClose: function(paneId, isRemoveChild) {
-        var len = this.layerTabPages.length;
-        var activeId = lang.getObject('_activeTable.layerInfo.id', false, this);
-        if (activeId === paneId) {
-          this.setActiveTable(null);
-        }
-        for (var i = 0; i < len; i++) {
-          if (this.layerTabPages[i] && this.layerTabPages[i].paneId === paneId) {
-            // this.featureTableSet
-
-            // var table = that._resourceManager.featureTableSet[paneId];
-            var table = lang.getObject('_resourceManager.featureTableSet.' + paneId, false, this);
-            if (table) {
-              var filterObj = table.getFilterObj();
-              if (filterObj && esriLang.isDefined(filterObj.expr)) {
-                this.filterManager.applyWidgetFilter(paneId, this.id, "");
-              }
-            }
-            if (isRemoveChild === true) {
-              this.tabContainer.removeChild(this.layerTabPages[i]);
-              this.layerTabPages[i].destroyRecursive();
-            }
-            if (this.layerTabPages && this.layerTabPages[i]) {
-              this.layerTabPages.splice(i, 1); // removed contentpane from memory
-            }
-
-            this._resourceManager.removeConfigInfo(paneId); // destroy featureTable
-            this._resourceManager.removeLayerInfo(paneId);
-
-            if (len === 1) {
-              this._activeLayerInfoId = null;
-              this.onClose();
-              return;
-            }  else if(paneId === this._activeLayerInfoId) {
-              var layerIndex = len - 2; // show last contentpane
-              this.tabContainer.selectChild(this.layerTabPages[layerIndex]);
-            }
-            break;
-          }
-        }
-      },
-
-      _processRelatedRecordsFromPopup: function(layerInfo, featureIds) {
-        if (layerInfo) {
-          var defs = [];
-          defs.push(layerInfo.getLayerObject());
-          defs.push(layerInfo.getRelatedTableInfoArray());
-          all(defs).then(lang.hitch(this, function(results) {
-            if (results) {
-              var layerObject = results[0];
-              var relatedTableInfos = results[1];
-              this._resourceManager.collectRelationShips(layerInfo, relatedTableInfos);
-              var ships = layerObject.relationships;
-              for (var i = 0, len = ships.length; i < len; i++) {
-                this.addNewRelationTab(featureIds, ships[i], layerInfo.id);
-              }
-            }
-          }));
-        }
-      },
-
-      showRelatedRecordsFromPopup: function(layerInfo, featureIds) {
-        if (!this.showing) {
-          this._openTable().then(lang.hitch(this, function() {
-            var isInResources = !!this._resourceManager.getLayerInfoById(layerInfo.id);
-            if (!isInResources) {
-              this._resourceManager.updateLayerInfoResources(false)
-              .then(lang.hitch(this, function() {
-                this._processRelatedRecordsFromPopup(layerInfo, featureIds);
-              }));
-            } else {
-              this._processRelatedRecordsFromPopup(layerInfo, featureIds);
-            }
-          }));
-        } else {
-          this._resourceManager.updateLayerInfoResources(false)
-          .then(lang.hitch(this, function() {
-            this._processRelatedRecordsFromPopup(layerInfo, featureIds);
-          }));
-        }
-      }
-    });
-
-    clazz.inPanel = false;
-    clazz.hasUIFile = false;
-    return clazz;
-  });
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+require({cache:{"dijit/layout/TabContainer":function(){define(["dojo/_base/lang","dojo/_base/declare","./_TabContainerBase","./TabController","./ScrollingTabController"],function(g,e,q,p,h){return e("dijit.layout.TabContainer",q,{useMenu:!0,useSlider:!0,controllerWidget:"",_makeController:function(e){var m=this.baseClass+"-tabs"+(this.doLayout?"":" dijitTabNoLayout");return new ("string"==typeof this.controllerWidget?g.getObject(this.controllerWidget):this.controllerWidget)({id:this.id+"_tablist",
+ownerDocument:this.ownerDocument,dir:this.dir,lang:this.lang,textDir:this.textDir,tabPosition:this.tabPosition,doLayout:this.doLayout,containerId:this.id,"class":m,nested:this.nested,useMenu:this.useMenu,useSlider:this.useSlider,tabStripClass:this.tabStrip?this.baseClass+(this.tabStrip?"":"No")+"Strip":null},e)},postMixInProperties:function(){this.inherited(arguments);this.controllerWidget||(this.controllerWidget="top"!=this.tabPosition&&"bottom"!=this.tabPosition||this.nested?p:h)}})})},"dijit/layout/_TabContainerBase":function(){define("dojo/_base/declare dojo/dom-class dojo/dom-geometry dojo/dom-style ./StackContainer ./utils ../_TemplatedMixin dojo/text!./templates/TabContainer.html".split(" "),
+function(g,e,q,p,h,l,m,r){return g("dijit.layout._TabContainerBase",[h,m],{tabPosition:"top",baseClass:"dijitTabContainer",tabStrip:!1,nested:!1,templateString:r,postMixInProperties:function(){this.baseClass+=this.tabPosition.charAt(0).toUpperCase()+this.tabPosition.substr(1).replace(/-.*/,"");this.srcNodeRef&&p.set(this.srcNodeRef,"visibility","hidden");this.inherited(arguments)},buildRendering:function(){this.inherited(arguments);this.tablist=this._makeController(this.tablistNode);this.doLayout||
+e.add(this.domNode,"dijitTabContainerNoLayout");this.nested?(e.add(this.domNode,"dijitTabContainerNested"),e.add(this.tablist.containerNode,"dijitTabContainerTabListNested"),e.add(this.tablistSpacer,"dijitTabContainerSpacerNested"),e.add(this.containerNode,"dijitTabPaneWrapperNested")):e.add(this.domNode,"tabStrip-"+(this.tabStrip?"enabled":"disabled"))},_setupChild:function(g){e.add(g.domNode,"dijitTabPane");this.inherited(arguments)},removeChild:function(g){e.remove(g.domNode,"dijitTabPane");this.inherited(arguments)},
+startup:function(){this._started||(this.tablist.startup(),this.inherited(arguments))},layout:function(){if(this._contentBox&&"undefined"!=typeof this._contentBox.l){var e=this.selectedChildWidget;if(this.doLayout){var k=this.tabPosition.replace(/-h/,"");this.tablist.region=k;k=[this.tablist,{domNode:this.tablistSpacer,region:k},{domNode:this.containerNode,region:"center"}];l.layoutChildren(this.domNode,this._contentBox,k);this._containerContentBox=l.marginBox2contentBox(this.containerNode,k[2]);e&&
+e.resize&&e.resize(this._containerContentBox)}else{if(this.tablist.resize){k=this.tablist.domNode.style;k.width="0";var g=q.getContentBox(this.domNode).w;k.width="";this.tablist.resize({w:g})}e&&e.resize&&e.resize()}}},destroy:function(e){this.tablist&&this.tablist.destroy(e);this.inherited(arguments)}})})},"dijit/layout/StackContainer":function(){define("dojo/_base/array dojo/cookie dojo/_base/declare dojo/dom-class dojo/dom-construct dojo/has dojo/_base/lang dojo/on dojo/ready dojo/topic dojo/when ../registry ../_WidgetBase ./_LayoutWidget".split(" "),
+function(g,e,q,p,h,l,m,r,v,k,w,f,d,b){l("dijit-legacy-requires")&&v(0,function(){require(["dijit/layout/StackController"])});q=q("dijit.layout.StackContainer",b,{doLayout:!0,persist:!1,baseClass:"dijitStackContainer",buildRendering:function(){this.inherited(arguments);p.add(this.domNode,"dijitLayoutContainer")},postCreate:function(){this.inherited(arguments);this.own(r(this.domNode,"keydown",m.hitch(this,"_onKeyDown")))},startup:function(){if(!this._started){var a=this.getChildren();g.forEach(a,this._setupChild,
+this);this.persist?this.selectedChildWidget=f.byId(e(this.id+"_selectedChild")):g.some(a,function(a){a.selected&&(this.selectedChildWidget=a);return a.selected},this);var b=this.selectedChildWidget;!b&&a[0]&&(b=this.selectedChildWidget=a[0],b.selected=!0);k.publish(this.id+"-startup",{children:a,selected:b,textDir:this.textDir});this.inherited(arguments)}},resize:function(){if(!this._hasBeenShown){this._hasBeenShown=!0;var a=this.selectedChildWidget;a&&this._showChild(a)}this.inherited(arguments)},
+_setupChild:function(a){var b=a.domNode,c=h.place("\x3cdiv role\x3d'tabpanel' class\x3d'"+this.baseClass+"ChildWrapper dijitHidden'\x3e",a.domNode,"replace"),d=a["aria-label"]||a.title||a.label;d&&c.setAttribute("aria-label",d);h.place(b,c);a._wrapper=c;this.inherited(arguments);"none"==b.style.display&&(b.style.display="block");a.domNode.removeAttribute("title")},addChild:function(a,b){this.inherited(arguments);this._started&&(k.publish(this.id+"-addChild",a,b),this.layout(),this.selectedChildWidget||
+this.selectChild(a))},removeChild:function(a){var b=g.indexOf(this.getChildren(),a);this.inherited(arguments);h.destroy(a._wrapper);delete a._wrapper;this._started&&k.publish(this.id+"-removeChild",a);if(!this._descendantsBeingDestroyed){if(this.selectedChildWidget===a&&(this.selectedChildWidget=void 0,this._started)){var c=this.getChildren();c.length&&this.selectChild(c[Math.max(b-1,0)])}this._started&&this.layout()}},selectChild:function(a,b){var c;a=f.byId(a);this.selectedChildWidget!=a&&(c=this._transition(a,
+this.selectedChildWidget,b),this._set("selectedChildWidget",a),k.publish(this.id+"-selectChild",a,this._focused),this.persist&&e(this.id+"_selectedChild",this.selectedChildWidget.id));return w(c||!0)},_transition:function(a,b){b&&this._hideChild(b);b=this._showChild(a);a.resize&&(this.doLayout?a.resize(this._containerContentBox||this._contentBox):a.resize());return b},_adjacent:function(a){var b=this.getChildren(),c=g.indexOf(b,this.selectedChildWidget),c=c+(a?1:b.length-1);return b[c%b.length]},
+forward:function(){return this.selectChild(this._adjacent(!0),!0)},back:function(){return this.selectChild(this._adjacent(!1),!0)},_onKeyDown:function(a){k.publish(this.id+"-containerKeyDown",{e:a,page:this})},layout:function(){var a=this.selectedChildWidget;a&&a.resize&&(this.doLayout?a.resize(this._containerContentBox||this._contentBox):a.resize())},_showChild:function(a){var b=this.getChildren();a.isFirstChild=a==b[0];a.isLastChild=a==b[b.length-1];a._set("selected",!0);a._wrapper&&p.replace(a._wrapper,
+"dijitVisible","dijitHidden");return a._onShow&&a._onShow()||!0},_hideChild:function(a){a._set("selected",!1);a._wrapper&&p.replace(a._wrapper,"dijitHidden","dijitVisible");a.onHide&&a.onHide()},closeChild:function(a){if(!a.onClose||a.onClose(this,a))this.removeChild(a),a.destroyRecursive()},destroyDescendants:function(a){this._descendantsBeingDestroyed=!0;this.selectedChildWidget=void 0;g.forEach(this.getChildren(),function(b){a||this.removeChild(b);b.destroyRecursive(a)},this);this._descendantsBeingDestroyed=
+!1}});q.ChildWidgetProperties={selected:!1,disabled:!1,closable:!1,iconClass:"dijitNoIcon",showTitle:!0};m.extend(d,q.ChildWidgetProperties);return q})},"dijit/layout/TabController":function(){define("dojo/_base/declare dojo/dom dojo/dom-attr dojo/dom-class dojo/has dojo/i18n dojo/_base/lang ./StackController ../registry ../Menu ../MenuItem dojo/text!./templates/_TabButton.html dojo/i18n!../nls/common".split(" "),function(g,e,q,p,h,l,m,r,v,k,w,f){f=g("dijit.layout._TabButton"+(h("dojo-bidi")?"_NoBidi":
+""),r.StackButton,{baseClass:"dijitTab",cssStateNodes:{closeNode:"dijitTabCloseButton"},templateString:f,_setNameAttr:"focusNode",scrollOnFocus:!1,buildRendering:function(){this.inherited(arguments);e.setSelectable(this.containerNode,!1)},startup:function(){this.inherited(arguments);var d=this.domNode;this.defer(function(){d.className=d.className},1)},_setCloseButtonAttr:function(d){this._set("closeButton",d);p.toggle(this.domNode,"dijitClosable",d);this.closeNode.style.display=d?"":"none";d&&(d=
+l.getLocalization("dijit","common"),this.closeNode&&q.set(this.closeNode,"title",d.itemClose))},_setDisabledAttr:function(d){this.inherited(arguments);if(this.closeNode)if(d)q.remove(this.closeNode,"title");else{var b=l.getLocalization("dijit","common");q.set(this.closeNode,"title",b.itemClose)}},_setLabelAttr:function(d){this.inherited(arguments);this.showLabel||this.params.title||(this.iconNode.alt=m.trim(this.containerNode.innerText||this.containerNode.textContent||""))}});h("dojo-bidi")&&(f=g("dijit.layout._TabButton",
+f,{_setLabelAttr:function(d){this.inherited(arguments);this.applyTextDir(this.iconNode,this.iconNode.alt)}}));g=g("dijit.layout.TabController",r,{baseClass:"dijitTabController",templateString:"\x3cdiv role\x3d'tablist' data-dojo-attach-event\x3d'onkeydown:onkeydown'\x3e\x3c/div\x3e",tabPosition:"top",buttonWidget:f,buttonWidgetCloseClass:"dijitTabCloseButton",postCreate:function(){this.inherited(arguments);var d=new k({id:this.id+"_Menu",ownerDocument:this.ownerDocument,dir:this.dir,lang:this.lang,
+textDir:this.textDir,targetNodeIds:[this.domNode],selector:function(a){return p.contains(a,"dijitClosable")&&!p.contains(a,"dijitTabDisabled")}});this.own(d);var b=l.getLocalization("dijit","common"),a=this;d.addChild(new w({label:b.itemClose,ownerDocument:this.ownerDocument,dir:this.dir,lang:this.lang,textDir:this.textDir,onClick:function(b){b=v.byNode(this.getParent().currentTarget);a.onCloseButtonClick(b.page)}}))}});g.TabButton=f;return g})},"dijit/layout/StackController":function(){define("dojo/_base/array dojo/_base/declare dojo/dom-class dojo/dom-construct dojo/keys dojo/_base/lang dojo/on dojo/topic ../focus ../registry ../_Widget ../_TemplatedMixin ../_Container ../form/ToggleButton dojo/touch".split(" "),
+function(g,e,q,p,h,l,m,r,v,k,w,f,d,b){p=e("dijit.layout._StackButton",b,{tabIndex:"-1",closeButton:!1,_aria_attr:"aria-selected",buildRendering:function(a){this.inherited(arguments);(this.focusNode||this.domNode).setAttribute("role","tab")}});e=e("dijit.layout.StackController",[w,f,d],{baseClass:"dijitStackController",templateString:"\x3cspan role\x3d'tablist' data-dojo-attach-event\x3d'onkeydown'\x3e\x3c/span\x3e",containerId:"",buttonWidget:p,buttonWidgetCloseClass:"dijitStackCloseButton",pane2button:function(a){return k.byId(this.id+
+"_"+a)},postCreate:function(){this.inherited(arguments);this.own(r.subscribe(this.containerId+"-startup",l.hitch(this,"onStartup")),r.subscribe(this.containerId+"-addChild",l.hitch(this,"onAddChild")),r.subscribe(this.containerId+"-removeChild",l.hitch(this,"onRemoveChild")),r.subscribe(this.containerId+"-selectChild",l.hitch(this,"onSelectChild")),r.subscribe(this.containerId+"-containerKeyDown",l.hitch(this,"onContainerKeyDown")));this.containerNode.dojoClick=!0;this.own(m(this.containerNode,"click",
+l.hitch(this,function(a){var b=k.getEnclosingWidget(a.target);if(b!=this.containerNode&&!b.disabled&&b.page)for(a=a.target;a!==this.containerNode;a=a.parentNode)if(q.contains(a,this.buttonWidgetCloseClass)){this.onCloseButtonClick(b.page);break}else if(a==b.domNode){this.onButtonClick(b.page);break}})))},onStartup:function(a){this.textDir=a.textDir;g.forEach(a.children,this.onAddChild,this);if(a.selected)this.onSelectChild(a.selected);var b=k.byId(this.containerId).containerNode,c=l.hitch(this,"pane2button");
+a={title:"label",showtitle:"showLabel",iconclass:"iconClass",closable:"closeButton",tooltip:"title",disabled:"disabled",textdir:"textdir"};var d=function(a,d){return m(b,"attrmodified-"+a,function(a){var b=c(a.detail&&a.detail.widget&&a.detail.widget.id);b&&b.set(d,a.detail.newValue)})},f;for(f in a)this.own(d(f,a[f]))},destroy:function(a){this.destroyDescendants(a);this.inherited(arguments)},onAddChild:function(a,b){var c=new (l.isString(this.buttonWidget)?l.getObject(this.buttonWidget):this.buttonWidget)({id:this.id+
+"_"+a.id,name:this.id+"_"+a.id,label:a.title,disabled:a.disabled,ownerDocument:this.ownerDocument,dir:a.dir,lang:a.lang,textDir:a.textDir||this.textDir,showLabel:a.showTitle,iconClass:a.iconClass,closeButton:a.closable,title:a.tooltip,page:a});this.addChild(c,b);a.controlButton=c;if(!this._currentChild)this.onSelectChild(a);b=a._wrapper.getAttribute("aria-labelledby")?a._wrapper.getAttribute("aria-labelledby")+" "+c.id:c.id;a._wrapper.removeAttribute("aria-label");a._wrapper.setAttribute("aria-labelledby",
+b)},onRemoveChild:function(a){this._currentChild===a&&(this._currentChild=null);var b=this.pane2button(a.id);b&&(this.removeChild(b),b.destroy());delete a.controlButton},onSelectChild:function(a){if(a){if(this._currentChild){var b=this.pane2button(this._currentChild.id);b.set("checked",!1);b.focusNode.setAttribute("tabIndex","-1")}b=this.pane2button(a.id);b.set("checked",!0);this._currentChild=a;b.focusNode.setAttribute("tabIndex","0");k.byId(this.containerId)}},onButtonClick:function(a){var b=this.pane2button(a.id);
+v.focus(b.focusNode);this._currentChild&&this._currentChild.id===a.id&&b.set("checked",!0);k.byId(this.containerId).selectChild(a)},onCloseButtonClick:function(a){k.byId(this.containerId).closeChild(a);this._currentChild&&(a=this.pane2button(this._currentChild.id))&&v.focus(a.focusNode||a.domNode)},adjacent:function(a){this.isLeftToRight()||this.tabPosition&&!/top|bottom/.test(this.tabPosition)||(a=!a);var b=this.getChildren(),c=g.indexOf(b,this.pane2button(this._currentChild.id)),d=b[c],f;do c=(c+
+(a?1:b.length-1))%b.length,f=b[c];while(f.disabled&&f!=d);return f},onkeydown:function(a,b){if(!this.disabled&&!a.altKey&&(b=null,a.ctrlKey||!a._djpage)){switch(a.keyCode){case h.LEFT_ARROW:case h.UP_ARROW:a._djpage||(b=!1);break;case h.PAGE_UP:a.ctrlKey&&(b=!1);break;case h.RIGHT_ARROW:case h.DOWN_ARROW:a._djpage||(b=!0);break;case h.PAGE_DOWN:a.ctrlKey&&(b=!0);break;case h.HOME:for(var c=this.getChildren(),d=0;d<c.length;d++){var f=c[d];if(!f.disabled){this.onButtonClick(f.page);break}}a.stopPropagation();
+a.preventDefault();break;case h.END:c=this.getChildren();for(d=c.length-1;0<=d;d--)if(f=c[d],!f.disabled){this.onButtonClick(f.page);break}a.stopPropagation();a.preventDefault();break;case h.DELETE:case 87:this._currentChild.closable&&(a.keyCode==h.DELETE||a.ctrlKey)&&(this.onCloseButtonClick(this._currentChild),a.stopPropagation(),a.preventDefault());break;case h.TAB:a.ctrlKey&&(this.onButtonClick(this.adjacent(!a.shiftKey).page),a.stopPropagation(),a.preventDefault())}null!==b&&(this.onButtonClick(this.adjacent(b).page),
+a.stopPropagation(),a.preventDefault())}},onContainerKeyDown:function(a){a.e._djpage=a.page;this.onkeydown(a.e)}});e.StackButton=p;return e})},"dijit/layout/ScrollingTabController":function(){define("dojo/_base/array dojo/_base/declare dojo/dom-class dojo/dom-geometry dojo/dom-style dojo/_base/fx dojo/_base/lang dojo/on dojo/query dojo/sniff ../registry dojo/text!./templates/ScrollingTabController.html dojo/text!./templates/_ScrollingTabControllerButton.html ./TabController ./utils ../_WidgetsInTemplateMixin ../Menu ../MenuItem ../form/Button ../_HasDropDown dojo/NodeList-dom ../a11yclick".split(" "),
+function(g,e,q,p,h,l,m,r,v,k,w,f,d,b,a,z,c,t,D,G){f=e("dijit.layout.ScrollingTabController",[b,z],{baseClass:"dijitTabController dijitScrollingTabController",templateString:f,useMenu:!0,useSlider:!0,tabStripClass:"",_minScroll:5,_setClassAttr:{node:"containerNode",type:"class"},buildRendering:function(){this.inherited(arguments);var a=this.domNode;this.scrollNode=this.tablistWrapper;this._initButtons();this.tabStripClass||(this.tabStripClass="dijitTabContainer"+this.tabPosition.charAt(0).toUpperCase()+
+this.tabPosition.substr(1).replace(/-.*/,"")+"None",q.add(a,"tabStrip-disabled"));q.add(this.tablistWrapper,this.tabStripClass)},onStartup:function(){this.inherited(arguments);h.set(this.domNode,"visibility","");this._postStartup=!0;this.own(r(this.containerNode,"attrmodified-label, attrmodified-iconclass",m.hitch(this,function(a){this._dim&&this.resize(this._dim)})))},onAddChild:function(a,c){this.inherited(arguments);h.set(this.containerNode,"width",h.get(this.containerNode,"width")+200+"px")},
+onRemoveChild:function(a,c){var b=this.pane2button(a.id);this._selectedTab===b.domNode&&(this._selectedTab=null);this.inherited(arguments)},_initButtons:function(){this._btnWidth=0;this._buttons=v("\x3e .tabStripButton",this.domNode).filter(function(a){if(this.useMenu&&a==this._menuBtn.domNode||this.useSlider&&(a==this._rightBtn.domNode||a==this._leftBtn.domNode))return this._btnWidth+=p.getMarginSize(a).w,!0;h.set(a,"display","none");return!1},this)},_getTabsWidth:function(){var a=this.getChildren();
+if(a.length){var c=a[this.isLeftToRight()?0:a.length-1].domNode,a=a[this.isLeftToRight()?a.length-1:0].domNode;return a.offsetLeft+a.offsetWidth-c.offsetLeft}return 0},_enableBtn:function(a){var c=this._getTabsWidth();a=a||h.get(this.scrollNode,"width");return 0<c&&a<c},resize:function(c){this._dim=c;this.scrollNode.style.height="auto";var b=this._contentBox=a.marginBox2contentBox(this.domNode,{h:0,w:c.w});b.h=this.scrollNode.offsetHeight;p.setContentSize(this.domNode,b);b=this._enableBtn(this._contentBox.w);
+this._buttons.style("display",b?"":"none");this._leftBtn.region="left";this._rightBtn.region="right";this._menuBtn.region=this.isLeftToRight()?"right":"left";a.layoutChildren(this.domNode,this._contentBox,[this._menuBtn,this._leftBtn,this._rightBtn,{domNode:this.scrollNode,region:"center"}]);this._selectedTab&&(this._anim&&"playing"==this._anim.status()&&this._anim.stop(),this.scrollNode.scrollLeft=this._convertToScrollLeft(this._getScrollForSelectedTab()));this._setButtonClass(this._getScroll());
+this._postResize=!0;return{h:this._contentBox.h,w:c.w}},_getScroll:function(){return this.isLeftToRight()||8>k("ie")||k("trident")&&k("quirks")||k("webkit")?this.scrollNode.scrollLeft:h.get(this.containerNode,"width")-h.get(this.scrollNode,"width")+(k("trident")||k("edge")?-1:1)*this.scrollNode.scrollLeft},_convertToScrollLeft:function(a){if(this.isLeftToRight()||8>k("ie")||k("trident")&&k("quirks")||k("webkit"))return a;var c=h.get(this.containerNode,"width")-h.get(this.scrollNode,"width");return(k("trident")||
+k("edge")?-1:1)*(a-c)},onSelectChild:function(a,c){var b=this.pane2button(a.id);if(b){var d=b.domNode;if(d!=this._selectedTab&&(this._selectedTab=d,this._postResize)){var f=this._getScroll();f>d.offsetLeft||f+h.get(this.scrollNode,"width")<d.offsetLeft+h.get(d,"width")?(d=this.createSmoothScroll(),c&&(d.onEnd=function(){b.focus()}),d.play()):c&&b.focus()}this.inherited(arguments)}},_getScrollBounds:function(){var a=this.getChildren(),c=h.get(this.scrollNode,"width"),b=h.get(this.containerNode,"width")-
+c,d=this._getTabsWidth();if(a.length&&d>c)return{min:this.isLeftToRight()?0:a[a.length-1].domNode.offsetLeft,max:this.isLeftToRight()?a[a.length-1].domNode.offsetLeft+a[a.length-1].domNode.offsetWidth-c:b};a=this.isLeftToRight()?0:b;return{min:a,max:a}},_getScrollForSelectedTab:function(){var a=this._selectedTab,c=h.get(this.scrollNode,"width"),b=this._getScrollBounds(),a=a.offsetLeft+h.get(a,"width")/2-c/2;return a=Math.min(Math.max(a,b.min),b.max)},createSmoothScroll:function(a){if(0<arguments.length){var c=
+this._getScrollBounds();a=Math.min(Math.max(a,c.min),c.max)}else a=this._getScrollForSelectedTab();this._anim&&"playing"==this._anim.status()&&this._anim.stop();var b=this,d=this.scrollNode,f=new l.Animation({beforeBegin:function(){this.curve&&delete this.curve;var c=d.scrollLeft,u=b._convertToScrollLeft(a);f.curve=new l._Line(c,u)},onAnimate:function(a){d.scrollLeft=a}});this._anim=f;this._setButtonClass(a);return f},_getBtnNode:function(a){for(a=a.target;a&&!q.contains(a,"tabStripButton");)a=a.parentNode;
+return a},doSlideRight:function(a){this.doSlide(1,this._getBtnNode(a))},doSlideLeft:function(a){this.doSlide(-1,this._getBtnNode(a))},doSlide:function(a,c){c&&q.contains(c,"dijitTabDisabled")||(a*=.75*h.get(this.scrollNode,"width"),a=this._getScroll()+a,this._setButtonClass(a),this.createSmoothScroll(a).play())},_setButtonClass:function(a){var c=this._getScrollBounds();this._leftBtn.set("disabled",a<=c.min);this._rightBtn.set("disabled",a>=c.max)}});d=e("dijit.layout._ScrollingTabControllerButtonMixin",
+null,{baseClass:"dijitTab tabStripButton",templateString:d,tabIndex:"",isFocusable:function(){return!1}});e("dijit.layout._ScrollingTabControllerButton",[D,d]);e("dijit.layout._ScrollingTabControllerMenuButton",[D,G,d],{containerId:"",tabIndex:"-1",isLoaded:function(){return!1},loadDropDown:function(a){this.dropDown=new c({id:this.containerId+"_menu",ownerDocument:this.ownerDocument,dir:this.dir,lang:this.lang,textDir:this.textDir});var b=w.byId(this.containerId);g.forEach(b.getChildren(),function(a){var c=
+new t({id:a.id+"_stcMi",label:a.title,iconClass:a.iconClass,disabled:a.disabled,ownerDocument:this.ownerDocument,dir:a.dir,lang:a.lang,textDir:a.textDir||b.textDir,onClick:function(){b.selectChild(a)}});this.dropDown.addChild(c)},this);a()},closeDropDown:function(a){this.inherited(arguments);this.dropDown&&(this._popupStateNode.removeAttribute("aria-owns"),this.dropDown.destroyRecursive(),delete this.dropDown)}});return f})},"widgets/AttributeTable/_ResourceManager":function(){define("dojo/_base/declare dojo/_base/lang dojo/_base/array dojo/Deferred dojo/promise/all esri/lang jimu/portalUrlUtils ./table/_FeatureTable ./utils".split(" "),
+function(g,e,q,p,h,l,m,r,v){return g(null,{_activeLayerInfoId:null,_activeRelationshipKey:null,nls:null,config:null,map:null,_delayedLayerInfos:[],_layerInfosFromMap:[],featureTableSet:{},relationshipsSet:{},relationshipTableSet:{},currentRelationshipKey:null,constructor:function(e){this.map=e&&e.map;this.nls=e&&e.nls;this._delayedLayerInfos=[];this._layerInfosFromMap=[];this.featureTableSet={};this.relationshipsSet={};this.relationshipTableSet={};this.currentRelationshipKey=null},setConfig:function(k){this.config=
+e.clone(k||{})},setMap:function(e){this.map=e},updateLayerInfoResources:function(k){var g=new p;v.readConfigLayerInfosFromMap(this.map,!1,!0).then(e.hitch(this,function(f){this._layerInfosFromMap=f;this._processDelayedLayerInfos();k&&(0===this.config.layerInfos.length?(f=v.getConfigInfosFromLayerInfos(f),this.config.layerInfos=q.filter(f,function(d){return d.show})):this.config.layerInfos=q.filter(e.delegate(this.config.layerInfos),e.hitch(this,function(d){var b=this._getLayerInfoById(d.id);return d.show&&
+b&&(d.name=b.name||b.title)})));g.resolve()}),function(f){g.reject(f)});return g},isEmpty:function(){return this.config&&this.config.layerInfos&&0>=this.config.layerInfos.length},getConfigInfos:function(){return e.clone(this.config.layerInfos)},addLayerInfo:function(e){0===this._layerInfosFromMap.length?this._delayedLayerInfos.push(e):0<this._layerInfosFromMap.length&&!this._getLayerInfoById(e.id)&&this._layerInfosFromMap.push(e)},addConfigInfo:function(e){this._getConfigInfoById(e.id)||(e=v.getConfigInfoFromLayerInfo(e),
+this.config.layerInfos.push({id:e.id,name:e.name,layer:{url:e.layer.url,fields:e.layer.fields}}))},removeLayerInfo:function(e){e=this._getLayerInfoById(e);e=this._layerInfosFromMap.indexOf(e);this._layerInfosFromMap.splice(e,1)},removeConfigInfo:function(k){if(e.getObject("config.layerInfos",!1,this))for(var g=this.config.layerInfos.length,f=0;f<g;f++)if(this.config.layerInfos[f].id===k){this.featureTableSet[k]&&(this.featureTableSet[k].destroy(),delete this.featureTableSet[k]);this.config.layerInfos.splice(f,
+1);break}},getQueryTable:function(k,g,f){var d=new p;this._activeLayerInfoId=k;this.featureTableSet[k]?d.resolve({isSupportQuery:!0,table:this.featureTableSet[k]}):this._getQueryTableInfo(k).then(e.hitch(this,function(b){if(b){var a=b.layerInfo,z=b.layerObject;b=b.tableInfo;if(this.featureTableSet[k])d.resolve({isSupportQuery:b.isSupportQuery,table:this.featureTableSet[k]});else if(e.getObject("isSupportQuery",!1,b)){var c=this._getConfigInfoById(k);c||(this.addConfigInfo(a),c=this._getConfigInfoById(k));
+var t=e.getObject("layer.fields",!1,c);c.layer.fields=this._clipValidFields(t,z&&z.fields);a=new r({map:this.map,matchingMap:g,hideExportButton:f,layerInfo:a,configedInfo:c,nls:this.nls});this.featureTableSet[k]=a;d.resolve({isSupportQuery:b.isSupportQuery,table:a})}else d.resolve({isSupportQuery:!1})}else d.resolve(null)}),function(b){d.reject(b)});return d},getRelationTable:function(k,g,f,d){var b=new p,a=this.relationshipsSet[g];this._activeRelationshipKey=g;if(a){var z=this._getLayerInfoById(k);
+k=e.getObject("shipInfo.id",!1,a);this.getQueryTable(k,f,d).then(e.hitch(this,function(c){if(c&&c.table){var d=c.table;d.set("relatedOriginalInfo",z);d.set("relationship",a)}b.resolve(c)}),e.hitch(function(){b.resolve(null)}))}else b.resolve(null);return b},removeRelationTable:function(e){this.relationshipTableSet[e]&&(this.relationshipTableSet[e].destroy(),this.relationshipTableSet[e]=null)},getCurrentTable:function(e){return this.featureTableSet[e]||this.relationshipTableSet[e]},collectRelationShips:function(e,
+g){this._collectRelationShips(e,e.layerObject,g)},getConfigInfoById:function(e){return this._getConfigInfoById(e)},getLayerInfoById:function(e){return this._getLayerInfoById(e)},getRelationshipsByInfoId:function(e){var k=[],f;for(f in this.relationshipsSet){var d=this.relationshipsSet[f];d._layerInfoId===e&&k.push(d)}return k},empty:function(){this._delayedLayerInfos=[];this._layerInfosFromMap=[];this.featureTableSet={};for(var e in this.relationshipsSet)this.relationshipsSet[e].shipInfo=null;this.relationshipsSet=
+{};this.relationshipTableSet={};this.nls=this.map=this.config=this.currentRelationshipKey=null},_processDelayedLayerInfos:function(){0<this._delayedLayerInfos.length&&(q.forEach(this._delayedLayerInfos,e.hitch(this,function(e){!this._getLayerInfoById(e&&e.id)&&this.map&&this.map.getLayer(e.id)&&this._layerInfosFromMap.push(e)})),this._delayedLayerInfos=[])},_getLayerInfoById:function(e){for(var g=0,f=this._layerInfosFromMap.length;g<f;g++)if(this._layerInfosFromMap[g]&&this._layerInfosFromMap[g].id===
+e)return this._layerInfosFromMap[g]},_getConfigInfoById:function(g){if(!e.getObject("layerInfos.length",!1,this.config))return null;for(var k=0,f=this.config.layerInfos.length;k<f;k++){var d=this.config.layerInfos[k];if(d&&d.id===g)return d}return null},_getQueryTableInfo:function(g){var k=new p,f=this._getLayerInfoById(g);if(f){var d=[],b=f.getUrl();d.push(f.getLayerObject());d.push(f.getSupportTableInfo());b&&d.push(f.getRelatedTableInfoArray());h(d).then(e.hitch(this,function(a){if(this._activeLayerInfoId===
+g&&a){var d=a[0],c=a[1];a=b?a[2]:[];l.isDefined(a)&&l.isDefined(d)&&0<a.length&&this._collectRelationShips(f,d,a);k.resolve({layerInfo:f,layerObject:d,tableInfo:c})}else k.resolve(null)}),function(a){k.reject(a)})}else console.error("no activeLayerInfo!"),k.reject(Error());return k},_collectRelationShips:function(g,h,f){var d=h.relationships;if(d&&0<d.length&&h&&h.url){var b=h.url.split("/");q.forEach(d,e.hitch(this,function(a){b[b.length-1]=a.relatedTableId;var d=b.join("/"),c=q.filter(f,e.hitch(this,
+function(a){a=a.getUrl();return l.isDefined(a)&&l.isDefined(d)&&m.removeProtocol(a.toString().toLowerCase())===m.removeProtocol(d.toString().toLowerCase())}));c&&0<c.length&&(a.shipInfo=c[0]);c=g.id+"_"+a.name+"_"+a.id;a._relKey=c;a._layerInfoId=g.id;this.relationshipsSet[c]||(this.relationshipsSet[c]=a,this.relationshipsSet[c].objectIdField=h.objectIdField)}))}},_getLayerInfoLabel:function(e){return e.name||e.title},_getLayerInfoId:function(e){return e&&e.id||""},_clipValidFields:function(g,m){if(!g||
+!g.length)return m||[];if(!m||!m.length)return g;for(var f=[],d=0,b=g.length;d<b;d++)for(var a=g[d],z=0,c=m.length;z<c;z++)if(m[z].name===a.name){f.push(a);break}0===f.length&&0<g.length&&(g=e.clone(m),q.forEach(g,e.hitch(this,function(a){"esriFieldTypeGeometry"!==a.type&&(a.show=!0,f.push(a))})));return f}})})},"widgets/AttributeTable/table/_FeatureTable":function(){define("dojo/_base/declare dojo/_base/html dijit/_WidgetBase jimu/dijit/Message jimu/dijit/Filter dgrid/OnDemandGrid ../dgrid/Selection dgrid/extensions/ColumnHider dgrid/extensions/ColumnResizer dgrid/extensions/ColumnReorder dijit/Menu dijit/MenuItem dijit/Toolbar dijit/form/Button dijit/DropDownMenu dijit/form/ToggleButton dijit/form/DropDownButton dojo/Deferred dojo/when dojo/Evented dojo/touch dojo/store/Memory esri/config esri/lang esri/request esri/tasks/RelationParameters esri/tasks/RelationshipQuery esri/layers/FeatureLayer esri/tasks/QueryTask esri/tasks/query esri/tasks/ProjectParameters esri/geometry/Multipoint esri/geometry/geometryEngine esri/geometry/normalizeUtils esri/IdentityManager dojo/_base/lang dojo/on dojo/aspect dojo/_base/array jimu/dijit/LoadingIndicator jimu/dijit/FieldStatistics jimu/dijit/Popup jimu/SelectionManager jimu/CSVUtils jimu/utils ../utils dojo/query".split(" "),
+function(g,e,q,p,h,l,m,r,v,k,w,f,d,b,a,z,c,t,D,G,L,C,H,u,A,N,I,O,J,F,P,Q,R,S,T,n,B,U,x,V,W,X,Y,Z,aa,M,K){return g([q,G],{baseClass:"jimu-widget-attributetable-feature-table",_defaultFeatureCount:2E3,_defaultBatchCount:25,_batchCount:0,_filterObj:null,_currentDef:null,_requestStatus:"initial",map:null,matchingMap:!1,layerInfo:null,configedInfo:null,footerHeight:25,layer:null,loading:null,grid:null,footer:null,selectedRowsLabel:null,selectionRows:null,nls:null,_dblClickResult:null,actived:!1,showSelected:!1,
+tableCreated:!1,_relatedQuery:!1,_relatedQueryIds:null,_selectionHandles:null,_selectionResults:null,constructor:function(a){a=a||{};this.set("map",a.map||null);this.set("matchingMap",!!a.matchingMap);this.set("layerInfo",a.layerInfo||null);this.set("layer",a.layer||null);this.set("configedInfo",a.configedInfo||null);this.set("relatedOriginalInfo",a.relatedOriginalInfo||null);this.set("relationship",a.relationship||null);this.set("syncSelection",!!a.syncSelection||!0)},postCreate:function(){this.inherited(arguments);
+this._relatedQueryIds=[];this.createToolbar();this.loading=new V;this.loading.placeAt(this.domNode);this.selectionManager=Y.getInstance();this._selectionResults=[];this.selectionRows=[];e.setAttr(this.domNode,"data-layerinfoid",n.getObject("layerInfo.id",!1,this));this.get("map")&&(this.own(B(this.map.root,L.release,n.hitch(this,function(){this._clickMap=!0}))),this.own(B(this.map,"extent-change",n.hitch(this,"_onExtentChange"))));this.own(B(window,"resize",n.hitch(this,this._resize)))},startup:function(){this.inherited(arguments);
+this.toolbarHeight=parseInt(e.getStyle(this.toolbar.domNode,"height"),10)||0},setLayerDefinition:function(a){this._layerDefinition=a},getLayerDefinition:function(){return this._getLayerDifinition()},getFilterableFields:function(){if(this._layerDefinition&&this.configedInfo){var a=n.clone(this._layerDefinition);return this._getFilterableFields(a.fields,this.configedInfo.layer.fields)}return[]},getFilterObj:function(){return this._filterObj},setFilterObj:function(a){this._filterObj=a},showRefreshing:function(a){a?
+this.loading.show():this.loading.hide()},active:function(){this.actived=!0},deactive:function(){this.actived=!1},cancelThread:function(){"fulfilled"!==this._requestStatus&&this._currentDef&&(this._currentDef.cancel({canceledBySelf:!0}),this._requestStatus="canceled")},isCanceled:function(){return"canceled"===this._requestStatus},createToolbar:function(){var y=new d({},e.create("div")),E=new a;this.showSelectedRecordsMenuItem=new f({label:this.nls.showSelectedRecords,iconClass:"esriAttributeTableSelectPageImage",
+onClick:n.hitch(this,this.toggleSelectedRecords)});E.addChild(this.showSelectedRecordsMenuItem);this.showRelatedRecordsMenuItem=new f({label:this.nls.showRelatedRecords,iconClass:"esriAttributeTableSelectAllImage",onClick:n.hitch(this,this.onShowRelatedRecordsClick)});E.addChild(this.showRelatedRecordsMenuItem);this.filterMenuItem=new f({label:this.nls.filter,iconClass:"esriAttributeTableFilterImage",onClick:n.hitch(this,this.onFilterMenuItemClick)});E.addChild(this.filterMenuItem);this.toggleColumnsMenuItem=
+new f({label:this.nls.columns,iconClass:"esriAttributeTableColumnsImage",onClick:n.hitch(this,this.onToggleColumnsClick)});E.addChild(this.toggleColumnsMenuItem);this.hideExportButton||(this.exportCSVMenuItem=new f({label:this.nls.exportFiles,showLabel:!0,iconClass:"esriAttributeTableExportImage",onClick:n.hitch(this,this.onExportCSVClick)}),E.addChild(this.exportCSVMenuItem));this.selectionMenu=new c({label:this.nls.options,iconClass:"esriAttributeTableOptionsImage",dropDown:E});y.addChild(this.selectionMenu);
+this.matchingCheckBox=new z({checked:this.matchingMap?!0:!1,showLabel:!0,label:this.nls.filterByExtent,onChange:n.hitch(this,function(a){this.set("matchingMap",a);this._onMatchingCheckBoxChange(a)})});y.addChild(this.matchingCheckBox);this.zoomButton=new b({label:this.nls.zoomto,iconClass:"esriAttributeTableZoomImage",onClick:n.hitch(this,this.zoomTo)});y.addChild(this.zoomButton);this.clearSelectionButton=new b({label:this.nls.clearSelection,iconClass:"esriAttributeTableClearImage",onClick:n.hitch(this,
+this.clearSelection,!0,!0)});y.addChild(this.clearSelectionButton);this.refreshButton=new b({label:this.nls.refresh,showLabel:!0,iconClass:"esriAttributeTableRefreshImage",onClick:n.hitch(this,this.refresh)});y.addChild(this.refreshButton);e.place(y.domNode,this.domNode);this.toolbar=y;this.own(B(this,"data-loaded,row-click,clear-selection",n.hitch(this,"changeToolbarStatus")))},startQuery:function(a){this.cancelThread();this._requestStatus="processing";this.loading.show();a&&a.length?this.queryByStoreObjectIds=
+a:(this._relatedQuery=!1,this._relatedQueryIds=[],this.queryByStoreObjectIds=null);this._currentDef=this._getLayerObject();this._currentDef.then(n.hitch(this,function(c){this.domNode&&(this.layer=c,(c=!this.layerInfo.isTable&&this.matchingMap&&this.map.extent||null)&&c.spatialReference&&c.spatialReference.isWebMercator()?(this._currentDef=S.normalizeCentralMeridian([c],null,n.hitch(this,function(a){return a[0]}))).then(n.hitch(this,function(c){this._doQuery(c,a)}),n.hitch(this,function(a){a&&"Request canceled"!==
+a.message&&console.error(a);this.changeToolbarStatus();this.loading.hide()})):this._doQuery(c,a))}),n.hitch(this,function(a){console.error(a);this.changeToolbarStatus();this.loading.hide()}))},queryRecordsByRelationship:function(a){var c=a&&a.layer,b=a&&a.selectedIds;a&&a.relationship&&this.set("relationship",a.relationship);a&&a.relatedOriginalInfo&&this.set("relatedOriginalInfo",a.relatedOriginalInfo);var d=this.relationship;c&&d&&b&&0<b.length&&!aa.isEqual(this._relatedQueryIds,b)&&n.getObject("relatedOriginalInfo.layerObject.url",
+!1,this)?(this.loading.show(),this._requestStatus="processing",this._relatedQuery=!0,this.matchingCheckBox.set("checked",!1),this.cancelThread(),this._currentDef=this._getLayerObject(),this._currentDef.then(n.hitch(this,function(a){if(this.domNode){this.layer=a;var y=[],f=this.layer;x.forEach(f.fields,function(a){(!u.isDefined(a.show)||!0===a.show||"esriFieldTypeOID"===a.type||u.isDefined(f.objectIdField)&&a.name===f.objectIdField)&&y.push(a.name)});a=new I;a.objectIds=b;a.outFields=y.length?y:["*"];
+a.relationshipId=d.id;a.returnGeometry="esriGeometryPoint"===this.layer.geometryType;(this._currentDef=c.queryRelatedFeatures(a,function(a){return a})).then(n.hitch(this,function(a){if(this.domNode){var c={displayFieldName:d.objectIdField,fields:f.fields,features:[],fieldAliases:null},y={},E=function(a){var b=a.attributes[this.layer.objectIdField];y[b]||(y[b]=!0,c.features.push(a))},u;for(u in a){var t=a[u];x.forEach(t&&t.features,E,this)}e.destroy(this.tipNode);0<c.features.length?(this.grid||(this._removeTable(),
+e.place(this.loading.domNode,this.domNode)),a=this._getOutFieldsFromLayerInfos(this.layer.objectIdField),this.queryExecute(a,c.features.length,!1,c)):(this.tipNode=e.toDom("\x3cdiv\x3e"+this.nls.noRelatedRecords+"\x3c/div\x3e"),this._removeTable(),e.place(this.tipNode,this.domNode),e.place(this.loading.domNode,this.domNode));this._relatedQueryIds=b;this.emit("data-loaded");this.loading.hide()}}),n.hitch(this,function(a){a&&"Request canceled"!==a.message&&console.error(a);e.destroy(this.tipNode);this.tipNode=
+e.toDom("\x3cdiv\x3e"+this.nls.noRelatedRecords+"\x3c/div\x3e");this._removeTable();e.place(this.tipNode,this.domNode);e.place(this.loading.domNode,this.domNode);this.loading.hide();this.changeToolbarStatus()}))}}),n.hitch(this,function(a){console.error(a);this.loading.hide();this.changeToolbarStatus()}))):this.loading.hide()},getSelectedRows:function(){return this.tableCreated?this.selectionRows:[]},zoomTo:function(){this._zoomToSelected()},toggleSelectedRecords:function(){this._relatedQuery&&!this.showSelected&&
+0===this.getSelectedRows().length?(this._relatedQuery=!1,this._relatedQueryIds=[],this.layerInfo&&!this.layerInfo.isTable&&this.matchingCheckBox.set("checked",!0),this.startQuery(),this.showSelectedRecordsMenuItem.set("label",this.nls.showSelectedRecords),this.showSelected=!1,this.emit("show-all-records",{layerInfoId:this.layerInfo.id})):this.tableCreated&&(this.showSelected?(this.showAllSelectedRecords(),this.showSelectedRecordsMenuItem.set("label",this.nls.showSelectedRecords),this.showSelected=
+!1,this.emit("show-all-records",{layerInfoId:this.layerInfo.id})):(this.showSelectedRecords(),this.showSelectedRecordsMenuItem.set("label",this.nls.showAllRecords),this.showSelected=!0,this.emit("show-selected-records",{layerInfoId:this.layerInfo.id})))},onShowRelatedRecordsClick:function(){this.emit("show-related-records",{layerInfoId:this.layerInfo.id,objectIds:this.getSelectedRows()})},onFilterMenuItemClick:function(){this.showRefreshing(!0);this.getLayerDefinition().then(n.hitch(this,function(a){if(this.domNode){a=
+n.clone(a);var c=this.getFilterableFields();a.fields=c;var b=new h({noFilterTip:this.nls.noFilterTip,style:"width:100%;",featureLayerId:this.layerInfo.id}),c=this._getFilterPopupSize();this._filterPopup=new X({titleLabel:this.nls.filter,width:c.w,height:c.h,content:b,autoHeight:!0,buttons:[{label:this.nls.ok,onClick:n.hitch(this,function(){var a=b.toJson();a&&a.expr?(this.setFilterObj(a),this.clearSelection(!1),this.startQuery(),this._filterPopup.close(),this._filterPopup=null,this.emit("apply-filter",
+{layerInfoId:this.layerInfo.id,expr:a.expr})):new p({message:this.nls.setFilterTip})})},{label:this.nls.cancel}]});b.startup();e.addClass(this._filterPopup.domNode,"widget-at-filter-popup");(c=this.getFilterObj())?b.buildByFilterObj(this.layer.url,c,a):b.buildByExpr(this.layer.url,null,a)}}),n.hitch(this,function(a){this.domNode&&console.error(a)})).always(n.hitch(this,function(){this.showRefreshing(!1)}));this.emit("show-filter",{layerInfoId:this.layerInfo.id})},_getFilterPopupSize:function(){var a=
+{w:720,h:485};window.appInfo.isRunInMobile&&(a={w:window.innerWidth,h:window.innerHeight});return a},_resize:function(){if(this._filterPopup){var a=this._getFilterPopupSize();this._filterPopup.resize(a)}},onToggleColumnsClick:function(){this.toggleColumns();this.emit("toggle-columns",{layerInfoId:this.layerInfo.id})},onExportCSVClick:function(){var a=new p({message:this.nls.exportMessage,titleLabel:this.nls.exportFiles,autoHeight:!0,buttons:[{label:this.nls.ok,onClick:n.hitch(this,function(){this.exportToCSV();
+a.close()})},{label:this.nls.cancel}]});this.emit("export-csv",{layerInfoId:this.layerInfo.id})},onSelectionComplete:function(){var a=this.layer&&this.layer.getSelectedFeatures();a&&(0===a.length?this.clearSelection(!1):this._selectBySelf(a)||(this.clearSelection(!1),this._updateSelectRowsByFeatures(a)))},changeToolbarStatus:function(){if(this.tableCreated){var a=this.getSelectedRows();this.showSelected?this.showSelectedRecordsMenuItem.set("label",this.nls.showAllRecords):this.showSelectedRecordsMenuItem.set("label",
+this.nls.showSelectedRecords);this.tableCreated&&a&&0<a.length&&this.layer&&this.layer.objectIdField?(this.showSelectedRecordsMenuItem.set("disabled",!1),this.clearSelectionButton.set("disabled",!1)):(this.showSelectedRecordsMenuItem.set("disabled",!0),this.clearSelectionButton.set("disabled",!0));this._relatedQuery&&(this.showSelectedRecordsMenuItem.set("disabled",!1),this.tableCreated&&a&&0===a.length&&this.showSelectedRecordsMenuItem.set("label",this.nls.showAllRecords));this.showRelatedRecordsMenuItem.set("disabled",
+!0);if(this.layerInfo&&this.isSupportQueryToServer()&&a&&0<a.length&&this.layer&&this.layer.objectIdField){this._relatedDef&&!this._relatedDef.isFulfilled()&&this._relatedDef.cancel();var c=this.layerInfo.getRelatedTableInfoArray();this._relatedDef=c;c.then(n.hitch(this,function(a){if(this.domNode){var c=this.getSelectedRows();this.tableCreated&&a&&0<a.length&&c&&0<c.length&&this.showRelatedRecordsMenuItem.set("disabled",!1)}}))}this.tableCreated&&this.isSupportQueryToServer()&&!this._relatedQuery?
+this.filterMenuItem.set("disabled",!1):this.filterMenuItem.set("disabled",!0);this.matchingCheckBox.set("disabled",!1);this.tableCreated?this.toggleColumnsMenuItem.set("disabled",!1):this.toggleColumnsMenuItem.set("disabled",!0);this.hideExportButton||(a&&0<a.length?this.exportCSVMenuItem.set("label",this.nls.exportSelected):this.exportCSVMenuItem.set("label",this.nls.exportAll),this.tableCreated?this.exportCSVMenuItem.set("disabled",!1):this.exportCSVMenuItem.set("disabled",!0));this.layerInfo.isShowInMap()?
+this.tableCreated&&a&&0<a.length?this.zoomButton.set("disabled",!1):this.zoomButton.set("disabled",!0):this.zoomButton.set("disabled",!0);this.layerInfo.isTable&&(this.matchingCheckBox.set("disabled",!0),this.zoomButton.set("disabled",!0))}else this._relatedQuery?(this.showSelectedRecordsMenuItem.set("disabled",!1),this.showSelectedRecordsMenuItem.set("label",this.nls.showAllRecords)):this.showSelectedRecordsMenuItem.set("disabled",!0),this.showRelatedRecordsMenuItem.set("disabled",!0),this.matchingCheckBox.set("disabled",
+!0),this.filterMenuItem.set("disabled",!0),this.toggleColumnsMenuItem.set("disabled",!0),this.hideExportButton||this.exportCSVMenuItem.set("disabled",!0),this.zoomButton.set("disabled",!0)},showSelectedRecords:function(){if(this.tableCreated){var a=this.layer.objectIdField,c=this.getSelectedRows();0<c.length&&this.grid&&(this.grid.store instanceof C?this.grid.set("query",n.hitch(this,function(b){return"number"===typeof b&&-1<c.indexOf(b)||-1<c.indexOf(b[a])?!0:!1})):this.grid.set("query",function(){return c}))}},
+showAllSelectedRecords:function(){if(this.tableCreated&&this.showSelected){this.grid.set("query",{});var a=this.getSelectedRows();this._updateSelectRowsByIds(a)}},clearSelection:function(a,c){this.tableCreated&&(this.grid.clearSelection(),this.selectionRows=[],a&&this.grid.set("query",{}),c&&(this.selectionManager.clearSelection(this.layer),this._selectionResults=[]),this._closePopup(),this.setSelectedNumber(),this.showSelected=!1,this.emit("clear-selection"))},refresh:function(){this.grid&&this.grid.clearSelection();
+this._relatedQuery||this.startQuery();this.emit("refresh",{layerInfoId:this.layerInfo.id})},exportToCSV:function(a){this.layerInfo&&this.layer&&this.tableCreated&&this.getSelectedRowsData().then(n.hitch(this,function(c){var b=this.layer.objectIdField,d=x.map(this._getTableSelectedIds(),n.hitch(this,function(a){for(var d=0,f=c.length;d<f;d++)if(c[d]&&c[d][b]===a)return c[d];return{}}))||[];0===d.length&&this.isSelectionMode()&&d.push({});var f=d;0===d.length&&this.grid.store instanceof C&&(f=n.clone(this.grid.store.data));
+f.length&&this._appendXY(f);var d={},e=this.getOutFields(!!f.length);d.datas=f;d.fromClient=!1;d.withGeometry="esriGeometryPoint"===this.layer.geometryType;d.outFields=e;d.formatNumber=!1;d.formatDate=!0;d.formatCodedValue=!0;d.popupInfo=this.layerInfo.getPopupInfo();return Z.exportCSVFromFeatureLayer(a||this.configedInfo.name,this.layer,d)}))},toggleColumns:function(){this.tableCreated&&this.grid._toggleColumnHiderMenu()},changeHeight:function(a){this.grid&&0<=a-this.toolbarHeight-this.footerHeight&&
+e.setStyle(this.grid.domNode,"height",a-this.toolbarHeight-this.footerHeight+"px")},isSupportQueryToServer:function(){var a=this.layer&&"esri.layers.CSVLayer"===this.layer.declaredClass,c=this.layer&&"esri.layers.StreamLayer"===this.layer.declaredClass;return this.layer&&this.layer.url&&this.configedInfo.layer.url&&!a&&!c},isSupportQueryOnClient:function(){var a=this.layer&&"esri.layers.CSVLayer"===this.layer.declaredClass,c=this.layer&&"esri.layers.StreamLayer"===this.layer.declaredClass;return!(this.layer&&
+this.layer.url&&this.configedInfo.layer.url)||a||c},destroy:function(){this._destroyed||(this.layer=this.configedInfo=this.layerInfo=null,this._selectionHandles&&x.forEach(this._selectionHandles,function(a){a&&a.remove&&a.remove()}),this._closePopup(),this._filterPopup&&this._filterPopup.domNode&&(this._filterPopup.close(),this._filterPopup=null),this._dblClickResult=null,this.grid&&this.grid.destroy(),this.relationship=this.nls=this.map=null,this._currentDef&&!this._currentDef.isFulfilled()&&this._currentDef.cancel({canceledBySelf:!0}),
+this._relatedDef&&!this._relatedDef.isFulfilled()&&this._relatedDef.cancel({canceledBySelf:!0}),this.inherited(arguments))},_selectBySelf:function(a){a=a||[];return a.length!==this._selectionResults.length?!1:x.every(this._selectionResults,function(c){return-1<a.indexOf(c)})},_updateSelectRowsByFeatures:function(a){a=x.map(a,n.hitch(this,function(a){return a.attributes[this.layer.objectIdField]}));this._updateSelectRowsByIds(a)},_updateSelectRowsByIds:function(a){this.grid&&this.tableCreated&&(this.selectionRows=
+a,x.forEach(a,n.hitch(this,function(a){this.grid.select(a)})),this.setSelectedNumber(),this.changeToolbarStatus())},_removeTable:function(){this.grid&&this.grid.domNode&&(this.grid.destroy(),this.grid=null);this.footer&&(e.destroy(this.footer),this.selectedRowsLabel=this.footer=null);this.tableCreated=!1},_onMatchingCheckBoxChange:function(a){this.tableCreated&&!this._relatedQuery&&(this.cancelThread(),this.queryByStoreObjectIds=null,this.startQuery());if("fulfilled"===this._requestStatus&&this.tableCreated&&
+this._relatedQuery)if(a)this.queryByStoreObjectIds=x.map(this.grid.store.data,n.hitch(this,function(a){return a[this.layer.objectIdField]})),this.startQuery(this.queryByStoreObjectIds);else{var c=this._relatedQueryIds;this._relatedQueryIds=[];this.queryRecordsByRelationship({layer:this.relatedOriginalInfo.layerObject,selectedIds:c})}a||(this._currentExtent=null)},_closePopup:function(){var a=this.map.infoWindow.getSelectedFeature(),c=a&&this._dblClickResult&&a===this._dblClickResult,a=a&&a._layer===
+this.layer;this.domNode&&(c||a)&&(this.map.infoWindow.hide(),this._dblClickResult=null)},_getLayerObject:function(){function a(a){this._selectionHandles&&x.forEach(this._selectionHandles,function(a){a&&a.remove&&a.remove()});this._selectionHandles=[];this._selectionHandles.push(B(a,"selection-complete",n.hitch(this,"onSelectionComplete")))}return(this._currentDef=this.layerInfo.getLayerObject()).then(n.hitch(this,function(c){var b=new t;"esri.layers.ArcGISImageServiceLayer"===c.declaredClass||"esri.layers.ArcGISImageServiceVectorLayer"===
+c.declaredClass?(c=new O(c.url),this.own(B(c,"load",n.hitch(this,function(c){n.hitch(this,a)(c.layer);b.resolve(c.layer)})))):(n.hitch(this,a)(c),b.resolve(c));return b}))},_getLayerDifinition:function(){return this._layerDefinition?D(n.clone(this._layerDefinition)):A({url:this.layer.url,content:{f:"json"},handleAs:"json",callbackParamName:"callback"}).then(n.hitch(this,function(a){this.setLayerDefinition(a);return this.getLayerDefinition()}))},_getFilterableFields:function(a,c){return x.filter(a,
+function(a){return x.some(c,function(c){return a.name===c.name&&(c.show||!u.isDefined(c.show))&&n.mixin(a,c)})})},_doQuery:function(a,c){if(this.layer){var b=this.layer.objectIdField;this.isSupportQueryToServer()?this._queryToServer(a,b,c):this.isSupportQueryOnClient()&&this._queryOnClient(a,b,c)}},_queryOnClient:function(a,c,b){var d={};d.features="esri.layers.StreamLayer"===this.layer.declaredClass?this.layer.getLatestObservations():x.filter(this.layer.graphics,n.hitch(this,function(a){return!a.wabIsTemp}));
+b&&0<b.length&&(d.features=x.filter(d.features,function(a){return-1<b.indexOf(a.attributes[this.layer.objectIdField])},this));var f=this.layer.fields,e=this.configedInfo.layer.fields;d.fields=e?x.filter(e,n.hitch(this,function(a){u.isDefined(a.show)||(a.show=!0);a.name!==c||"esriFieldTypeOID"!==a.type&&"esriFieldTypeInteger"!==a.type||(a._pk=!0);for(var b=0,d=f.length;b<d;b++)f[b].name!==a.name||a.type||(a.type=f[b].type);return a.show||a._pk})):x.filter(f,n.hitch(this,function(a){u.isDefined(a.show)||
+(a.show=!0);a.name!==c||"esriFieldTypeOID"!==a.type&&"esriFieldTypeInteger"!==a.type||(a._pk=!0);return a.show||a._pk}));for(var e=[],y=d.features.length,t=0;t<y;t++)d&&d.features&&d.features[t]&&d.features[t].geometry&&e.push(d.features[t].geometry);a&&H.defaults.geometryService&&0<e.length?a.spatialReference.equals(e[0].spatialReference)?(d.features=x.filter(d.features,n.hitch(this,function(c){return R.intersects(a,c.geometry)})),this.queryExecute(d.fields,d.features.length,!1,d,a)):(y=new N,y.geometries1=
+e,y.geometries2=[a],y.relation=N.SPATIAL_REL_INTERSECTION,(this._currentDef=H.defaults.geometryService.relation(y,n.hitch(this,function(a){return a}))).then(n.hitch(this,function(c,b){for(var d=b.length,f=[],e=0;e<d;e++)f.push(c.features[b[e].geometry1Index]);c.features=f;this.queryExecute(c.fields,c.features.length,!1,c,a)},d),n.hitch(this,function(a){a&&"Request canceled"!==a.message&&console.error(a);this.changeToolbarStatus();this.loading.hide()}))):this.queryExecute(d.fields,d.features.length,
+!1,d,a)},_queryToServer:function(a,c,b){this._getFeatureCount(a,b).then(n.hitch(this,function(d){if(this.domNode)if(b)this._queryFeatureLayer(a,c,d,!1,b);else{var f=this.layer,e=u.isDefined(f.maxRecordCount)?f.maxRecordCount:1E3;this._batchCount=Math.min(e,this._defaultBatchCount);if(d<=e||!this.layer.objectIdField)this._queryFeatureLayer(a,c,d,!1);else{var y=this._getOutFieldsFromLayerInfos(c),t={fields:this.layer.fields};this.layer._recordCounts=d;f.advancedQueryCapabilities&&f.advancedQueryCapabilities.supportsPagination?
+this.queryExecute(y,d,!0,t,a):this._getFeatureIds(c,a).then(n.hitch(this,function(c){this.domNode&&(this.layer._objectIds=c,this.queryExecute(y,d,!0,t,a))}),n.hitch(this,function(a){console.error(a);this.changeToolbarStatus()}))}}}),n.hitch(this,function(a){console.error(a);this.changeToolbarStatus()}))},_getFeatureCount:function(a,c){var b=new t,d=new J(this.configedInfo.layer.url),f=new F;f.returnGeometry=!1;f.where=this._getLayerFilterExpression();c&&(f.where+=" AND "+this.layer.objectIdField+
+" IN ("+c.join()+")");a&&(f.geometry=a);(this._currentDef=d.executeForCount(f,n.hitch(this,function(a){return a}))).then(n.hitch(this,function(a){b.resolve(a)}),n.hitch(this,function(a){a&&"Request canceled"!==a.message&&(console.error(a),console.log("Could not get feature count."));this.loading.hide();b.reject(a)}));return b},_queryFeatureLayer:function(a,c,b,d,f){var e=new J(this.configedInfo.layer.url),u=new F;u.where=this._getLayerFilterExpression();f&&c&&(u.where+=" AND "+c+" IN ("+f.join()+
+")");var t=this._getOutFieldsFromLayerInfos(c);0<t.length?(f=x.map(t,function(a){return a.name}),u.outFields=f):u.outFields=["*"];a&&(u.geometry=a,u.spatialRelationship=F.SPATIAL_REL_INTERSECTS);u.outSpatialReference=n.clone(this.map.spatialReference);u.returnGeometry="esriGeometryPoint"===this.layer.geometryType;c&&(u.orderByFields=[c+" ASC"]);(this._currentDef=e.execute(u,n.hitch(this,function(a){return a}))).then(n.hitch(this,function(c){this.queryExecute(t,b,d,c,a)}),n.hitch(this,function(a){a&&
+"Request canceled"!==a.message&&console.error(a);this.changeToolbarStatus();this.loading.hide()}))},_getFeatureIds:function(a,c){var b=new t,d=new J(this.configedInfo.layer.url),f=new F;f.returnGeometry=!1;f.returnIdsOnly=!0;f.where=this._getLayerFilterExpression();if(this.layer._orderByFields||a)f.orderByFields=this.layer._orderByFields||[a+" ASC"];c&&(f.geometry=c);(this._currentDef=d.executeForIds(f,n.hitch(this,function(a){return a}))).then(n.hitch(this,function(a){b.resolve(a)}),n.hitch(this,
+function(a){a&&"Request canceled"!==a.message&&(console.error(a),console.log("Could not get feature Ids"));b.resolve([])}));return b},queryExecute:function(a,c,b,d,f){var u=[],u=null,t={};if(this.domNode){d.fields=this._processExecuteFields(this.layer.fields,a);b?u=M.generateCacheStore(this.layer,c,this._batchCount,this._getLayerFilterExpression(),f):(u=x.map(d.features,n.hitch(this,function(a){var c=n.clone(a.attributes);return n.mixin(c,{geometry:a.geometry})})),u=M.generateMemoryStore(u,this.layer.objectIdField));
+a=this.layer.typeIdField;var t=this.layer.types,y=n.getObject("advancedQueryCapabilities.supportsOrderBy",!1,this.layer),g=n.getObject("advancedQueryCapabilities.supportsPagination",!1,this.layer),z=n.getObject("advancedQueryCapabilities.supportsStatistics",!1,this.layer),t=M.generateColumnsFromFields(this.layerInfo.getPopupInfo(),d.fields,a,t,y&&g||!b,z);this.layer.hasAttachments&&this.layer.objectIdField&&this.configedInfo.showAttachments&&(t.attachmentsColumn=this.formatAttachmentsColumn());b=
+20+100*d.fields.length<e.getMarginBox(this.domNode).w;this.createTable(t,u,c,b);this._currentExtent=f;c=this.layer.getSelectedFeatures();this.selectionRows&&0<this.selectionRows.length?this._updateSelectRowsByIds(this.selectionRows):c&&0<c.length?this._updateSelectRowsByFeatures(c):this.grid.clearSelection();this.changeToolbarStatus();this.emit("data-loaded")}},formatAttachmentsColumn:function(){var a={label:this.nls.attachments,className:"attachments-column",hidden:!1,unhidable:!0,field:"at-show-attachments",
+sortable:!1,_cache:{sortable:!1,statistics:!1}};a.renderCell=n.hitch(this,function(a,c,b){var d=a[this.layer.objectIdField];this.layer.queryAttachmentInfos(d,n.hitch(this,function(a){var c=x.map(a,n.hitch(this,function(a){var c=a.name&&/\.(png|jpg|jpeg|gif)$/gi.test(a.name)?"image-type":"file-type",b=T.findCredential(this.layer.url);return'\x3cli class\x3d"'+c+'"\x3e\x3ca class\x3d"jimu-ellipsis" target\x3d"_blank" href\x3d"'+(this.layer.url+"/"+d+"/attachments/"+a.id+(b?"?token\x3d"+b.token:""))+
+'"\x3e'+a.name+"\x3c/a\x3e\x3c/li\x3e"})),f="";0<a.length&&(f=" "+this.nls.files);f='\x3cdiv class\x3d"attachment-infos"\x3e\x3cdiv class\x3d"show-attachments-div"\x3e\x3cspan class\x3d"show-attachments"\x3e'+a.length+f+'\x3c/span\x3e\x3c/div\x3e\x3cdiv class\x3d"attachment-popup"\x3e\x3cdiv class\x3d"attachment-popup-header"\x3e\x3cspan\x3e'+c.length+"\x26nbsp;"+this.nls.files+'\x3c/span\x3e\x3cspan class\x3d"close jimu-float-trailing"\x3e\x3c/span\x3e\x3c/div\x3e\x3cul class\x3d"attachment-popup-content"\x3e'+
+c.join("")+"\x3c/ul\x3e\x3c/div\x3e\x3c/div\x3e";f=e.toDom(f);0<a.length&&(a=K(".show-attachments-div",f)[0],e.addClass(a,"has-attachments"));b.appendChild(f);this.own(B(b,"click",n.hitch(this,function(a){a=a&&a.target;if(e.hasClass(a,"show-attachments-div")||e.hasClass(a,"show-attachments")||e.hasClass(a,"close")){a=this._visibleAttachmentPopup;var d=K(".attachment-popup",b)[0];d&&0<c.length&&e.toggleClass(d,"show");e.hasClass(d,"show")?this._visibleAttachmentPopup=d:this._visibleAttachmentPopup=
+null;a&&a!==d&&e.toggleClass(a,"show")}})))}),n.hitch(this,function(a){console.error(a)}))});return a},createTable:function(a,c,b,d){if(this.grid)this.grid.set("store",c),this.grid.set("columns",a),this.grid.refresh();else{var f={};f.columns=a;f.store=c;f.keepScrollPosition=!0;f.pagingDelay=1E3;f.allowTextSelection=!0;f.deselectOnRefresh=!1;this.layer.objectIdField||(f.minRowsPerPage=this.layer.maxRecordCount||1E3,f.maxRowsPerPage=this.layer.maxRecordCount||1E3,f.selectionMode="none");this.grid=new (g([l,
+m,r,v,k]))(f,e.create("div"));e.place(this.grid.domNode,this.domNode);this.grid.startup();this.tipNode&&e.destroy(this.tipNode);this.own(B(this.ownerDocument,"keydown",n.hitch(this,function(a){this.grid&&this.grid.allowTextSelection&&a.shiftKey&&this.grid._setAllowTextSelection(!1)})));this.own(B(this.ownerDocument,"keyup",n.hitch(this,function(){this.grid&&!this.grid.allowTextSelection&&this.grid._setAllowTextSelection(!0)})));this.layer.objectIdField&&(this.own(B(this.grid,".dgrid-header .dgrid-cell:click",
+n.hitch(this,this._onHeaderClick))),this.own(B(this.grid,"dgrid-columnstatechange",n.hitch(this,this._onColumnStateChange))),this.own(B(this.grid,".selection-handle-column:click",n.hitch(this,this._onSelectionHandleClick))),this.own(B(this.grid,".dgrid-row:dblclick",n.hitch(this,this._onDblclickRow))),this.own(B(this.grid,"dgrid-sort",n.hitch(this,function(a){this.emit("sort",a)}))),a=this.map.getLayer(this.layer.id),this.syncSelection&&a&&this.own(B(a,"click",n.hitch(this,this._onFeaturelayerClick))))}this.layer.objectIdField&&
+this.grid.set("sort",this.layer.objectIdField,!1);this.getParent()&&(a=K(".dgrid-scroller",this.grid.domNode)[0],f=K(".dgrid-header",this.grid.domNode)[0],c=e.getComputedStyle(a),f=e.getMarginBox(f),c=parseInt(c.marginTop,10),isFinite(c)&&f&&c<f.h&&e.setStyle(a,"marginTop",f.h+"px"));d?e.addClass(this.domNode,"auto-width"):e.removeClass(this.domNode,"auto-width");this.footer?e.empty(this.footer):this.footer=e.create("div",{"class":"jimu-widget-attributetable-feature-table-footer"},this.domNode);b=
+e.create("div",{"class":"dgrid-status self-footer",innerHTML:b+"\x26nbsp;"+(this.layerInfo.isTable?this.nls.records:this.nls.features)+"\x26nbsp;"},this.footer);this.selectedRowsLabel=e.create("div",{"class":"dgrid-status self-footer",innerHTML:"0\x26nbsp;"+this.nls.selected+"\x26nbsp;",style:{display:this.layer.objectIdField?"":"none"}},b,"after");b=e.getStyle(this.domNode,"height");this.changeHeight(b);this._requestStatus="fulfilled";this.tableCreated=!0;e.place(this.loading.domNode,this.grid.domNode);
+this.loading.hide()},getSelectedRowsData:function(){var a=new t,c=this._getTableSelectedIds()||[];if(!this.grid||!c.length)return a.resolve(null),a;this.grid.store instanceof C?(c=n.clone(this.grid.store.data),a.resolve(c)):this.grid.store.query(c,{_export_count:c.length}).then(n.hitch(this,function(c){c=c&&n.clone(this.grid.store._entityData||this.grid.store.data);a.resolve(c)}));return a},_appendXY:function(a){a&&"esriGeometryPoint"===this.layer.geometryType&&x.forEach(a,function(a){var c=a.geometry;
+c&&"point"===c.type&&("x"in a?a._x=c.x:a.x=c.x,"y"in a?a._y=c.y:a.y=c.y);delete a.geometry})},getOutFields:function(a){var c=null,c=this._getOutFieldsFromLayerInfos(this.layer.objectIdField),c=this._processExecuteFields(this.layer.fields,c),c=n.clone(c);a&&(a="",a=-1!==c.indexOf("x")?"_x":"x",c.push({name:a,alias:a,format:{digitSeparator:!1,places:6},show:!0,type:"esriFieldTypeDouble"}),a=-1!==c.indexOf("y")?"_y":"y",c.push({name:a,alias:a,format:{digitSeparator:!1,places:6},show:!0,type:"esriFieldTypeDouble"}));
+return c},setSelectedNumber:function(){if(this.selectedRowsLabel&&this.grid){var a=this.getSelectedRows(),c=0;if(this.grid.store instanceof C){var b=x.map(this.grid.store.data,function(a){return a[this.layer.objectIdField]},this);x.forEach(a,function(a){-1<b.indexOf(a)&&c++})}else c=a.length;this.selectedRowsLabel.innerHTML="\x26nbsp;\x26nbsp;"+c+" "+this.nls.selected+"\x26nbsp;\x26nbsp;"}},_setSelection:function(a){this._selectionResults=a=a||[];this.selectionManager.setSelection(this.layer,a)},
+_zoomToExtentByFeatures:function(a){return this.getExtent(a).then(n.hitch(this,function(a){if(a&&this.domNode){var c=null;if("point"===a.type){var b=this.map.getNumLevels(),d=this.map.getLevel(),c=this.map.getMaxZoom();0<b?(d===c?b=d:(b=d+4,b>c&&(b=c)),c=this.map.centerAndZoom(a,b)):c=this.map.centerAndZoom(a,1/Math.pow(2,4)*2)}else c=this.map.setExtent(a.expand(2));return c.then(function(){return a})}}))},_showMapInfoWindowByFeatures:function(a,c){if(c&&0!==c.length&&this.domNode){var b=this.map.infoWindow,
+d=this.layerInfo.isPopupEnabled()&&this.layerInfo.getInfoTemplate();if(b&&b.setFeatures&&1===c.length&&d){x.forEach(c,n.hitch(this,function(a){a._layer=this.layerInfo.layerObject;a.setInfoTemplate(d)}));b.setFeatures(c);var f=null,f="point"===a.type?c[0].geometry:a.getCenter();b.show(f,{closetFirst:!0});this._dblClickResult=c[0];this.syncWithMapInfowindow(this._dblClickResult)}}},selectFeatures:function(a,c){c&&0<c.length?("rowclick"===a||"selectall"===a?this._setSelection(c):"zoom"!==a&&"row-dblclick"!==
+a||this._zoomToExtentByFeatures(c).then(n.hitch(this,function(b){"row-dblclick"===a&&this.domNode&&this._showMapInfoWindowByFeatures(b,c)}),n.hitch(this,function(a){a&&"Request canceled"!==a.message&&console.error(a)})),this.setSelectedNumber()):this._popupMessage(this.nls.dataNotAvailable)},syncWithMapInfowindow:function(a){var c=this.map.infoWindow,b=n.isArray(a)?a:[a];B.once(c,"hide",n.hitch(this,function(){d&&d.remove&&(d.remove(),d=null)}));var d=U.after(c,"show",n.hitch(this,function(){var a=
+c.getSelectedFeature(),a=a&&b[0]===a,f=-1;c.features&&(f=c.features.indexOf(b[0]));!a&&-1<f?c.select(f):this.domNode&&!a&&d&&d.remove&&(d.remove(),d=null)}))},getGraphicsFromLocalFeatureLayer:function(a){for(var c=[],b,d,f=a.length,e=this.layer.graphics.length,u=this.layer.objectIdField,t=0;t<f;t++)for(var g=0;g<e;g++)if(b=this.layer.graphics[g].attributes[u]+"",d=a[t]+"",b===d){c.push(this.layer.graphics[g]);break}return c},getExtent:function(a){var c=new t,b,d,f=a.length;if(1===f&&a[0].geometry&&
+"point"===a[0].geometry.type)b=a[0].geometry;else if(1!==f||a[0].geometry)for(var e=0;e<f;e++)a[e].geometry?"point"===a[e].geometry.type?(d||(d=new Q(a[e].geometry.spatialReference)),d.addPoint(a[e].geometry),e===f-1&&(b=d.getExtent())):b=b?b.union(a[e].geometry.getExtent()):a[e].geometry.getExtent():console.error("unable to get geometry of the reocord: ",a[e]);else return c.reject(Error("AttributeTable.getExtent:: extent was not projected.")),c;if(!b||!b.spatialReference)return c.reject(Error("AttributeTable.getExtent:: extent was not projected.")),
+c;a=this.map.spatialReference;b.spatialReference.equals(a)?c.resolve(b):(d=new P,d.geometries=[b],d.outSR=a,H.defaults.geometryService.project(d,n.hitch(this,function(a){this.domNode&&(a&&a.length?c.resolve(a[0]):c.reject(Error("AttributeTable.getExtent:: extent was not projected.")))}),n.hitch(this,function(a){a||(a=Error("AttributeTable.getExtent:: extent was not projected."));c.reject(a)})));return c},_onFeaturelayerClick:function(a,c){if(this.actived){var b=n.getObject("graphic",!1,a),d=n.getObject("graphic.attributes",
+!1,a);d&&b&&b._layer===this.layer&&((b=this.map.infoWindow.getSelectedFeature())&&b._layer===this.layer&&!c&&this.map.infoWindow.hide(),c=d[this.layer.objectIdField],this.showSelected&&this.toggleSelectedRecords(),this._getIndexOfIdInGrid(c).then(n.hitch(this,function(c){-1!==c&&(this.grid.scrollTo({x:0,y:this.grid.rowHeight*c}),this.map.infoWindow.features&&(c=this.map.infoWindow.features.indexOf(a.graphic),this.map.infoWindow.select(c)),B.once(this.map.infoWindow,"selection-change",n.hitch(this,
+function(){var c=this.map.infoWindow.getSelectedFeature(),b=n.getObject("_layer",!1,c);c!==a.graphic&&b===this.layer&&this._onFeaturelayerClick({graphic:c},!0)})),this.syncWithMapInfowindow(a.graphic))})))}},_getIndexOfIdInGrid:function(a){var c=new t,b=-1,d=n.getObject("store.objectIds",!1,this.grid),b=null,b=this.grid.get("sort")[0];if(this._relatedQuery)return c.resolve(-1),c;if(this.grid.store instanceof C)a=this.grid.store.get(a),d=this.grid.store.data,a?b&&b.attribute&&u.isDefined(b.descending)?
+(d=n.clone(d),b=function(a,c){return function(b,d){return b[a]===d[a]?0:b[a]<d[a]?c?1:-1:c?-1:1}}(b.attribute,b.descending),d.sort(b),d=x.map(d,function(a){return a[this.layer.objectIdField]},this),b=d.indexOf(a[this.layer.objectIdField])):b=d.indexOf(a):b=-1,c.resolve(b);else if(d&&0<d.length)b=d.indexOf(a),c.resolve(b);else{d=new F;d.returnGeometry=!1;d.where=this._getLayerFilterExpression()+" AND "+this.layer.objectIdField+" \x3c "+a;if(b&&(b.attribute!==this.layer.objectIdField||b.descending))return c.resolve(-1),
+c;this.matchingMap&&!this._relatedQuery&&this._currentExtent&&(d.geometry=this._currentExtent);(this._currentDef=this.layer.queryCount(d)).then(n.hitch(this,function(a){c.resolve(a)}),n.hitch(this,function(a){c.reject(a)}))}return c},_zoomToSelected:function(){if(this.configedInfo&&this.tableCreated){var a=this.getSelectedRows();this._goToFeatures(a,"zoom")}},_goToFeatures:function(a,c){if(0!==a.length){var b=this.getGraphicsFromLocalFeatureLayer(a);this.isSupportQueryToServer()&&a.length!==b.length?
+this._queryFeaturesByIds(a,c):this.selectFeatures(c,b)}},_onDblclickRow:function(a){this.layerInfo&&this.layerInfo.isShowInMap()&&(a=[this.grid.row(a).id],this._goToFeatures(a,"row-dblclick"))},_queryFeaturesByIds:function(a,c){var b=new F;b.objectIds=a;b.returnGeometry=!0;b.outSpatialReference=n.clone(this.map.spatialReference);b.outFields=["*"];a=this.layer;var d="esri.layers.CSVLayer"===a.declaredClass;a.url&&!d?(new J(a.url)).execute(b,n.hitch(this,function(a){this.selectFeatures(c,a.features)}),
+n.hitch(this,this._errorSelectFeatures)):a.selectFeatures(b,O.SELECTION_NEW,n.hitch(this,this.selectFeatures,c),n.hitch(this,this._errorSelectFeatures))},_onHeaderClick:function(a){var c=this.grid.cell(a);this._showColumnMenu(c.column,c,a.target,{x:a.pageX,y:a.pageY})},_showColumnMenu:function(a,c,b,d){var u=n.getObject("_cache",!1,a);if(u){var t=new w({});e.addClass(t.domNode,"jimu-widget-attributetable-feature-menu");var g=this;if(u.sortable){var z=["iconSortAscending","iconSortDescending"];x.forEach([this.nls.sortAsc,
+this.nls.sortDes],function(c,b){c=new f({label:c,iconClass:z[b],baseClass:"menuItemClass",onClick:function(){0===b?g.grid.set("sort",a.field,!1):1===b&&g.grid.set("sort",a.field,!0)}});t.addChild(c)})}u.statistics&&(u=new f({label:this.nls.statistics,iconClass:"iconTableStatistics",baseClass:"menuItemClass",onClick:n.hitch(this,function(){var c={layer:this.layer,filterExpression:this._getLayerFilterExpression(),fieldNames:[a.field]};this.matchingMap&&(c.geometry=this._currentExtent);if(this.showSelected){var b=
+this._getSelectedIds();c.filterExpression+=" AND "+this.layer.objectIdField+" IN ("+b.join()+")"}else this.queryByStoreObjectIds&&0<this.queryByStoreObjectIds.length&&(c.filterExpression+=" AND "+this.layer.objectIdField+" IN ("+this.queryByStoreObjectIds.join()+")");this.fieldStatistics=new W;this.fieldStatistics.showContentAsPopup(c)})}),t.addChild(u));u=t.getChildren();t.startup();t._openMyself({target:b,delegatedTarget:c,iframe:null,coords:d});this.own(B(t,"Close",n.hitch(this,function(){var a=
+this.get("columnMenu");a&&(a.destroyRecursive(),this.set("columnMenu",null))})));this.set("columnMenu",t);1>u.length&&B.emit(t,"Close")}},_onColumnStateChange:function(a){if(a&&a.grid&&a.grid.columns){var c=0,b;for(b in a.grid.columns)a.grid.columns[b].hidden||c++;20+100*c-1<e.getMarginBox(this.domNode).w?e.addClass(this.domNode,"auto-width"):e.removeClass(this.domNode,"auto-width")}},_onSelectionHandleClick:function(){var a=this._getSelectedIds();this.selectionRows=a;this._closePopup();this.layerInfo.isTable||
+(0<a.length?this._goToFeatures(a,"rowclick"):this._setSelection([]));this.setSelectedNumber();this.emit("row-click",{table:this,selectedIds:a})},_onExtentChange:function(a){var c=n.getObject("delta.x",!1,a),b=n.getObject("delta.y",!1,a);a=this._clickMap&&!a.levelChange?isFinite(c)&&isFinite(b)&&(0<Math.abs(c)||0<Math.abs(b)):!0;this._clickMap=!1;a&&this.matchingMap&&this.actived&&this.layerInfo&&!this.layerInfo.isTable&&this.startQuery(this.queryByStoreObjectIds)},_getLayerFilterExpression:function(){var a=
+this.layerInfo.getFilter();return a?a:"1\x3d1"},_getOutFieldsFromLayerInfos:function(a){var c=this.configedInfo.layer.fields,b=[];c&&x.forEach(c,n.hitch(this,function(c){u.isDefined(c.show)||(c.show=!0);c.name!==a||"esriFieldTypeOID"!==c.type&&"esriFieldTypeInteger"!==c.type&&c.type||(c._pk=!0);(c.show||c._pk)&&b.push(c)}));return b},_processExecuteFields:function(a,c){if(a&&0<a.length){var b=[];if(!c.length)return a;for(var d=0,f=c.length;d<f;d++)for(var e=0;e<a.length;e++)c[d].name!==a[e].name||
+c[d].type!==a[e].type&&c[d].type||(a[e]=n.mixin(a[e],c[d]),b.push(a[e]));return b}return c},_getSelectedIds:function(){var a=[],c=this.grid.selection,b;for(b in c)c[b]&&(isFinite(b)?a.push(parseInt(b,10)):a.push(b));return a},_getTableSelectedIds:function(){var a=[],c=this.getSelectedRows();if(this.grid)if(this.grid.store instanceof C){var b=x.map(this.grid.store.data,function(a){return a[this.layer.objectIdField]},this);x.forEach(c,function(c){-1<b.indexOf(c)&&a.push(parseInt(c,10))})}else a=c;return a},
+isSelectionMode:function(){var a=this.getSelectedRows();return this.tableCreated&&a&&0<a.length&&this.layer&&this.layer.objectIdField?!0:!1},_errorSelectFeatures:function(a){console.error(a)},_popupMessage:function(a){var c=new p({message:a,buttons:[{label:this.nls.ok,onClick:n.hitch(this,function(){c.close()})}]});this.loading.hide()}})})},"widgets/AttributeTable/dgrid/Selection":function(){define("dojo/_base/kernel dojo/_base/declare dojo/_base/Deferred dojo/on dojo/has dojo/aspect dgrid/List dojo/has!touch?dgrid/util/touch put-selector/put dojo/query dojo/_base/sniff".split(" "),
+function(g,e,q,p,h,l,m,r,v){function k(a,b){b=a.unselectable=b?"on":"";a=a.getElementsByTagName("*");for(var c=a.length;--c;)"INPUT"!==a[c].tagName&&"TEXTAREA"!==a[c].tagName&&(a[c].unselectable=b)}function w(a,b){var c=a.bodyNode,f=b?"text":21>h("ff")?"-moz-none":"none";d&&"msUserSelect"!==d?c.style[d]=f:h("dom-selectstart")?b||a._selectstartHandle?b&&a._selectstartHandle&&(a._selectstartHandle.remove(),delete a._selectstartHandle):a._selectstartHandle=p(c,"selectstart",function(a){var c=a.target&&
+a.target.tagName;"INPUT"!==c&&"TEXTAREA"!==c&&a.preventDefault()}):(k(c,!b),b||a._unselectableHandle)?b&&a._unselectableHandle&&(a._unselectableHandle.remove(),delete a._unselectableHandle):a._unselectableHandle=l.after(a,"renderRow",function(a){k(a,!0);return a})}h.add("dom-comparedocumentposition",function(a,b,d){return!!d.compareDocumentPosition});h.add("pointer",function(a){return"PointerEvent"in a?"pointer":"MSPointerEvent"in a?"MSPointer":!1});h.add("css-user-select",function(a,b,d){a=d.style;
+b=["Khtml","O","ms","Moz","Webkit"];d=b.length;var c="userSelect";do if("undefined"!==typeof a[c])return c;while(d--&&(c=b[d]+"UserSelect"));return!1});h.add("dom-selectstart","undefined"!==typeof document.onselectstart);var f=h("mac")?"metaKey":"ctrlKey",d=h("css-user-select"),b=(m=h("pointer"))&&"MS"===m.slice(0,2),a=m?m+(b?"Down":"down"):"mousedown",z=m?m+(b?"Up":"up"):"mouseup";"WebkitUserSelect"===d&&"undefined"!==typeof document.documentElement.style.msUserSelect&&(d=!1);return e("dgrid.Selection",
+null,{selectionDelegate:".dgrid-cell.dgrid-cell-padding.dgrid-column-selectionHandle.field-selectionHandle.selection-handle-column",selectionEvents:a+","+z+",dgrid-cellfocusin",selectionTouchEvents:h("touch")?r.tap:null,deselectOnRefresh:!0,allowSelectAll:!1,selection:{},selectionMode:"extended",allowTextSelection:void 0,_selectionTargetType:"rows",create:function(){this.selection={};return this.inherited(arguments)},postCreate:function(){this.inherited(arguments);this._initSelectionEvents();var a=
+this.selectionMode;this.selectionMode="";this._setSelectionMode(a)},destroy:function(){this.inherited(arguments);this._selectstartHandle&&this._selectstartHandle.remove();this._unselectableHandle&&this._unselectableHandle.remove();this._removeDeselectSignals&&this._removeDeselectSignals()},_setSelectionMode:function(a){a!=this.selectionMode&&(this.clearSelection(),this.selectionMode=a,this._selectionHandlerName="_"+a+"SelectionHandler",this._setAllowTextSelection(this.allowTextSelection))},setSelectionMode:function(a){g.deprecated("setSelectionMode(...)",
+'use set("selectionMode", ...) instead',"dgrid 0.4");this.set("selectionMode",a)},_setAllowTextSelection:function(a){"undefined"!==typeof a?w(this,a):w(this,"none"===this.selectionMode);this.allowTextSelection=a},_handleSelect:function(c,b){if(this[this._selectionHandlerName]&&this.allowSelect(this.row(b))&&("dgrid-cellfocusin"!==c.type||"mousedown"!==c.parentType)&&(c.type!==z||b==this._waitForMouseUp)){this._waitForMouseUp=null;this._selectionTriggerEvent=c;if(!c.keyCode||!c.ctrlKey||32==c.keyCode)if(!c.shiftKey&&
+c.type===a&&this.isSelected(b))this._waitForMouseUp=b;else this[this._selectionHandlerName](c,b);this._selectionTriggerEvent=null}},_singleSelectionHandler:function(a,b){a=a.keyCode?a.ctrlKey:a[f];this._lastSelected===b?this.select(b,null,!a||!this.isSelected(b)):(this.clearSelection(),this.select(b),this._lastSelected=b)},_multipleSelectionHandler:function(a,b){var c=this._lastSelected,d=a.keyCode?a.ctrlKey:a[f],e;a.shiftKey||(e=d?null:!0,c=null);this.select(b,c,e);c||(this._lastSelected=b)},_extendedSelectionHandler:function(a,
+b){(2===a.button?this.isSelected(b):a.keyCode?a.ctrlKey:a[f])||this.clearSelection(null,!0);this._multipleSelectionHandler(a,b)},_toggleSelectionHandler:function(a,b){this.select(b,null,null)},_initSelectionEvents:function(){var a=this,b=this.contentNode,d=this.selectionDelegate;this._selectionEventQueues={deselect:[],select:[]};h("touch")&&!h("pointer")&&this.selectionTouchEvents?(p(b,r.selector(d,this.selectionTouchEvents),function(c){a._handleSelect(c,this);a._ignoreMouseSelect=this}),p(b,p.selector(d,
+this.selectionEvents),function(c){a._ignoreMouseSelect!==this?a._handleSelect(c,this):c.type===z&&(a._ignoreMouseSelect=null)})):p(b,p.selector(d,this.selectionEvents),function(c){a._handleSelect(c,this)});this.addKeyHandler&&this.addKeyHandler(32,function(c){a._handleSelect(c,c.target)});if(this.allowSelectAll)this.on("keydown",function(c){c[f]&&65==c.keyCode&&!/\bdgrid-input\b/.test(c.target.className)&&(c.preventDefault(),a[a.allSelected?"clearSelection":"selectAll"]())});this._setStore&&l.after(this,
+"_setStore",function(){a._updateDeselectionAspect()});this._updateDeselectionAspect()},_updateDeselectionAspect:function(){function a(a,c,d){a=c||a&&a[b.idProperty||"id"];if(null!=a&&(c=(a=b.row(a))&&b.selection[a.id]))b[d](a,null,c)}var b=this,d=this.store,f,e;this._removeDeselectSignals&&this._removeDeselectSignals();d&&d.notify?(f=l.before(d,"notify",function(c,b){c||a(c,b,"deselect")}),e=l.after(d,"notify",function(c,b){a(c,b,"select")},!0),this._removeDeselectSignals=function(){f.remove();e.remove()}):
+(f=l.before(this,"removeRow",function(a,c){c||(a=this.row(a))&&a.id in this.selection&&this.deselect(a)}),this._removeDeselectSignals=function(){f.remove()})},allowSelect:function(a){return!0},_fireSelectionEvent:function(a){var c=this._selectionEventQueues[a],b=this._selectionTriggerEvent,d;d={bubbles:!0,grid:this};b&&(d.parentType=b.type);d[this._selectionTargetType]=c;this._selectionEventQueues[a]=[];p.emit(this.contentNode,"dgrid-"+a,d)},_fireSelectionEvents:function(){var a=this._selectionEventQueues,
+b;for(b in a)a[b].length&&this._fireSelectionEvent(b)},_select:function(a,b,d){var c,f,e;"undefined"===typeof d&&(d=!0);a.element||(a=this.row(a));if(!1===d||this.allowSelect(a))if(c=this.selection,f=!!c[a.id],null===d&&(d=!f),e=a.element,d||this.allSelected?c[a.id]=d:delete this.selection[a.id],e&&(d?v(e,".dgrid-selected"+(this.addUiClasses?".ui-state-active":"")):v(e,"!dgrid-selected!ui-state-active")),d!==f&&e&&this._selectionEventQueues[(d?"":"de")+"select"].push(a),b)if(b.element||(b=this.row(b)),
+b){if(b=b.element)for(c=this._determineSelectionDirection(e,b),c||(b=document.getElementById(b.id),c=this._determineSelectionDirection(e,b));a.element!=b&&(a=this[c](a));)this._select(a,null,d)}else this._lastSelected=e,console.warn("The selection range has been reset because the beginning of the selection is no longer in the DOM. If you are using OnDemandList, you may wish to increase farOffRemoval to avoid this, but note that keeping more nodes in the DOM may impact performance.")},_determineSelectionDirection:h("dom-comparedocumentposition")?
+function(a,b){a=b.compareDocumentPosition(a);return a&1?!1:2===a?"down":"up"}:function(a,b){return 1>b.sourceIndex?!1:b.sourceIndex>a.sourceIndex?"down":"up"},select:function(a,b,d){this._select(a,b,d);this._fireSelectionEvents()},deselect:function(a,b){this.select(a,b,!1)},clearSelection:function(a,b){this.allSelected=!1;for(var c in this.selection)a!==c&&this._select(c,null,!1);b||(this._lastSelected=null);this._fireSelectionEvents()},selectAll:function(){this.allSelected=!0;this.selection={};for(var a in this._rowIdToObject){var b=
+this.row(this._rowIdToObject[a]);this._select(b.id,null,!0)}this._fireSelectionEvents()},isSelected:function(a){if("undefined"===typeof a||null===a)return!1;a.element||(a=this.row(a));return a.id in this.selection?!!this.selection[a.id]:this.allSelected&&(!a.data||this.allowSelect(a))},refresh:function(){this.deselectOnRefresh&&this.clearSelection();this._lastSelected=null;return this.inherited(arguments)},renderArray:function(){var a=this,b=this.inherited(arguments);q.when(b,function(b){var c=a.selection,
+d,f,e;for(d=0;d<b.length;d++)f=a.row(b[d]),(e=f.id in c?c[f.id]:a.allSelected)&&a._select(f,null,e);a._fireSelectionEvents()});return b}})})},"dgrid/extensions/ColumnHider":function(){define("dojo/_base/declare dojo/has dojo/on ../util/misc put-selector/put dojo/i18n!./nls/columnHider xstyle/css!../css/extensions/ColumnHider.css".split(" "),function(g,e,q,p,h,l){var m,r,v=e("ie"),k=v&&e("quirks"),w=8>v||k?"htmlFor":"for";return g("dgrid.extensions.ColumnHider",null,{hiderMenuNode:null,hiderToggleNode:null,
+i18nColumnHider:l,_hiderMenuOpened:!1,_columnHiderRules:null,_columnHiderCheckboxes:null,_renderHiderMenuEntries:function(){var f=this.subRows,d=!0,b,a,e,c;delete this._columnHiderFirstCheckbox;e=0;for(b=f.length;e<b;e++)for(c=0,a=f[e].length;c<a;c++)this._renderHiderMenuEntry(f[e][c]),d&&(d=!1,this._columnHiderFirstCheckbox=this._columnHiderCheckboxes[f[e][c].id])},_renderHiderMenuEntry:function(f){var d=f.id,b=p.escapeCssIdentifier(d,"-"),a,e;f.hidden&&(f.hidden=!1,this._hideColumn(d),f.hidden=
+!0);f.unhidable||(a=h("div.dgrid-hider-menu-row"),e=this.domNode.id+"-hider-menu-check-"+b,d=this._columnHiderCheckboxes[d]=h(a,"input.dgrid-hider-menu-check.hider-menu-check-"+b+"[type\x3dcheckbox]"),d.id=e,h(a,"label.dgrid-hider-menu-label.hider-menu-label-"+b+"["+w+"\x3d"+e+"]",f.label||f.field||""),h(this.hiderMenuNode,a),f.hidden||(d.checked=!0))},renderHeader:function(){function f(a){a.stopPropagation()}var d=this,b=this.hiderMenuNode,a=this.hiderToggleNode,e;this.inherited(arguments);if(b){for(e in this._columnHiderRules)this._columnHiderRules[e].remove();
+b.innerHTML=""}else a=this.hiderToggleNode=h(this.domNode,"button.ui-icon.dgrid-hider-toggle[type\x3dbutton][aria-label\x3d"+this.i18nColumnHider.popupTriggerLabel+"]"),this._listeners.push(q(a,"click",function(a){d._toggleColumnHiderMenu(a)})),b=this.hiderMenuNode=h("div.dgrid-hider-menu[role\x3ddialog][aria-label\x3d"+this.i18nColumnHider.popupLabel+"]"),b.id=this.id+"-hider-menu",this._listeners.push(q(b,"keyup",function(b){27===(b.charCode||b.keyCode)&&(d._toggleColumnHiderMenu(b),a.focus())})),
+b.style.display="none",h(this.domNode,b),this._listeners.push(q(b,".dgrid-hider-menu-check:"+(9>v||k?"click":"change"),function(a){d._updateColumnHiddenState(a.target.id.substr(d.id.length+18),!a.target.checked)})),this._listeners.push(q(b,"mousedown",f),q(a,"mousedown",f)),r||(r=q.pausable(document,"mousedown",function(a){m&&m._toggleColumnHiderMenu(a)}),r.pause());this._columnHiderCheckboxes={};this._columnHiderRules={};this._renderHiderMenuEntries()},destroy:function(){this.inherited(arguments);
+for(var f in this._columnHiderRules)this._columnHiderRules[f].remove()},left:function(f,d){return this.right(f,-d)},right:function(f,d){f.element||(f=this.cell(f));for(var b=this.inherited(arguments),a=f;b.column.hidden;){b=this.inherited(arguments,[b,0<d?1:-1]);if(a.element===b.element)return f;a=b}return b},isColumnHidden:function(f){return!!this._columnHiderRules[f]},_toggleColumnHiderMenu:function(){var f=this._hiderMenuOpened,d=this.hiderMenuNode,b=this.domNode,a;d.style.display=f?"none":"";
+f?d.style.height="":(d.offsetHeight>b.offsetHeight-12&&(d.style.height=b.offsetHeight-12+"px"),(a=this._columnHiderFirstCheckbox)&&a.focus());r[f?"pause":"resume"]();m=f?null:this;this._hiderMenuOpened=!f},_hideColumn:function(f){var d=this,b="#"+p.escapeCssIdentifier(this.domNode.id)+" .dgrid-column-",a;this._columnHiderRules[f]||(this._columnHiderRules[f]=p.addCssRule(b+p.escapeCssIdentifier(f,"-"),"display: none;"),8!==e("ie")&&10!==e("ie")||e("quirks")||(a=p.addCssRule(".dgrid-row-table","display: inline-table;"),
+window.setTimeout(function(){a.remove();d.resize()},0)))},_showColumn:function(f){this._columnHiderRules[f]&&(this._columnHiderRules[f].remove(),delete this._columnHiderRules[f])},_updateColumnHiddenState:function(f,d){this[d?"_hideColumn":"_showColumn"](f);this.columns[f].hidden=d;q.emit(this.domNode,"dgrid-columnstatechange",{grid:this,column:this.columns[f],hidden:d,bubbles:!0});this.resize()},toggleColumnHiddenState:function(f,d){"undefined"===typeof d&&(d=!this._columnHiderRules[f]);this._updateColumnHiddenState(f,
+d);this._columnHiderCheckboxes[f].checked=!d}})})},"dgrid/extensions/ColumnResizer":function(){define("dojo/_base/declare dojo/on dojo/query dojo/_base/lang dojo/dom dojo/dom-geometry dojo/has ../util/misc put-selector/put dojo/_base/html xstyle/css!../css/extensions/ColumnResizer.css".split(" "),function(g,e,q,p,h,l,m,r,v){function k(a){for(var b=a.length,c=b,d=a[0].length,f=Array(b);b--;)f[b]=Array(d);for(var e={},b=0;b<c;b++)for(var g=f[b],k=a[b],m=0,u=0;m<d;m++){var A=k[u],h;if("undefined"==typeof g[m]){g[m]=
+A.id;if(A.rowSpan&&1<A.rowSpan){h=f;for(var l=A.rowSpan,r=b,q=m,v=A.id,p=1;p<l;p++)h[r+p][q]=v}if(0<b&&A.colSpan&&1<A.colSpan)for(h=1;h<A.colSpan;h++)if(g[++m]=A.id,A.rowSpan&&1<A.rowSpan)for(var l=f,r=A.rowSpan,q=b,v=m,p=A.id,w=1;w<r;w++)l[q+w][v]=p;e[A.id]=a[0][m].id;u++}}return e}function w(a,b,c,d,f){if(!(0>=c)){var g=a.columns[b],t;if(g&&(t={grid:a,columnId:b,width:c,bubbles:!0,cancelable:!0},d&&(t.parentType=d),!a._resizedColumns||e.emit(a.headerNode,"dgrid-columnresize",t)))return"auto"===
+c?delete g.width:(g.width=c,c+="px"),(d=a._columnSizes[b])?d.set("width",c):d=r.addCssRule("#"+r.escapeCssIdentifier(a.domNode.id)+" .dgrid-column-"+r.escapeCssIdentifier(b,"-"),"width: "+c+";"),a._columnSizes[b]=d,!1!==f&&a.resize(),!0}}var f,d=0,b={create:function(){f=v("div.dgrid-column-resizer")},destroy:function(){v(f,"!");f=null},show:function(a){a=l.position(a.domNode,!0);f.style.top=a.y+"px";f.style.height=a.h+"px";v(document.body,f)},move:function(a){f.style.left=a+"px"},hide:function(){f.parentNode.removeChild(f)}};
+return g("dgrid.extensions.ColumnResizer",null,{resizeNode:null,minWidth:40,adjustLastColumn:!0,_resizedColumns:!1,buildRendering:function(){this.inherited(arguments);d++||b.create()},destroy:function(){this.inherited(arguments);for(var a in this._columnSizes)this._columnSizes[a].remove();--d||b.destroy()},resizeColumnWidth:function(a,b){return w(this,a,b)},configStructure:function(){var a=this._oldColumnSizes=p.mixin({},this._columnSizes),b;this._resizedColumns=!1;this._columnSizes={};this.inherited(arguments);
+for(b in a)b in this._columnSizes||a[b].remove();delete this._oldColumnSizes},_configColumn:function(a){this.inherited(arguments);var b=a.id,c;"width"in a&&((c=this._oldColumnSizes[b])?c.set("width",a.width+"px"):c=r.addCssRule("#"+r.escapeCssIdentifier(this.domNode.id)+" .dgrid-column-"+r.escapeCssIdentifier(b,"-"),"width: "+a.width+"px;"),this._columnSizes[b]=c)},renderHeader:function(){this.inherited(arguments);var a=this,b;if(this.columnSets&&this.columnSets.length)for(var c=this.columnSets.length;c--;)b=
+p.mixin(b||{},k(this.columnSets[c]));else this.subRows&&1<this.subRows.length&&(b=k(this.subRows));for(var c=q(".dgrid-cell",a.headerNode),d=c.length;d--;){var f=c[d],g=f.columnId,h=a.columns[g],l=f.childNodes;if(h&&!1!==h.resizable){h=v("div.dgrid-resize-header-container");for(f.contents=h;0<l.length;)v(h,l[0]);v(f,h,"div.dgrid-resize-handle.resizeNode-"+r.escapeCssIdentifier(g,"-")).columnId=b&&b[g]||g}}a.mouseMoveListen||(e(a.headerNode,".dgrid-resize-handle:mousedown"+(m("touch")?",.dgrid-resize-handle:touchstart":
+""),function(b){a._resizeMouseDown(b,this);a.mouseMoveListen.resume();a.mouseUpListen.resume()}),a._listeners.push(a.mouseMoveListen=e.pausable(document,"mousemove"+(m("touch")?",touchmove":""),r.throttleDelayed(function(b){a._updateResizerPosition(b)}))),a._listeners.push(a.mouseUpListen=e.pausable(document,"mouseup"+(m("touch")?",touchend":""),function(b){a._resizeMouseUp(b);a.mouseMoveListen.pause();a.mouseUpListen.pause()})),a.mouseMoveListen.pause(),a.mouseUpListen.pause())},_resizeMouseDown:function(a,
+d){a.preventDefault();h.setSelectable(this.domNode,!1);this._startX=this._getResizeMouseLocation(a);this._targetCell=q(".dgrid-column-"+r.escapeCssIdentifier(d.columnId,"-"),this.headerNode)[0];this._updateResizerPosition(a);b.show(this)},_resizeMouseUp:function(a){var d=this._columnSizes,c,f,e;this.adjustLastColumn&&(e=this.headerNode.clientWidth-1);this._resizedColumns||(c=q(".dgrid-cell",this.headerNode),this.columnSets&&this.columnSets.length?c=c.filter(function(a){return"0"==a.columnId.split("-")[0]&&
+!(a.columnId in d)}):this.subRows&&1<this.subRows.length&&(c=c.filter(function(a){return"0"==a.columnId.charAt(0)&&!(a.columnId in d)})),f=c.map(function(a){return a.offsetWidth}),c.forEach(function(a,b){w(this,a.columnId,f[b],null,!1)},this),this._resizedColumns=!0);h.setSelectable(this.domNode,!0);c=this._targetCell;var g=this._getResizeMouseLocation(a)-this._startX,m=c.offsetWidth+g,k=this._getResizedColumnWidths(),l=k.totalWidth,k=k.lastColId,u=q(".dgrid-column-"+r.escapeCssIdentifier(k,"-"),
+this.headerNode)[0].offsetWidth;m<this.minWidth&&(m=this.minWidth);w(this,c.columnId,m,a.type)&&c.columnId!=k&&this.adjustLastColumn&&(l+g<e?w(this,k,"auto",a.type):u-g<=this.minWidth&&w(this,k,this.minWidth,a.type));b.hide();delete this._startX;delete this._targetCell},_updateResizerPosition:function(a){if(this._targetCell){a=this._getResizeMouseLocation(a);var d=this._targetCell.offsetWidth,c=a;d+(a-this._startX)<this.minWidth&&(c=this._startX-(d-this.minWidth));b.move(c)}},_getResizeMouseLocation:function(a){var b=
+0;a.pageX?b=a.pageX:a.clientX&&(b=a.clientX+document.body.scrollLeft+document.documentElement.scrollLeft);return b},_getResizedColumnWidths:function(){var a=0,b=q((this.columnSets?".dgrid-column-set-cell ":"")+"tr:first-child .dgrid-cell",this.headerNode),c=b.length;if(!c)return{};for(var d=b[c-1].columnId;c--;)a+=b[c].offsetWidth;return{totalWidth:a,lastColId:d}}})})},"dgrid/extensions/ColumnReorder":function(){define("dojo/_base/lang dojo/_base/declare dojo/_base/array dojo/on dojo/query dojo/dnd/Source put-selector/put xstyle/css!../css/extensions/ColumnReorder.css".split(" "),
+function(g,e,q,p,h,l,m){function r(f,d){var b=d[2];f=f[b?"columnSets":"subRows"][d[1]];return b?f[d[2]]:f}function v(f,d,b){d[2]?f.columnSets[d[1]][d[2]]=b:f.subRows[d[1]]=b}function k(f,d){return d.slice(("dgrid-"+f+"-").length)}var w=/(\d+)(?:-(\d+))?$/;g=e(l,{copyState:function(){return!1},checkAcceptance:function(f,d){return f==this},_legalMouseDown:function(f){return-1<f.target.className.indexOf("dgrid-resize-handle")?!1:this.inherited(arguments)},onDropInternal:function(f){var d=this.grid,b=
+w.exec(k(d.id,f[0].getAttribute("dndType"))),a=b[2]?"columnSets":"subRows",e=r(d,b),c=d.columns;this.inherited(arguments);b&&setTimeout(function(){var g=q.map(f[0].parentNode.childNodes,function(a){return c[a.columnId]});v(d,b,g);g={grid:d,subRow:g,column:c[f[0].columnId],bubbles:!0,cancelable:!0,parentType:"dnd"};g[a]=d[a];p.emit(d.domNode,"dgrid-columnreorder",g)?d.set(a,d[a]):(v(d,b,e),d.renderHeader(),this._sort&&this._sort.length&&this.updateSortArrow(this._sort))},0)}});e=e("dgrid.extensions.ColumnReorder",
+null,{columnDndConstructor:g,_initSubRowDnd:function(f,d){var b,a,e,c;a=0;for(e=f.length;a<e;a++)c=f[a],!1!==c.reorderable&&(c=c.headerNode,"TH"!=c.tagName&&(c=c.parentNode),m(c,".dojoDndItem[dndType\x3d"+d+"]"),b||(b=c.parentNode));b&&this._columnDndSources.push(new this.columnDndConstructor(b,{horizontal:!0,grid:this}))},renderHeader:function(){var f="dgrid-"+this.id+"-",d,b;this.inherited(arguments);this._columnDndSources=[];if(this.columnSets)for(b=0,d=this.columnSets.length;b<d;b++)q.forEach(this.columnSets[b],
+function(a,d){this._initSubRowDnd(a,f+b+"-"+d)},this);else q.forEach(this.subRows,function(a,b){this._initSubRowDnd(a,f+b)},this)},_destroyColumns:function(){this._columnDndSources&&q.forEach(this._columnDndSources,function(f){f.destroy()});this.inherited(arguments)}});e.ColumnDndSource=g;return e})},"dijit/Toolbar":function(){define("require dojo/_base/declare dojo/has dojo/keys dojo/ready ./_Widget ./_KeyNavContainer ./_TemplatedMixin".split(" "),function(g,e,q,p,h,l,m,r){q("dijit-legacy-requires")&&
+h(0,function(){g(["dijit/ToolbarSeparator"])});return e("dijit.Toolbar",[l,r,m],{templateString:'\x3cdiv class\x3d"dijit" role\x3d"toolbar" tabIndex\x3d"${tabIndex}" data-dojo-attach-point\x3d"containerNode"\x3e\x3c/div\x3e',baseClass:"dijitToolbar",_onLeftArrow:function(){this.focusPrev()},_onRightArrow:function(){this.focusNext()}})})},"esri/tasks/RelationParameters":function(){define("dojo/_base/declare dojo/_base/lang dojo/_base/array dojo/_base/json dojo/has ../kernel ../geometry/jsonUtils".split(" "),
+function(g,e,q,p,h,l,m){g=g(null,{declaredClass:"esri.tasks.RelationParameters",geometries1:null,geometries2:null,relation:null,relationParam:null,toJson:function(){var e=q.map(this.geometries1,function(f){return f.toJson()}),g=q.map(this.geometries2,function(f){return f.toJson()}),k={},h=this.geometries1;h&&0<h.length&&(k.geometries1=p.toJson({geometryType:m.getJsonType(h[0]),geometries:e}),e=this.geometries1[0].spatialReference,k.sr=e.wkid?e.wkid:p.toJson(e.toJson()));(e=this.geometries2)&&0<e.length&&
+(k.geometries2=p.toJson({geometryType:m.getJsonType(e[0]),geometries:g}));this.relation&&(k.relation=this.relation);this.relationParam&&(k.relationParam=this.relationParam);return k}});e.mixin(g,{SPATIAL_REL_CROSS:"esriGeometryRelationCross",SPATIAL_REL_DISJOINT:"esriGeometryRelationDisjoint",SPATIAL_REL_IN:"esriGeometryRelationIn",SPATIAL_REL_INTERIORINTERSECTION:"esriGeometryRelationInteriorIntersection",SPATIAL_REL_INTERSECTION:"esriGeometryRelationIntersection",SPATIAL_REL_COINCIDENCE:"esriGeometryRelationLineCoincidence",
+SPATIAL_REL_LINETOUCH:"esriGeometryRelationLineTouch",SPATIAL_REL_OVERLAP:"esriGeometryRelationOverlap",SPATIAL_REL_POINTTOUCH:"esriGeometryRelationPointTouch",SPATIAL_REL_TOUCH:"esriGeometryRelationTouch",SPATIAL_REL_WITHIN:"esriGeometryRelationWithin",SPATIAL_REL_RELATION:"esriGeometryRelationRelation"});h("extend-esri")&&e.setObject("tasks.RelationParameters",g,l);return g})},"jimu/CSVUtils":function(){define("exports dojo/_base/lang dojo/_base/array dojo/_base/html dojo/has dojo/Deferred jimu/utils esri/lang esri/tasks/QueryTask esri/tasks/query".split(" "),
+function(g,e,q,p,h,l,m,r,v,k){function w(f){var d=e.clone(f.attributes);(f=f.geometry)&&"point"===f.type&&("x"in d?d._x=f.x:d.x=f.x,"y"in d?d._y=f.y:d.y=f.y);return d}g.exportCSV=function(f,d,b){return g._createCSVStr(d,b).then(function(a){return g._download(f+".csv",a)})};g.exportCSVFromFeatureLayer=function(f,d,b){b=b||{};return g._getExportData(d,{datas:b.datas,fromClient:b.fromClient,withGeometry:b.withGeometry,outFields:b.outFields,filterExpression:b.filterExpression}).then(function(a){return g._formattedData(d,
+a,{formatNumber:b.formatNumber,formatDate:b.formatDate,formatCodedValue:b.formatCodedValue,popupInfo:b.popupInfo}).then(function(a){return g.exportCSV(f,a.datas,a.columns)})})};g.exportCSVByAttributes=function(f,d,b,a){a=e.mixin({},a);a.datas=b;return g.exportCSVFromFeatureLayer(f,d,a)};g.exportCSVByGraphics=function(f,d,b,a){b=q.map(b,function(a){return a.attributes});return g.exportCSVByAttributes(f,d,b,a)};g._createCSVStr=function(f,d){var b=new l,a="",e=0,c=0,g="",m="";try{q.forEach(d,function(b){a=
+a+g+b;g=","});for(var a=a+"\r\n",e=f.length,c=d.length,k=0;k<e;k++){for(var g="",h=0;h<c;h++)(m=f[k][d[h]])||"number"===typeof m||(m=""),m&&/[",\r\n]/g.test(m)&&(m='"'+m.replace(/(")/g,'""')+'"'),a=a+g+m,g=",";a+="\r\n"}b.resolve(a)}catch(C){console.error(C),b.resolve("")}return b};g._isIE11=function(){return 11===m.has("ie")};g._isEdge=function(){return m.has("edge")};g._getDownloadUrl=function(f){return window.Blob&&window.URL&&window.URL.createObjectURL?(f=new Blob(["\ufeff"+f],{type:"text/csv"}),
+URL.createObjectURL(f)):"data:attachment/csv;charset\x3dutf-8,\ufeff"+encodeURIComponent(f)};g._download=function(f,d){var b=new l;try{if(h("ie")&&10>h("ie")){var a=window.top.open("about:blank","_blank");a.document.write("sep\x3d,\r\n"+d);a.document.close();a.document.execCommand("SaveAs",!0,f);a.close()}else if(10===h("ie")||g._isIE11()||g._isEdge()){var e=new Blob(["\ufeff"+d],{type:"text/csv"});navigator.msSaveBlob(e,f)}else{var c=p.create("a",{href:g._getDownloadUrl(d),target:"_blank",download:f},
+document.body);if(h("safari")){var m=document.createEvent("MouseEvents");m.initEvent("click",!0,!0);c.dispatchEvent(m)}else c.click();p.destroy(c)}b.resolve()}catch(D){b.reject(D)}return b};g._getExportData=function(f,d){var b=new l,a=null,m=[],c=d.datas,k=d.withGeometry,a=d.outFields;a&&a.length||(a=f.fields);a=e.clone(a);if(k&&!(c&&0<c.length)){var m=e.clone(a),h="",h=-1!==a.indexOf("x")?"_x":"x";a.push({name:h,alias:h,format:{digitSeparator:!1,places:6},show:!0,type:"esriFieldTypeDouble"});h=-1!==
+a.indexOf("y")?"_y":"y";a.push({name:h,alias:h,format:{digitSeparator:!1,places:6},show:!0,type:"esriFieldTypeDouble"})}c&&0<c.length?b.resolve({data:c||[],outFields:a}):d.fromClient?(c=q.map(f.graphics,function(a){return k?w(a):e.clone(a)}),b.resolve({data:c||[],outFields:a})):g._getExportDataFromServer(f,m,d).then(function(c){b.resolve({data:c||[],outFields:a})});return b};g._getExportDataFromServer=function(f,d,b){var a=new l;if("esri.layers.FeatureLayer"!==f.declaredClass)return a.resolve([]),
+a;var e=new v(f.url),c=new k;c.where=b.filterExpression||f.getDefinitionExpression&&f.getDefinitionExpression()||"1\x3d1";0<d.length?(f=q.map(d,function(a){return a.name}),c.outFields=f):c.outFields=["*"];c.returnGeometry=b.withGeometry;e.execute(c,function(b){b=q.map(b.features,function(a){return w(a)});a.resolve(b)},function(b){console.error(b);a.resolve([])});return a};g._formattedData=function(f,d,b){var a=new l,e=[],c=d.data;d=d.outFields;for(var m=0,k=c.length;m<k;m++){for(var h={},p=0;p<d.length;p++){var r=
+d[p];h[r.alias||r.name]=g._getExportValue(c[m][r.name],r,f.objectIdField,f.typeIdField,c[m][f.typeIdField],f.types,b)}e.push(h)}f=q.map(d,function(a){return a.alias||a.name});a.resolve({datas:e,columns:f});return a};g._getExportValue=function(f,d,b,a,e,c,g){function h(a){if(k&&r.isDefined(k.fieldInfos))for(var b=0,c=k.fieldInfos.length;b<c;b++){var d=k.fieldInfos[b];if(d.fieldName===a)return d.format}return null}var k=g.popupInfo,l=!!d.domain&&g.formatCodedValue;g="esriFieldTypeDate"===d.type&&g.formatDate;
+var t=b&&d.name===b;a=a&&d.name===a;return g?m.fieldFormatter.getFormattedDate(f,h(d.name)):a?m.fieldFormatter.getTypeName(f,c):l?m.fieldFormatter.getCodedValue(d.domain,f):l||g||t||a?f:(l=null,b&&c&&0<c.length&&(b=(b=q.filter(c,function(a){return a.id===e}))&&b[0])&&b.domains&&b.domains[d.name]&&b.domains[d.name].codedValues&&(l=m.fieldFormatter.getCodedValue(b.domains[d.name],f)),null!==l?l:f)}})},"widgets/AttributeTable/utils":function(){define("dojo/_base/lang dojo/_base/array jimu/LayerInfos/LayerInfos dojo/Deferred dojo/promise/all exports dojo/store/Observable dojo/store/Cache dojo/store/Memory esri/lang ./table/FeatureLayerQueryStore jimu/utils".split(" "),
+function(g,e,q,p,h,l,m,r,v,k,w,f){function d(b,a){if(!b||!b.length)return a||[];if(!a||!a.length)return b;for(var d=[],c=0,f=b.length;c<f;c++)for(var e=b[c],g=0,m=a.length;g<m;g++)if(a[g].name===e.name){d.push(e);break}return d}l.readLayerInfosObj=function(b){return q.getInstance(b,b.itemInfo)};l.readLayerInfosFromMap=function(b,a,d){var c=new p;q.getInstance(b,b.itemInfo).then(g.hitch(this,function(b){var f=[];a?b.traversalLayerInfosOfWebmap(function(a){f.push(a)}):b.traversal(function(a){f.push(a)});
+if(d){var g=[],m=b.getMapNotesLayerInfoArray();e.forEach(m,function(a){g.push(a.id);a.traversal(function(a){g.push(a.id)})});f=e.filter(f,function(a){return-1===g.indexOf(a.id)})}b=b.getTableInfoArray();f=f.concat(b);c.resolve(f)}),g.hitch(this,function(a){console.error(a);c.reject(a)}));return c.promise};l.generateColumnsFromFields=function(b,a,d,c,f,m){function h(a){if(b&&k.isDefined(b.fieldInfos))for(var c=0,d=b.fieldInfos.length;c<d;c++){var f=b.fieldInfos[c];if(f.fieldName===a)return f.format}return null}
+var p={selectionHandle:{label:"",className:"selection-handle-column",hidden:!1,unhidable:!0,filed:"selection-handle-column",sortable:!1,_cache:{sortable:!1,statistics:!1}}};e.forEach(a,g.hitch(l,function(a,b,u){b="field"+b;var A=!!a.domain,r="esriFieldTypeDate"===a.type,I=d&&a.name===d,q="esriFieldTypeDouble"===a.type||"esriFieldTypeSingle"===a.type||"esriFieldTypeInteger"===a.type||"esriFieldTypeSmallInteger"===a.type,v="esriFieldTypeString"===a.type;p[b]={label:a.alias||a.name,className:b,hidden:1===
+u.length?!1:!a.show&&k.isDefined(a.show),unhidable:1===u.length?!1:!a.show&&k.isDefined(a.show)&&a._pk,field:a.name,sortable:!1,_cache:{sortable:!!f,statistics:m&&!A&&q}};v?p[b].formatter=g.hitch(l,l.urlFormatter):r?p[b].formatter=g.hitch(l,l.dateFormatter,h(a.name)):q&&(p[b].formatter=g.hitch(l,l.numberFormatter,h(a.name)));A?p[b].get=g.hitch(l,function(a,b){return this.getCodeValue(a.domain,b[a.name])},a):I?p[b].get=g.hitch(l,function(a,b,c){return this.getTypeName(c[a.name],b)},a,c):A||r||I||(p[b].get=
+g.hitch(l,function(a,b,c,d){var f=null;b&&c&&0<c.length&&(c=(c=e.filter(c,g.hitch(l,function(a){return a.id===d[b]})))&&c[0]||null)&&c.domains&&c.domains[a.name]&&c.domains[a.name].codedValues&&(f=this.getCodeValue(c.domains[a.name],d[a.name]));return(a=null!==f?f:d[a.name])||isFinite(a)?a:""},a,d,c))}));return p};l.getTypeName=function(b,a){return f.fieldFormatter.getTypeName(b,a)};l.getCodeValue=function(b,a){return f.fieldFormatter.getCodedValue(b,a)};l.urlFormatter=function(b){return f.fieldFormatter.getFormattedUrl(b)};
+l.dateFormatter=function(b,a){return f.fieldFormatter.getFormattedDate(a,b)};l.numberFormatter=function(b,a){return f.fieldFormatter.getFormattedNumber(a,b)};l.readLayerObjectsFromMap=function(b,a,d){var c=new p,f=[];this.readLayerInfosFromMap(b,a,d).then(g.hitch(this,function(a){e.forEach(a,g.hitch(this,function(a){f.push(a.getLayerObject())}));h(f).then(g.hitch(this,function(a){c.resolve(a)}),g.hitch(this,function(a){c.reject(a);console.error(a)}))}),g.hitch(this,function(a){c.reject(a)}));return c.promise};
+l.readSupportTableInfoFromLayerInfos=function(b){var a=new p,d=[];e.forEach(b,g.hitch(this,function(a){d.push(a.getSupportTableInfo())}));h(d).then(g.hitch(this,function(c){c=g.clone(c);e.forEach(c,function(a,c){a.id=b[c].id});a.resolve(c)}),function(b){a.reject(b)});return a.promise};l.readConfigLayerInfosFromMap=function(b,a,d){var c=new p,f=[];this.readLayerInfosFromMap(b,a,d).then(g.hitch(this,function(a){var b=[];e.forEach(a,function(a){f.push(a.getSupportTableInfo())});h(f).then(g.hitch(this,
+function(d){e.forEach(d,g.hitch(this,function(c,d){c.isSupportedLayer&&(a[d].name=a[d].title,b.push(a[d]))}));c.resolve(b)}),g.hitch(this,function(a){c.reject(a)}))}),g.hitch(this,function(a){c.reject(a)}));return c.promise};l.getConfigInfosFromLayerInfos=function(b){return e.map(b,function(a){return l.getConfigInfoFromLayerInfo(a)})};l.getConfigInfoFromLayerInfo=function(b){var a={};a.name=b.name||b.title;a.id=b.id;a.show=b.isShowInMap();a.layer={url:b.getUrl()};var f=b.getPopupInfo();f&&!f.description&&
+(a.layer.fields=e.map(f.fieldInfos,function(a){return{name:a.fieldName,alias:a.label,show:a.visible,format:a.format}}),b=g.getObject("layerObject.fields",!1,b),a.layer.fields=d(a.layer.fields,b),e.some(a.layer.fields,function(a){return a.show})||(a.layer.fields&&0<a.layer.fields.length?a.layer.fields[0].show=!0:console.warn("We do not get fields info.")));return a};l.generateCacheStore=function(b,a,d,c,f){b=new w({layer:b,objectIds:b._objectIds||null,totalCount:a,batchCount:d,where:c||"1\x3d1",spatialFilter:f});
+a=new v;return new r(b,a,{})};l.generateMemoryStore=function(b,a){return new m(new v({data:b||[],idProperty:a}))};l.merge=function(b,a,d,c){for(var f=e.map(a,function(a){return a[d]}),g=0,m=b.length;g<m;g++){var h=f.indexOf(b[g][d]);-1<h&&c(b[g],a[h])}};l.syncOrderWith=function(b,a,d){function c(a,b){return e.map(a,function(a){return a[b]})}if(!g.isArray(a)||!d)return b;for(var f=c(b,d),m=[],h=0,k=a.length;h<k;h++){var l=f.indexOf(a[h][d]);-1<l&&(m=m.concat(b.splice(l,1)),f=c(b,d))}return m.concat(b)}})},
+"dojo/store/Cache":function(){define(["../_base/lang","../when"],function(g,e){var q=function(p,h,l){l=l||{};return g.delegate(p,{query:function(e,g){e=p.query(e,g);e.forEach(function(e){l.isLoaded&&!l.isLoaded(e)||h.put(e)});return e},queryEngine:p.queryEngine||h.queryEngine,get:function(g,l){return e(h.get(g),function(m){return m||e(p.get(g,l),function(e){e&&h.put(e,{id:g});return e})})},add:function(g,l){return e(p.add(g,l),function(e){h.add(e&&"object"==typeof e?e:g,l);return e})},put:function(g,
+l){h.remove(l&&l.id||this.getIdentity(g));return e(p.put(g,l),function(e){h.put(e&&"object"==typeof e?e:g,l);return e})},remove:function(g,l){return e(p.remove(g,l),function(e){return h.remove(g,l)})},evict:function(e){return h.remove(e)}})};g.setObject("dojo.store.Cache",q);return q})},"widgets/AttributeTable/table/FeatureLayerQueryStore":function(){define("dojo/_base/declare dojo/_base/lang dojo/_base/array esri/tasks/query esri/tasks/QueryTask ./FeatureLayerQueryResult".split(" "),function(g,e,
+q,p,h,l){return g(null,{queryUrl:"",idProperty:"id",data:null,_entityData:null,constructor:function(e){g.safeMixin(this,e);this.data=[];this._entityData=[];this.layer=e.layer;this.objectIds=e.objectIds;this.where=e.where;this.orderByFields=e.orderByFields;this.totalCount=e.totalCount;this.batchCount=e.batchCount||25;this.idProperty=this.layer.objectIdField;this.spatialFilter=e.spatialFilter;this.layer&&this.layer.url&&(this.queryTask=new h(this.layer.url))},get:function(e){return this.data[e]},getIdentity:function(e){return e[this.idProperty]},
+query:function(g,h){var m=new p,k=h&&h.start||0,r=h._export_count||this.batchCount,f=null;"function"===typeof g?f=g(this._entityData):"[object Array]"===Object.prototype.toString.call(g)&&(f=g);this.objectIds?(f=f?f:this.objectIds,m.objectIds=f.length>=k+this.batchCount?f.slice(k,k+r):f.slice(k)):(f&&0<f.length?m.objectIds=f.length>=k+this.batchCount?f.slice(k,k+r):f.slice(k):(m.start=k,m.num=r,m.where=this.where,m.geometry=this.spatialFilter,m.spatialRelationship=p.SPATIAL_REL_INTERSECTS),(g=h.sort)&&
+0<g.length&&(g=q.map(g,function(b){return b.attribute+" "+(b.descending?"DESC":"ASC")}),m.orderByFields=g));m.returnGeometry="esriGeometryPoint"===this.layer.geometryType;m.outFields=["*"];var d=this.totalCount;g=null;g=!m.where;if(!(m.objectIds&&0<m.objectIds.length)&&g)return new l([]);g=this.queryTask?this.queryTask.execute(m):this.layer.queryFeatures(m);g.total=g.then(e.hitch(this,function(b){var a=0,f=this.layer.objectIdField;if(this.objectIds){if(!f)for(a=0;a<b.fields.length;a++)if("esriFieldTypeOID"===
+b.fields[a].type){f=b.fields[a].name;break}for(var c={},a=0;a<b.features.length;a++)c[b.features[a].attributes[f]]=b.features[a];b.features=q.map(m.objectIds,function(a){return c[a]})}for(a=0;a<b.features.length;a++)if(b.features[a]){var g=b.features[a];b.features[a]=e.mixin(e.clone(g.attributes),{geometry:g.geometry});this.data[b.features[a][f]]=b.features[a];this._entityData.push(b.features[a])}b=b.features;return d}),function(){console.log("FeatureLayerQueryStore queryFeatures failed.");return 0});
+return new l(g)}})})},"widgets/AttributeTable/table/FeatureLayerQueryResult":function(){define("esri/main dojo/_base/lang dojo/_base/kernel dojo/_base/Deferred dojo/DeferredList dojo/_base/array".split(" "),function(g,e,q,p){var h=function(l){function m(e){l[e]||(l[e]=function(){var g=arguments;return p.when(l,function(k){Array.prototype.unshift.call(g,k.features||k);return h(q[e].apply(q,g))})})}if(!l)return l;l.then&&(l=e.delegate(l));l.total||(l.total=p.when(l,function(e){return g._isDefined(e.total)?
+e.total:e.length||0}));m("forEach");m("filter");m("map");m("some");m("every");return l};return h})},"widgets/AttributeTable/_build-generate_module":function(){define(["dojo/text!./css/style.css","dojo/i18n!./nls/strings"],function(){})},"url:dijit/layout/templates/TabContainer.html":'\x3cdiv class\x3d"dijitTabContainer"\x3e\r\n\t\x3cdiv class\x3d"dijitTabListWrapper" data-dojo-attach-point\x3d"tablistNode"\x3e\x3c/div\x3e\r\n\t\x3cdiv data-dojo-attach-point\x3d"tablistSpacer" class\x3d"dijitTabSpacer ${baseClass}-spacer"\x3e\x3c/div\x3e\r\n\t\x3cdiv class\x3d"dijitTabPaneWrapper ${baseClass}-container" data-dojo-attach-point\x3d"containerNode"\x3e\x3c/div\x3e\r\n\x3c/div\x3e\r\n',
+"url:dijit/layout/templates/_TabButton.html":'\x3cdiv role\x3d"presentation" data-dojo-attach-point\x3d"titleNode,innerDiv,tabContent" class\x3d"dijitTabInner dijitTabContent"\x3e\r\n\t\x3cspan role\x3d"presentation" class\x3d"dijitInline dijitIcon dijitTabButtonIcon" data-dojo-attach-point\x3d"iconNode"\x3e\x3c/span\x3e\r\n\t\x3cspan data-dojo-attach-point\x3d\'containerNode,focusNode\' class\x3d\'tabLabel\'\x3e\x3c/span\x3e\r\n\t\x3cspan class\x3d"dijitInline dijitTabCloseButton dijitTabCloseIcon" data-dojo-attach-point\x3d\'closeNode\'\r\n\t\t  role\x3d"presentation"\x3e\r\n\t\t\x3cspan data-dojo-attach-point\x3d\'closeText\' class\x3d\'dijitTabCloseText\'\x3e[x]\x3c/span\r\n\t\t\t\t\x3e\x3c/span\x3e\r\n\x3c/div\x3e\r\n',
+"url:dijit/layout/templates/ScrollingTabController.html":'\x3cdiv class\x3d"dijitTabListContainer-${tabPosition}" style\x3d"visibility:hidden"\x3e\r\n\t\x3cdiv data-dojo-type\x3d"dijit.layout._ScrollingTabControllerMenuButton"\r\n\t\t class\x3d"tabStripButton-${tabPosition}"\r\n\t\t id\x3d"${id}_menuBtn"\r\n\t\t data-dojo-props\x3d"containerId: \'${containerId}\', iconClass: \'dijitTabStripMenuIcon\',\r\n\t\t\t\t\tdropDownPosition: [\'below-alt\', \'above-alt\']"\r\n\t\t data-dojo-attach-point\x3d"_menuBtn" showLabel\x3d"false" title\x3d""\x3e\x26#9660;\x3c/div\x3e\r\n\t\x3cdiv data-dojo-type\x3d"dijit.layout._ScrollingTabControllerButton"\r\n\t\t class\x3d"tabStripButton-${tabPosition}"\r\n\t\t id\x3d"${id}_leftBtn"\r\n\t\t data-dojo-props\x3d"iconClass:\'dijitTabStripSlideLeftIcon\', showLabel:false, title:\'\'"\r\n\t\t data-dojo-attach-point\x3d"_leftBtn" data-dojo-attach-event\x3d"onClick: doSlideLeft"\x3e\x26#9664;\x3c/div\x3e\r\n\t\x3cdiv data-dojo-type\x3d"dijit.layout._ScrollingTabControllerButton"\r\n\t\t class\x3d"tabStripButton-${tabPosition}"\r\n\t\t id\x3d"${id}_rightBtn"\r\n\t\t data-dojo-props\x3d"iconClass:\'dijitTabStripSlideRightIcon\', showLabel:false, title:\'\'"\r\n\t\t data-dojo-attach-point\x3d"_rightBtn" data-dojo-attach-event\x3d"onClick: doSlideRight"\x3e\x26#9654;\x3c/div\x3e\r\n\t\x3cdiv class\x3d\'dijitTabListWrapper\' data-dojo-attach-point\x3d\'tablistWrapper\'\x3e\r\n\t\t\x3cdiv role\x3d\'tablist\' data-dojo-attach-event\x3d\'onkeydown:onkeydown\'\r\n\t\t\t data-dojo-attach-point\x3d\'containerNode\' class\x3d\'nowrapTabStrip\'\x3e\x3c/div\x3e\r\n\t\x3c/div\x3e\r\n\x3c/div\x3e',
+"url:dijit/layout/templates/_ScrollingTabControllerButton.html":'\x3cdiv data-dojo-attach-event\x3d"ondijitclick:_onClick" class\x3d"dijitTabInnerDiv dijitTabContent dijitButtonContents"  data-dojo-attach-point\x3d"focusNode" role\x3d"button"\x3e\r\n\t\x3cspan role\x3d"presentation" class\x3d"dijitInline dijitTabStripIcon" data-dojo-attach-point\x3d"iconNode"\x3e\x3c/span\x3e\r\n\t\x3cspan data-dojo-attach-point\x3d"containerNode,titleNode" class\x3d"dijitButtonText"\x3e\x3c/span\x3e\r\n\x3c/div\x3e',
+"url:widgets/AttributeTable/css/style.css":'.jimu-widget-attributetable-main .tabStripButton{height: 24px !important;}.jimu-widget-attributetable,.jimu-widget-attributetable-main{left: 0px; bottom: 0px; background-color: #efefef;}.jimu-widget-attributetable{height: auto;}.jimu-widget-attributetable-main{overflow: hidden; width: 100%; height: 100%;}.jimu-widget-attributetable .jimu-widget-attributetable-main .dijitToolbar {position: relative;}.jimu-widget-attributetable-move{width: 100%; height: 7px; top: 0px; background-color: rgba(0, 0, 0, 0.7);}.jimu-widget-attributetable-move:hover{cursor: n-resize;}.jimu-widget-attributetable-move:hover .jimu-widget-attributetable-thumb{background-color: #fff;}.jimu-widget-attributetable .draging{background-color: gray;}.jimu-widget-attributetable-thumb{background: #B0B0B0 none; height: 1px; width: 19px; margin: 3px auto; position: absolute; left: 0; right: 0;}.jimu-widget-attributetable-indicate-vertical{width: 2px; height: 100%; background-color: black; position: absolute; z-index: 1; opacity: 0;}.jimu-widget-attributetable-indicate-horizontal{width: 100%; height: 2px; background-color: black; position: absolute; z-index: 1; opacity: 0;}.jimu-widget-attributetable-switch{width: 63px; height: 17px; left: 0; right: 0; top: -17px; margin: auto; position: absolute; cursor: pointer; border-radius: 8px 8px 0 0; background-position: center; background-repeat: no-repeat; background-color: rgba(0,0,0,0.7); border: 2px solid rgba(255,255,255,0.8); border-bottom-style: none;}.jimu-widget-attributetable-switch.open{background-image: url(images/arrow_down.svg); border-bottom-left-radius: 0; border-bottom-right-radius: 0;}.jimu-widget-attributetable-switch.open:hover{background-image: url(images/arrow_down_hover.svg);}.jimu-widget-attributetable-switch.close{background-image: url(images/arrow_up.svg)}.jimu-widget-attributetable-switch.close:hover{background-image: url(images/arrow_up_hover.svg);}.jimu-widget-attributetable-arrowImage{width: 30px; height: 30px; left: 48%; top: -30px; position: absolute; border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-left-radius: 0px; border-bottom-right-radius: 0px; background-position: center center; background-repeat: no-repeat; cursor: ns-resize; background-color: rgba(0, 0, 0, 0.8);}.dijitTabPaneWrapper .dijitTabContainerTop-container .dijitAlignCenter{height: 100%;}.jimu-widget-attributetable .dijitTabContainerTopChildWrapper,.jimu-widget-attributetable .dijitTabContainerTopChildWrapper .dijitContentPane{height: 100% !important; width: 100% !important; padding: 0;}.jimu-widget-attributetable .dijitToggleButton.dijitToggleButtonChecked .dijitButtonText{color: #518dca;}.jimu-widget-attributetable .esriAttributeTable{width: 100%; height: 100%; position: relative;}.jimu-widget-attributetable .dgrid-header .dgrid-column-selectionHandle.selection-handle-column div.dgrid-resize-header-container{display: none;}.jimu-widget-attributetable .dgrid-column-selectionHandle.selection-handle-column{width: 20px !important; background-color: #eee; padding: 0 !important; border-bottom: 1px solid #ccc !important; cursor: pointer;}.dojoDndSource.dojoDndTarget.dojoDndHorizontal.dojoDndContainer .dgrid-column-selectionHandle.selection-handle-column{pointer-events: none;}.jimu-widget-attributetable .dgrid-cell {border-right: solid 1px #ccc; width: 100px;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table.auto-width .dgrid-cell{width: auto;}.jimu-widget-attributetable .dgrid-row .dgrid-cell {border:medium none; padding: 7px 3px; border-right: 1px solid #CCCCCC;}.jimu-rtl .jimu-widget-attributetable .dgrid-rtl-swap .dgrid-header-row {right: 0; left: 17px;}.jimu-rtl .jimu-widget-attributetable .dgrid-cell {text-align: right; border-left: solid 1px #ccc;}.jimu-widget-attributetable .dgrid-header {overflow: hidden; background-color: #eee;}.jimu-widget-attributetable .dgrid-cell a{color: #21759B; text-decoration: none;}.jimu-widget-attributetable .dgrid-cell a:hover, a:active{text-decoration: underline;}.jimu-widget-attributetable .dgrid-row {border: medium none;}.jimu-widget-attributetable .dgrid-row:hover {background-color:#E1F0FB;}.jimu-widget-attributetable .dgrid-row-even{background-color: #FFF;}.jimu-widget-attributetable .dgrid-row-odd {background-color: #F7F8F8;}.jimu-widget-attributetable .ui-state-active {background-color: rgb(0, 255, 255) !important;}.jimu-widget-attributetable .dgrid-status {white-space: pre;}.jimu-widget-attributetable .self-footer {display: inline-block;}.jimu-rtl .dgrid-hider-menu-check{right: 2px; left: auto;}.jimu-rtl .dgrid-hider-menu-label {padding-left: 0; padding-right: 20px;}.jimu-rtl .jimu-widget-attributetable .dgrid-pagination .dgrid-status{float: right !important;}.jimu-rtl .dgrid-pagination .dgrid-navigation,.jimu-rtl .dgrid-pagination .dgrid-page-size{float: left !important;}.esriAttributeTableExportImage{background-image: url("../images/export.png"); width: 13px; height: 13px;}.esriAttributeTableZoomImage{background-image: url("../images/zoom.png"); width: 13px; height: 13px;}.esriAttributeTableSelectAllImage{background-image: url("../images/select.png"); width: 13px; height: 13px;}.esriAttributeTableFilterImage{background-image: url("../images/filter.png"); width: 13px; height: 13px;}.esriAttributeTableSelectPageImage{background-image: url("../images/page.png"); width: 13px; height: 13px;}.esriAttributeTableClearImage{background-image: url("../images/clear.png"); width: 13px; height: 13px;}.esriAttributeTableOptionsImage{background-image: url("../images/more.png"); width: 13px; height: 13px;}.esriAttributeTableRefreshImage{background-image: url("../images/refresh.png"); width: 13px; height: 13px;}.esriAttributeTableSymbolImage{background-image: url("../images/symbol.png"); width: 13px; height: 13px;}.esriAttributeTableCloseImage{background-image: url("../images/close.png"); width: 13px; height: 13px; position: absolute; right: 0; top: -13px;}.esriAttributeTableColumnsImage{background-image: url("../images/columns.png"); width: 13px; height: 13px;}.jimu-rtl .jimu-widget-attributetable .close-button {right: auto; left: 0;}.jimu-widget-attributetable .jimu-loading-indicator {z-index: 100;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table{height: 100%; position: relative;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column{overflow: visible; text-align: center;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos{text-align: center; display: inline-block; position: relative;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .show-attachments-div{display: inline-block; color: #24B5CC; cursor: pointer; padding: 2px 10px; height: 20px; border-radius: 10px; line-height: 16px;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .show-attachments-div.has-attachments:hover,.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .show-attachments-div.has-attachments.selected{background: #24B5CC; color: white;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup{display: none; position: absolute; background: #FFFFFF; box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.50); border-radius: 2px; width: 240px; left: -245px; top: 4px; text-align: left;}.jimu-rtl .jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup{left: auto; right: -245px; text-align: right;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup.show{display: block;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-header{background: none; padding-left: 10px; font-size: 14px; color: #000000; font-weight: bold; line-height: 36px;}.jimu-rtl .jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-header{padding-left: 0; padding-right: 10px;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-header:hover{background: #fff;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-header .close {display: inline-block; width: 36px; height: 36px; background: url(\'../images/close.png\') center no-repeat; cursor: pointer;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-content{box-sizing: border-box; width: 100%; max-height: 160px; list-style-type: none; margin: 0; padding: 0; overflow-x: hidden; overflow-y: auto; padding-left: 20px;}.jimu-rtl .jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-content{padding-left: 0; padding-right: 20px;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-content li {vertical-align: middle; background-image: url(\'./images/file.png\'); background-repeat: no-repeat; padding-left: 30px; background-size: 20px; background-position: left;}.jimu-rtl .jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-content li{padding-left: 0; padding-right: 30px; background-position: right;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-content li.image-type{background-image: url(\'./images/image.png\');}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-content li a{display: inline-block; width: 176px; height: 36px; line-height: 36px;}.jimu-widget-attributetable .jimu-widget-attributetable-feature-table .attachments-column .attachment-infos .attachment-popup-content li a:hover{cursor: pointer;}.jimu-widget-attributetable-feature-menu .menuItemClass{cursor: pointer;}.jimu-widget-attributetable-feature-menu.dijitMenu{background-color: #fff !important;}.jimu-widget-attributetable-feature-menu.dijitMenu .dijitMenuItemSelected td,.jimu-widget-attributetable-feature-menu.dijitMenu .dijitMenuItemSelected{background-color: #f1f1f1 !important; color: #000!important;}.jimu-widget-attributetable-feature-table-footer {position: absolute; bottom: 4px; background: white; width: 100%;}.widget-at-filter-popup .content-absolute{left: 0; right: 0;}',
+"*now":function(g){g(['dojo/i18n!*preload*widgets/AttributeTable/nls/Widget*["ar","bs","cs","da","de","en","el","es","et","fi","fr","he","hi","hr","id","it","ja","ko","lt","lv","nb","nl","pl","pt-br","pt-pt","ro","ru","sl","sr","sv","th","tr","zh-cn","vi","zh-hk","zh-tw","ROOT"]'])},"*noref":1}});
+define("dojo/_base/declare dojo/_base/html dijit/_WidgetsInTemplateMixin jimu/BaseWidget dijit/layout/TabContainer dijit/layout/ContentPane jimu/utils jimu/dijit/Message dojo/Deferred dojo/promise/all esri/layers/FeatureLayer esri/lang dojo/_base/lang dojo/on dojo/touch dojo/topic dojo/aspect dojo/_base/array dojo/query jimu/dijit/LoadingIndicator jimu/FilterManager ./_ResourceManager ./utils".split(" "),function(g,e,q,p,h,l,m,r,v,k,w,f,d,b,a,z,c,t,D,G,L,C,H){g=g([p,q],{name:"AttributeTable",baseClass:"jimu-widget-attributetable",
+normalHeight:0,openHeight:0,arrowDivHeight:null,_relatedDef:null,_resourceManager:null,_activeLayerInfoId:null,_layerTypes:{FEATURELAYER:"FeatureLayerTable",RELATIONSHIPTABLE:"RelationshipTable"},postMixInProperties:function(){this.nls.features=this.nls.features||"features"},postCreate:function(){this.inherited(arguments);m.loadStyleLink("dgrid",apiUrl+"dgrid/css/dgrid.css");this.AttributeTableDiv=this._loadInfoDef=null;this._delayedLayerInfos=[];this.layerTabPages=[];this.tabContainer=null;this.moveMode=
+!1;this.bottomPosition=this.noGridHeight=this.previousDomHeight=this.moveY=0;this.layerTabPagesIndex=-1;this.showing=!1;this.openHeight=this.normalHeight=this._getNormalHeight();this.arrowDivHeight=0;this._dragingHandlers=[];this._activeTable=null;this._activeTableHandles=[];this.filterManager=L.getInstance();this._createUtilitiesUI();this._resourceManager=new C({map:this.map,nls:this.nls});this._resourceManager.setConfig(this.config);this.own(z.subscribe("changeMapPosition",d.hitch(this,this._onMapPositionChange)));
+H.readLayerInfosObj(this.map).then(d.hitch(this,function(a){this.domNode&&a&&(this.own(b(a,"layerInfosIsShowInMapChanged",d.hitch(this,this.onLayerInfosIsShowInMapChanged))),this.own(a.on("layerInfosChanged",d.hitch(this,this.onLayerInfosChanged))),this.own(a.on("layerInfosFilterChanged",d.hitch(this,this.onLayerInfosFilterChanged))))}))},_createUtilitiesUI:function(){this._createSwitchUI();this._createBarUI()},_createBarUI:function(){this.arrowDiv=e.create("div");e.addClass(this.arrowDiv,"jimu-widget-attributetable-move");
+e.create("div",{"class":"jimu-widget-attributetable-thumb"},this.arrowDiv);e.place(this.arrowDiv,this.domNode);if(!this.arrowDivHeight){var c=e.getMarginBox(this.arrowDiv);this.arrowDivHeight=c&&c.h?c.h:7}this.own(b(this.arrowDiv,"mousedown",d.hitch(this,this._onDragStart)));this.own(b(this.arrowDiv,a.press,d.hitch(this,this._onDragStart)))},_isOnlyTable:function(){return this.closeable||!this.isOnScreen},_createSwitchUI:function(){this._isOnlyTable()||(this.switchBtn=e.create("div",{className:"jimu-widget-attributetable-switch"},
+this.domNode),this.own(b(this.switchBtn,"click",d.hitch(this,this._switchTable))))},_processOpenBarUI:function(){this._isOnlyTable()||(e.removeClass(this.switchBtn,"close"),e.addClass(this.switchBtn,"open"),e.setAttr(this.switchBtn,"title",this.nls.closeTableTip))},_processCloseBarUI:function(){this._isOnlyTable()||(e.removeClass(this.switchBtn,"open"),e.addClass(this.switchBtn,"close"),e.setAttr(this.switchBtn,"title",this.nls.openTableTip))},_switchTable:function(){this.showing?this._closeTable():
+this._openTable()},_openTable:function(){this._loadInfoDef?this._loadInfoDef&&this._loadInfoDef.isFulfilled()&&(this.showing=!0,this._processDelayedLayerInfos(),this._activeTable&&this._activeTable.active()):(this._loadInfoDef=new v,this.own(this._loadInfoDef),this.loading||(this.loading=new G),this.loading.placeAt(this.domNode),this.loading.show(),this._resourceManager.updateLayerInfoResources(!0).then(d.hitch(this,function(){this.domNode&&(this._init(),this.showRefreshing(!1),this.showing=!0,this._loadInfoDef.resolve())}),
+d.hitch(this,function(a){console.error(a);this._loadInfoDef.reject(a)})));this._changeHeight(this.openHeight);this._processOpenBarUI();return this._loadInfoDef},_onCloseBtnClicked:function(){this.showing&&this._isOnlyTable()?this.widgetManager.closeWidget(this):this.showing&&this._closeTable();this._activeTable&&this._activeTable.deactive()},_closeTable:function(){this._changeHeight(0);this.showRefreshing(!1);this._processCloseBarUI();this._activeTable&&this._activeTable.deactive();this.showing=!1;
+e.setStyle(this.arrowDiv,"display","none");e.setStyle(this.domNode,"overflow","hidden");setTimeout(d.hitch(this,function(){this.domNode&&(e.setStyle(this.domNode,"overflow","visible"),e.setStyle(this.arrowDiv,"display","block"))}),10)},_init:function(){this.initDiv();this._changeHeight(this.openHeight);this.resize();this.own(b(window.document,"mouseup",d.hitch(this,this._onDragEnd)));this.own(b(window.document,"mousemove",d.hitch(this,this._onDraging)));this.own(b(window.document,a.move,d.hitch(this,
+this._onDraging)));this.own(b(window.document,a.release,d.hitch(this,this._onDragEnd)))},_processDelayedLayerInfos:function(){0<this._delayedLayerInfos.length&&(t.forEach(this._delayedLayerInfos,d.hitch(this,function(a){this._resourceManager.addLayerInfo(a)})),this._delayedLayerInfos=[])},onLayerInfosIsShowInMapChanged:function(){this._activeTable&&this._activeTable.changeToolbarStatus()},onLayerInfosChanged:function(a,b,c){c&&a&&("added"===b?c.getSupportTableInfo().then(d.hitch(this,function(a){a.isSupportedLayer&&
+this._resourceManager.addLayerInfo(c)})):"removed"===b&&(a=c.id,this.getExistLayerTabPage(a)&&this.layerTabPageClose(a,!0),this._resourceManager.getLayerInfoById(a)&&this._resourceManager.removeLayerInfo(a),this._resourceManager.getConfigInfoById(a)&&this._resourceManager.removeConfigInfo(a)))},onLayerInfosFilterChanged:function(a){t.some(a,d.hitch(this,function(a){if(this._activeTable&&a.id===this._activeTable.layerInfo.id)return this._activeTable._relatedQuery||this._activeTable.startQuery(),!0}))},
+destroy:function(){if(!this._destroyed){var a,b;if(this.layerTabPages&&0<this.layerTabPages.length){a=this.layerTabPages.length;for(b=0;b<a;b++){var c=this.layerTabPages[b].paneId,e=d.getObject("_resourceManager.featureTableSet."+c,!1,this);e&&(e=e.getFilterObj())&&f.isDefined(e.expr)&&this.filterManager.applyWidgetFilter(c,this.id,"");this.layerTabPages[b].destroy()}this.layerTabPages=null}this.tabContainer&&(this.tabContainer.destroy(),this.tabContainer=null);this._activeLayerInfoId=this._loadInfoDef=
+this.AttributeTableDiv=null;this._resourceManager&&this._resourceManager.empty();this.inherited(arguments)}},onOpen:function(){!this.showing&&this._isOnlyTable()&&this._openTable()},onClose:function(){this.showing&&this._closeTable()},_changeHeight:function(a){e.setStyle(this.domNode,"height",a+"px");this.tabContainer&&this.tabContainer.domNode&&0<=a-this.arrowDivHeight&&e.setStyle(this.tabContainer.domNode,"height",a-this.arrowDivHeight+"px");this._activeTable&&this._activeTable.changeHeight(a-this.noGridHeight);
+z.publish("changeMapPosition",{bottom:a+this.bottomPosition});this.publishData({changeMapPosition:{bottom:a+this.bottomPosition}});0!==a&&(this.openHeight=a>=this.arrowDivHeight?a:this.normalHeight)},_onMapPositionChange:function(a){isFinite(a.left)&&"number"===typeof a.left&&(window.isRTL?e.setStyle(this.domNode,"right",parseFloat(a.left)+"px"):e.setStyle(this.domNode,"left",parseFloat(a.left)+"px"));isFinite(a.right)&&"number"===typeof a.right&&(window.isRTL?e.setStyle(this.domNode,"left",parseFloat(a.right)+
+"px"):e.setStyle(this.domNode,"right",parseFloat(a.right)+"px"));this.tabContainer&&this.tabContainer.resize()},setPosition:function(a){this.position=a;this._isOnlyTable()?this.bottomPosition=0:this.bottomPosition="bottom"in a?parseInt(a.bottom,10):0;this.domNode.parentNode&&this.domNode.parentNode.id===window.jimuConfig.layoutId||(e.place(this.domNode,window.jimuConfig.layoutId),this.setInitialPosition(a),this.showRefreshing(!1));e.setStyle(this.domNode,"bottom",this.bottomPosition+"px");this._resourceManager.isEmpty()||
+setTimeout(d.hitch(this,function(){var a=this._getGridTopSectionHeight(),b=e.getStyle(this.domNode,"height");0<a&&(this.noGridHeight=a);0<b&&this._changeHeight(b)}),20)},_startQueryOnLayerTab:function(a,b){var c=this._resourceManager.getLayerInfoById(a),f=this.getExistLayerTabPage(a);c&&f&&(this.showRefreshing(!0),this._resourceManager.getQueryTable(a,this.config.filterByMapExtent,this.config.hideExportButton).then(d.hitch(this,function(c){this._activeLayerInfoId===a&&c&&(f=this.getExistLayerTabPage(a),
+c.isSupportQuery?(c=c.table,c.getParent()!==f&&c.placeAt(f),this.setActiveTable(c,{h:this.openHeight-this.noGridHeight,featureSet:b})):(c=e.toDom("\x3cdiv\x3e"+this.nls.unsupportQueryWarning+"\x3c/div\x3e"),f.set("content",c),this._activeTable&&this._activeTable.changeToolbarStatus()),this.showRefreshing(!1))}),d.hitch(this,function(a){new r({message:a.message||a});this.showRefreshing(!1)})))},_startQueryOnRelationTab:function(a,b,c,f){var g=this._resourceManager.getLayerInfoById(f),u=this.getExistLayerTabPage(a);
+g&&g.layerObject&&u&&this._resourceManager.getRelationTable(f,b,!1,this.config.hideExportButton).then(d.hitch(this,function(b){this._activeLayerInfoId===a&&b&&(u=this.getExistLayerTabPage(a),b.isSupportQuery?(b=b.table,b.getParent()!==u&&b.placeAt(u),this.setActiveTable(b,{h:this.openHeight-this.noGridHeight,layer:g.layerObject,selectedIds:c})):(b=e.toDom("\x3cdiv\x3e"+this.nls.unsupportQueryWarning+"\x3c/div\x3e"),u.set("content",b),this._activeTable&&this._activeTable.changeToolbarStatus()),this.showRefreshing(!1))}))},
+tabChanged:function(){if(this.tabContainer&&this.tabContainer.selectedChildWidget){0>=this.noGridHeight&&(this.noGridHeight=this._getGridTopSectionHeight()+5);var a=this.tabContainer.selectedChildWidget.params,b=a.layerType,c=a.paneId,d=a.relKey;b===this._layerTypes.FEATURELAYER&&(this._activeLayerInfoId!==c||a.oids||a.featureSet)?(this.setActiveTable(null),delete a.oids,this._activeLayerInfoId=c,this._startQueryOnLayerTab(c,a.featureSet)):b===this._layerTypes.RELATIONSHIPTABLE&&(this.setActiveTable(null),
+b=a.oids,a=a.originalInfoId,this._activeLayerInfoId=c,this._startQueryOnRelationTab(c,d,b,a))}},showRefreshing:function(a){this.loading&&(a?this.loading.show():this.loading.hide())},_onDragStart:function(a){this.moveMode=!0;this.moveY=a.clientY;this.previousDomHeight=e.getStyle(this.domNode,"height");e.addClass(this.arrowDiv,"draging");this._dragingHandlers=this._dragingHandlers.concat([b(this.ownerDocument,"dragstart",function(a){a.stopPropagation();a.preventDefault()}),b(this.ownerDocumentBody,
+"selectstart",function(a){a.stopPropagation();a.preventDefault()})])},_onDraging:function(a){this.moveMode&&125<=a.clientY&&this._changeHeight(this.moveY-a.clientY+this.previousDomHeight)},_onDragEnd:function(){this.moveMode=!1;e.removeClass(this.arrowDiv,"draging");for(var a=this._dragingHandlers.pop();a;)a.remove(),a=this._dragingHandlers.pop()},_getNormalHeight:function(){var a=document.body.clientHeight;return window.appInfo.isRunInMobile?a/2:a/3},setInitialPosition:function(){e.setStyle(this.domNode,
+"top","auto");e.setStyle(this.domNode,"left","0px");e.setStyle(this.domNode,"right","0px");e.setStyle(this.domNode,"position","absolute");this._isOnlyTable()||(this.config&&this.config.initiallyExpand?this._openTable():this._closeTable())},_bindActiveTableEvents:function(){var a=this;a._activeTable&&(a._activeTableHandles.push(b(a._activeTable,"show-related-records",function(b){a._showRelatedRecords(b)})),a._activeTableHandles.push(b(a._activeTable,"show-all-records",function(b){a.getExistLayerTabPage(b.layerInfoId).params.layerType=
+a._layerTypes.FEATURELAYER})),a._activeTableHandles.push(b(a._activeTable,"refresh",function(b){delete a.getExistLayerTabPage(b.layerInfoId).params.featureSet})),a._activeTableHandles.push(b(a._activeTable,"apply-filter",function(b){a.filterManager.applyWidgetFilter(b.layerInfoId,a.id,b.expr);a._activeTable.startQuery()})))},_unbindActiveTableEvents:function(){for(var a=this._activeTableHandles;0<a.length;){var b=a.pop();b&&b.remove&&b.remove()}},setActiveTable:function(a,b){this._activeTable&&(this._activeTable.cancelThread(),
+this._activeTable.deactive(),this._unbindActiveTableEvents(),this._activeTable=null);if(a){this._activeTable=a;this._activeTable.active();this._activeTable.changeHeight(b.h);if(!this._activeTable.tableCreated||this._activeTable.tableCreated&&this._activeTable.matchingMap||this._activeTable.tableCreated&&!this._activeTable.matchingMap&&b.featureSet||b.layer&&b.selectedIds)if(a=d.getObject("featureSet.features.length",!1,b),b.layer&&b.selectedIds)this._activeTable.queryRecordsByRelationship(b);else if(a){var c=
+b.featureSet.displayFieldName;b=t.map(b.featureSet.features,function(a){return a.attributes[c]});this._activeTable.startQuery(b)}else this._activeTable.startQuery();this._bindActiveTableEvents();this._activeTable.changeToolbarStatus()}},initDiv:function(){this.AttributeTableDiv=e.create("div",{},this.domNode);e.addClass(this.AttributeTableDiv,"jimu-widget-attributetable-main");var a=e.create("div");e.place(a,this.AttributeTableDiv);this.tabContainer=new h({style:"width: 100%;"},a);e.setStyle(this.tabContainer.domNode,
+"height",this.normalHeight+"px");this.tabContainer.startup();for(var a=this._resourceManager.getConfigInfos(),b=a.length,f=0;f<b;f++){var g=a[f];if(g.show){var g=d.clone(g),k={};k.paneId=g.id;k.title=g.name;k.name=g.name;k.layerType=this._layerTypes.FEATURELAYER;k.style="height: 100%; width: 100%; overflow: visible;";g=new l(k);this.layerTabPages[f]=g;this.tabContainer.addChild(g)}}0<b&&(this.noGridHeight=this._getGridTopSectionHeight()+5);m.setVerticalCenter(this.tabContainer.domNode);this.tabChanged();
+this.own(c.after(this.tabContainer,"selectChild",d.hitch(this,this.tabChanged)))},getLayerInfoLabel:function(a){return a.name||a.title},getLayerInfoId:function(a){return a&&a.id||""},_getGridTopSectionHeight:function(){var a=D(".dijitTabPaneWrapper",this.domNode)[0];if(a){var b=e.position(this.domNode).y;return e.position(a).y-b}return 0},_getLayerInfoByIdFromConfigJSON:function(a){var b=t.filter(this.config.layerInfos,function(b){return b.id===a});return b&&0<b.length&&b[0]},_showRelatedRecords:function(){var a=
+this._activeTable;if(a){var b=a.layerInfo;if(b&&b.layerObject)for(var c=b.layerObject.relationships,a=a.getSelectedRows(),d=0,f=c.length;d<f;d++)this.addNewRelationTab(a,c[d],b.id)}},addNewLayerTab:function(a,c){var f=this._resourceManager.getLayerInfoById(a);if(f){a=this.getExistLayerTabPage(a);var e={};e.title=this.getLayerInfoLabel(f);e.name=e.title;e.paneId=this.getLayerInfoId(f);e.closable=!0;e.layerType=this._layerTypes.FEATURELAYER;e.featureSet=c;a?(d.mixin(a.params,e),this.onOpen()):(this._resourceManager.getConfigInfoById(f.id)||
+this._resourceManager.addConfigInfo(f),this._resourceManager.getLayerInfoById(f.id)||this._resourceManager.addLayerInfo(f),this.onOpen(),e.style="height: 100%; width: 100%; overflow: visible",a=new l(e),this.layerTabPages.push(a),a.set("title",e.name),this.own(b(a,"close",d.hitch(this,this.layerTabPageClose,e.paneId))),this.tabContainer.addChild(a));this.tabContainer.selectChild(a)}},addNewRelationTab:function(a,c,f){var e=c&&c.shipInfo;if(e){var g=this.getExistLayerTabPage(c.shipInfo.id),h={};h.oids=
+a;h.title=e.title||e.name||c.name;h.name=h.title;h.paneId=e.id;h.relKey=c._relKey;h.originalInfoId=f;h.closable=!0;h.layerType=this._layerTypes.RELATIONSHIPTABLE;g?d.mixin(g.params,h):(this._resourceManager.getConfigInfoById(e.id)||this._resourceManager.addConfigInfo(e),this._resourceManager.getLayerInfoById(e.id)||this._resourceManager.addLayerInfo(e),h.style="height: 100%; width: 100%; overflow: visible",g=new l(h),this.layerTabPages.push(g),g.set("title",h.name),this.own(b(g,"close",d.hitch(this,
+this.layerTabPageClose,h.paneId))),this.tabContainer.addChild(g));this.tabContainer.selectChild(g)}},onReceiveData:function(a,b,c){c&&"AttributeTable"===c.target&&(this._isOnlyTable()&&"closed"===this.state?console.warn("Please open Attribute Table!"):(c.layer=c.layer||c.layerInfo,this.showing?this._resourceManager.updateLayerInfoResources(!1).then(d.hitch(this,function(){this._addLayerToTable(c)})):this._openTable().then(d.hitch(this,function(){this._resourceManager.getLayerInfoById(c.layer.id)?
+this._addLayerToTable(c):this._resourceManager.updateLayerInfoResources(!1).then(d.hitch(this,function(){this._addLayerToTable(c)}))}))))},_addLayerToTable:function(a){var c=null;if(d.getObject("layer.id",!1,a)||d.getObject("layerInfo.id",!1,a)){var f=this._resourceManager.getLayerInfoById(a.layerInfo&&a.layerInfo.id||a.layer&&a.layer.id);f.getLayerObject().then(d.hitch(this,function(e){e?(e.id=a.layer.id,e.loaded?this.addNewLayerTab(f.id,a.featureSet):this.own(b(e,"load",d.hitch(this,this.addNewLayerTab,
+f.id,a.featureSet)))):a.url&&(c=new w(a.url),this.own(b(c,"load",d.hitch(this,this.addNewLayerTab,f.id,a.featureSet))))}),d.hitch(this,function(a){new r({message:a.message||a})}))}},getExistLayerTabPage:function(a){for(var b=this.layerTabPages.length,c=0;c<b;c++)if(this.layerTabPages[c]&&this.layerTabPages[c].get("paneId")===a)return this.layerTabPages[c];return null},layerTabPageClose:function(a,b){var c=this.layerTabPages.length;d.getObject("_activeTable.layerInfo.id",!1,this)===a&&this.setActiveTable(null);
+for(var e=0;e<c;e++)if(this.layerTabPages[e]&&this.layerTabPages[e].paneId===a){var g=d.getObject("_resourceManager.featureTableSet."+a,!1,this);g&&(g=g.getFilterObj())&&f.isDefined(g.expr)&&this.filterManager.applyWidgetFilter(a,this.id,"");!0===b&&(this.tabContainer.removeChild(this.layerTabPages[e]),this.layerTabPages[e].destroyRecursive());this.layerTabPages&&this.layerTabPages[e]&&this.layerTabPages.splice(e,1);this._resourceManager.removeConfigInfo(a);this._resourceManager.removeLayerInfo(a);
+if(1===c){this._activeLayerInfoId=null;this.onClose();break}else a===this._activeLayerInfoId&&this.tabContainer.selectChild(this.layerTabPages[c-2]);break}},_processRelatedRecordsFromPopup:function(a,b){if(a){var c=[];c.push(a.getLayerObject());c.push(a.getRelatedTableInfoArray());k(c).then(d.hitch(this,function(c){if(c){var d=c[0];this._resourceManager.collectRelationShips(a,c[1]);c=d.relationships;for(var d=0,e=c.length;d<e;d++)this.addNewRelationTab(b,c[d],a.id)}}))}},showRelatedRecordsFromPopup:function(a,
+b){this.showing?this._resourceManager.updateLayerInfoResources(!1).then(d.hitch(this,function(){this._processRelatedRecordsFromPopup(a,b)})):this._openTable().then(d.hitch(this,function(){this._resourceManager.getLayerInfoById(a.id)?this._processRelatedRecordsFromPopup(a,b):this._resourceManager.updateLayerInfoResources(!1).then(d.hitch(this,function(){this._processRelatedRecordsFromPopup(a,b)}))}))}});g.inPanel=!1;g.hasUIFile=!1;return g});

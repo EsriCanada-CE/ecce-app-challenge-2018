@@ -1,397 +1,62 @@
-///////////////////////////////////////////////////////////////////////////
-// Copyright © 2014 - 2017 Esri. All Rights Reserved.
-//
-// Licensed under the Apache License Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-///////////////////////////////////////////////////////////////////////////
-
-define([
-  'dojo/_base/declare',
-  'dojo/_base/lang',
-  'dojo/_base/array',
-  'dojo/_base/html',
-  'jimu/BaseWidget',
-  "dojo/query",
-  'dojo/on',
-  'dojo/Deferred',
-  //'esri/SpatialReference',
-  //'./ItemNode',
-  "./HeadBar",
-  "./WebmapBookmarks",
-  "./CustomBookmarks",
-  //'jimu/utils',
-  './utils',
-  'libs/storejs/store'
-],
-  function (declare, lang, array, html, BaseWidget, query, on, Deferred,
-    /*SpatialReference, ItemNode, */HeadBar, WebmapBookmarks, CustomBookmarks,
-    /*jimuUtils, */utils, store) {
-    return declare([BaseWidget], {
-      //these two properties is defined in the BaseWidget
-      baseClass: 'jimu-widget-bookmark dojoDndSource dojoDndTarget dojoDndContainer',
-      name: 'Bookmark',
-      //bookmarks: Object[]
-      //    all of the bookmarks, the format is the same as the config.json
-      bookmarks: [],
-      //_init_editing: false,
-      jimuNls: null,
-
-      postMixInProperties: function () {
-        this.jimuNls = window.jimuNls;
-      },
-
-      startup: function () {
-        this.inherited(arguments);
-
-        //TODO ======================= for test only ===============================
-        //this.config = utils._testUpdateOldConfig();
-        //this.bookmarks = this.config.bookmarks2D;
-        //this._saveAllToLocalCache();
-        //TODO ======================= for test only ===============================
-
-        //check wheather update config
-        if (utils.isConfigBefore5_3(this.config)) {
-          utils.setDefaultConfigForUpdate(this.config);//set default config
-          //but no completeUpdateConfig() in widget.js, beacuse widget can't save config
-        }
-
-        //HeadBar
-        this.headBar = new HeadBar({
-          map: this.map,
-          nls: this.nls,
-          bookmarksContainer: this.bookmarksContainer,
-          editMenuContainer: this.editMenuContainer,
-          editable: this.config.editable,
-          layout: this.config.layout
-        }, this.headBarContainer);
-        this.headBar.startup();
-        this.own(on(this.headBar, 'add', lang.hitch(this, function () {
-          this.customBookmarks.add();
-        })));
-        this.own(on(this.headBar, 'filter-change', lang.hitch(this, function (value) {
-          this.webmapBookmarks.filter(value);
-          this.customBookmarks.filter(value);
-        })));
-        // this.own(on(this.headBar, 'layout-cards', lang.hitch(this, function () {
-        //   this.bookmarks.forEach(lang.hitch(this, function (bookmark) {
-        //     ItemNode.removeFloatLeading(bookmark);
-        //   }));
-        // })));
-        // this.own(on(this.headBar, 'layout-list', lang.hitch(this, function () {
-        //   this.bookmarks.forEach(lang.hitch(this, function (bookmark) {
-        //     ItemNode.addFloatLeading(bookmark);
-        //   }));
-        // })));
-
-        //webmap area
-        this.webmapBookmarks = new WebmapBookmarks({
-          nls: this.nls,
-          map: this.map,
-          folderUrl: this.folderUrl,
-          config: this.config
-        }, this.webmapBookmarksContainer);
-        this.webmapBookmarks.startup();
-
-        //custom area
-        this.customBookmarks = new CustomBookmarks({
-          nls: this.nls,
-          map: this.map,
-          folderUrl: this.folderUrl,
-          widgetId: this.id,
-          config: this.config
-        }, this.customBookmarksContainer);
-        this.customBookmarks.startup();
-        this.own(on(this.customBookmarks, 'sort', lang.hitch(this, '_onSort')));
-        this.own(on(this.customBookmarks, 'change-img', lang.hitch(this, '_onChangeImg')));
-        this.own(on(this.customBookmarks, 'delete', lang.hitch(this, '_onDelete')));
-        this.own(on(this.customBookmarks, 'label-blur', lang.hitch(this, '_onLabelBlur')));
-        this.own(on(this.customBookmarks, 'added', lang.hitch(this, '_onAdded')));
-
-        this.resize();
-      },
-
-      _onLabelBlur: function (bookmarks) {
-        this.onBookmarksChange(bookmarks);
-      },
-      _onSort: function (bookmarks) {
-        this.onBookmarksChange(bookmarks);
-      },
-      _onChangeImg: function (bookmarks) {
-        this.onBookmarksChange(bookmarks);
-      },
-      _onDelete: function (bookmarks) {
-        this.onBookmarksChange(bookmarks);
-      },
-      _onAdded: function (bookmarks) {
-        this.onBookmarksChange(bookmarks);
-      },
-      onBookmarksChange: function (bookmarks) {
-        this._saveAllToLocalCache(bookmarks);
-        this.resize();
-      },
-
-      onOpen: function () {
-        //1 webmap
-        this.webmapBookmarks.refresh();//refresh when opened
-        //2 custom
-        var bookmarksInCache = this._getLocalCache();
-        this.customBookmarks.refresh(bookmarksInCache);
-
-        this.resize();
-      },
-
-      destroy: function () {
-        if (this.headBar) {
-          this.headBar.destroy();
-          this.headBar = null;
-        }
-        if (this.webmapBookmarks) {
-          this.webmapBookmarks.destroy();
-          this.webmapBookmarks = null;
-        }
-        if (this.customBookmarks) {
-          this.customBookmarks.destroy();
-          this.customBookmarks = null;
-        }
-
-        this.inherited(arguments);
-      },
-
-      onMinimize: function () {
-        this.resize();
-      },
-      onMaximize: function () {
-        this.resize();
-      },
-
-      //********************  responsive  ************************/
-      resize: function () {
-        if (window.appInfo.isRunInMobile) {
-          html.addClass(this.domNode, "mobile");
-        } else {
-          html.removeClass(this.domNode, "mobile");
-        }
-        this.headBar.toogleMobileDisplay(window.appInfo.isRunInMobile);
-        this.customBookmarks.toggleMobile(window.appInfo.isRunInMobile);
-
-        var parentNode = this.domNode.parentElement || this.domNode.parentNode;
-        //put scroller aside
-        if (parentNode) {
-          if (window.isRTL) {
-            html.setStyle(parentNode, "padding-left", "0");
-          } else {
-            html.setStyle(parentNode, "padding-right", "0");
-          }
-        }
-
-        this._getParentSize(parentNode).then(lang.hitch(this, function (parentSize) {
-          //var itemSize = this.getItemSize();
-          //this.setContainerWidth(parentSize, itemSize);
-          // this.items.forEach(lang.hitch(this, function(item) {
-          //   this.setItemPosition(item, itemSize);
-          // }));
-          var dartThemeRuler = 280 - 1;
-          var foldableThemeRuler = 330;
-          var container = this.domNode;
-          var thumbnailWidth = 100;
-
-          if (parentSize.w >= dartThemeRuler && parentSize.w < foldableThemeRuler - 1) {
-            this._setNodeWidths(container, 130, thumbnailWidth);
-          } else if (Math.abs(parentSize.w - foldableThemeRuler) <= 1) {
-            this._setNodeWidths(container, thumbnailWidth, thumbnailWidth);
-          } else {
-            var box = html.getMarginBox(container);
-            var width = box.w - 20;
-            var column = parseInt(width / thumbnailWidth, 10);
-            if (column > 0) {
-              var margin = width % thumbnailWidth;
-              var addWidth = parseInt(margin / column, 10);
-              this._setNodeWidths(container, thumbnailWidth + addWidth, thumbnailWidth);
-            }
-          }
-
-          this.setContainerHeight(parentSize, parentNode);
-        }));
-      },
-      _setNodeWidths: function (container, width, thumbnailWidth) {
-        var minWidth = thumbnailWidth + 4;
-        if (width < minWidth) {
-          width = minWidth;
-        }
-        query('.jimu-img-node', container).forEach(function (node) {
-          html.setStyle(node, 'width', width + 'px');
-        });
-      },
-
-      getItemSize: function () {
-        var size = {};
-        size.width = this.itemSize.width;
-        size.height = this.itemSize.height;
-        return size;
-      },
-
-      setContainerWidth: function (parentSize, itemSize) {
-        var scrollerWidth = 20;
-
-        var colsNum = Math.floor((parentSize.w) / (itemSize.width + 2 * this.hmargin));
-        var totalWidth = (itemSize.width + 2 * this.hmargin) * colsNum + scrollerWidth;
-        html.setStyle(this.domNode, {
-          width: totalWidth + "px",
-          margin: "0px auto"//move to center
-        });
-      },
-      setContainerHeight: function (parentSize, parentNode) {
-        var headerH = this._getDomHeight(".header", parentNode);
-        //var errorH = this._getDomHeight(".error", parentNode);
-        //var footerH = this._getDomHeight(".footer", parentNode);
-        var usedH = headerH;// + errorH + footerH;
-
-        html.setStyle(this.bookmarksContainer, {
-          height: parentSize.h - usedH + "px"
-        });
-      },
-
-      setItemPosition: function (item, itemSize) {
-        var itemStyle = {
-          position: 'relative',
-          margin: this.vmargin + "px " + this.hmargin + "px"
-        };
-        if (itemSize.width >= 0) {
-          itemStyle.width = itemSize.width + 'px';
-        }
-        if (itemSize.height >= 0) {
-          itemStyle.height = itemSize.height + 'px';
-        }
-        html.setStyle(item.domNode, itemStyle);
-        html.addClass(item.domNode, "jimu-float-leading");
-      },
-
-      _getDomHeight: function (className, sope) {
-        var h = 0;
-        var dom = query(className, sope)[0];
-        if (dom) {
-          var domSize = html.getMarginBox(dom);
-          if (domSize && domSize.h) {
-            h = domSize.h;
-          }
-        }
-        return h;
-      },
-      //delay get height
-      _getParentSize: function (parentNode) {
-        var def = new Deferred();
-        setTimeout(lang.hitch(this, function () {
-          var parentSize = html.getMarginBox(parentNode);
-          var padding = html.getPadExtents(parentNode);
-          parentSize.h = parentSize.h - padding.h;
-
-          def.resolve(parentSize);
-        }), 10);
-        return def;
-      },
-
-      //********************  LocalCache  ************************/
-      _saveAllToLocalCache: function (bookmarks) {
-        var keys = [];
-        //clean
-        array.forEach(store.get(utils.getKey(this.id)), function (bName) {
-          store.remove(bName);
-        }, this);
-        //set
-        array.forEach(bookmarks, function (bookmark) {
-          var key = utils.getKey(this.id) + '.' + bookmark.displayName;
-          keys.push(key);
-
-          var bookmarkData = lang.mixin({}, bookmark);
-          if (bookmarkData.itemNode) {
-            delete bookmarkData.itemNode;
-          }
-          if (bookmarkData._uID) {
-            delete bookmarkData._uID;
-          }
-
-          try {
-            store.set(key, bookmarkData);
-          } catch (error) {
-            alert("localcache store error");//TODO
-          }
-        }, this);
-        //set indexs
-        store.set(utils.getKey(this.id), keys);
-      },
-      _getLocalCache: function () {
-        var oldCacheBefore5_3 = this._getCacheByKeys(this._getOldKey());
-        //oldCacheBefore5_3 = utils._testSetOldCacheBookmark();//TODO test only
-        var cache = this._getCacheByKeys(utils.getKey(this.id));
-        var updatedKey = this._getCacheUpdatedKey();
-        //need to update old cache, keep them(do not delete) after updated
-        if (0 === cache.length && oldCacheBefore5_3.length > 0 && true !== store.get(updatedKey)) {
-          //only old cache, and have not updated(independent of config update)
-          cache = utils.filterBookmarkFromTarget(oldCacheBefore5_3, this.config.bookmarks2D);//filter old cache
-          this._saveAllToLocalCache(cache);//update immediately, so cache.length will >0 next time
-          store.set(updatedKey, true);//flag, for delete all new cache
-        }
-
-        return cache;
-      },
-      _getCacheUpdatedKey: function () {
-        return utils.getKey(this.id) + ".BookmarkCacheUpdated";
-      },
-
-      //keys = oldKey OR newKey
-      _getCacheByKeys: function (keys) {
-        var cache = [];
-        if (!store.get(keys)) {
-          //no cache
-        } else {
-          array.forEach(store.get(keys), function (bName) {
-            if (bName.startWith(keys)) {
-              var bookmark = store.get(bName);
-              cache.push(bookmark);
-            }
-          }, this);
-        }
-
-        return cache;
-      },
-      // //new keys after 5.3
-      // _getKey: function () {
-      //   var prefix = "Bookmark.2D";
-      //   // if (this.appConfig.map['3D']) {
-      //   //   prefix = this.name + '.3D';
-      //   // } else {
-      //   //   prefix = this.name + '.2D';
-      //   // }
-      //   var appId = encodeURIComponent(jimuUtils.getAppIdFromUrl());
-      //   var widgetId = this.id;
-      //   //like: Bookmark.2D.appId.widgetId
-      //   return prefix + "." + appId + "." + widgetId;
-      // },
-      //Deprecated(old keys befor 5.3, just for update)
-      _getOldKey: function () {
-        if (this.appConfig.map['3D']) {
-          return this.name + '.3D';
-        } else {
-          return this.name + '.2D';
-        }
-      }
-      /*
-      _cleanLocalCache: function () {
-        var key = this._getKeysKey();
-        for (var p in store.getAll()) {
-          if (p.startWith(key)) {
-            store.remove(p);
-          }
-        }
-      }*/
-    });
-  });
+// All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+// See http://js.arcgis.com/3.15/esri/copyright.txt and http://www.arcgis.com/apps/webappbuilder/copyright.txt for details.
+//>>built
+require({cache:{"widgets/Bookmark/HeadBar":function(){define("dojo/Evented dojo/_base/declare dojo/_base/lang dojo/_base/html dojo/on dijit/_WidgetBase dijit/_TemplatedMixin dijit/_WidgetsInTemplateMixin dojo/text!./HeadBar.html".split(" "),function(m,k,e,a,n,l,h,g,c){return k([l,h,g,m],{baseClass:"dojoDndSource dojoDndTarget dojoDndContainer",templateString:c,nls:null,map:null,bookmarksContainer:null,layout:null,editingName:!1,initMapState:null,postMixInProperties:function(){this.nls=e.mixin(this.nls,
+window.jimuNls.common)},startup:function(){this.inherited(arguments);this.refreshUI();this.own(n(this.addBtn,"click",e.hitch(this,function(){this.addingBookmark()})));this.own(n(this.filterInput,"blur",e.hitch(this,this.onFilterChange)));this.own(n(this.filterInput,"keyUp",e.hitch(this,this.onFilterChange)));this.own(n(this.cardsBtn,"click",e.hitch(this,function(){this._toggleLayoutBtnDisplay("cards")})));this.own(n(this.listBtn,"click",e.hitch(this,function(){this._toggleLayoutBtnDisplay("list")})))},
+refreshUI:function(){this.editable?(a.addClass(this.domNode,"editable"),a.removeClass(this.addBtn,"hide")):(a.removeClass(this.domNode,"editable"),a.addClass(this.addBtn,"hide"));this._toggleLayoutBtnDisplay(this.layout.defaultMode);!1!==this.editable||!0===this.layout.list&&!0===this.layout.cards?a.removeClass(this.domNode,"hide"):a.addClass(this.domNode,"hide")},_toggleLayoutBtnDisplay:function(c){a.addClass(this.listBtn,"hide");a.addClass(this.cardsBtn,"hide");"list"===c?this.listMode():this.cardsMode();
+!0===this.layout.list&&!0===this.layout.cards?("list"===c?a.removeClass(this.cardsBtn,"hide"):a.removeClass(this.listBtn,"hide"),a.addClass(this.displayMode,"two-modes")):a.removeClass(this.displayMode,"two-modes")},cardsMode:function(){a.removeClass(this.bookmarksContainer,"list");a.addClass(this.bookmarksContainer,"cards");a.addClass(this.domNode,"list");a.removeClass(this.domNode,"cards");this.emit("layout-cards")},listMode:function(){a.removeClass(this.bookmarksContainer,"cards");a.addClass(this.bookmarksContainer,
+"list");a.addClass(this.domNode,"cards");a.removeClass(this.domNode,"list");this.emit("layout-list")},toogleMobileDisplay:function(c){c?a.addClass(this.displayMode,"hide"):a.removeClass(this.displayMode,"hide")},addingBookmark:function(){this.emit("add")},onFilterChange:function(){var c=this.filterInput.getValue();this.emit("filter-change",c)},onFilterBlur:function(){var c=this.filterInput.getValue();this.emit("filter-blur",c)}})})},"widgets/Bookmark/WebmapBookmarks":function(){define("dojo/Evented dojo/_base/declare dojo/_base/lang dojo/_base/html dojo/_base/array dojo/on esri/SpatialReference jimu/BaseWidget dijit/_TemplatedMixin ./utils".split(" "),
+function(m,k,e,a,n,l,h,g,c,q){var d=window.Sortable;return k([g,c,m],{baseClass:"dojoDndSource dojoDndTarget dojoDndContainer bookmarker-nodes",templateString:"\x3cdiv\x3e\x3c/div\x3e",nls:null,postCreate:function(){this.inherited(arguments);this.drawerHandle=a.create("div",{"class":"drawer-handle"},this.domNode);this.bookMarkerContainer=a.create("div",{"class":"webmap"},this.domNode)},startup:function(){this.inherited(arguments);this.config.syncMode&&(!1===this.config.syncMode.webmap&&!1===this.config.syncMode.custom?
+a.addClass(this.domNode,"hide"):a.removeClass(this.domNode,"hide"));this.sortableBookMarkerNodes=d.create(this.bookMarkerContainer,{sort:!1,disabled:!0,animation:100})},refresh:function(){q.empty(this.bookmarks);this.bookmarks=[];this.config.syncMode&&!0===this.config.syncMode.webmap&&(this.bookmarks=q.readBookmarksInWebmap(this.map));var b=e.clone(this.config.bookmarks2D);n.forEach(b,function(b){b&&!0===this.config.syncMode.custom&&this.bookmarks.push(b)},this);q.updateBookmarks(this.bookmarks);
+this.displayBookmarks(this.bookmarks)},_onBookmarkClick:function(b){require(["esri/geometry/Extent"],e.hitch(this,function(c){if(!1!==b.isSaveExtent){var d=b.extent;d.spatialReference?new h(d.spatialReference):new h({wkid:4326});this.map.setExtent(new c(d))}q.layerInfosRestoreState(b.layerOptions)}))},filter:function(b){q.filter(b,this.bookmarks)},displayBookmarks:function(b){q.empty(b,this.bookMarkerContainer);var c={editBtn:!1,changeImgBtn:!0};n.forEach(b,function(b){if(b){var d=q.createBookMarkNode(b,
+this.nls,this.folderUrl,c);b.itemNode=d;this.own(l(d,"thumbnail-click",e.hitch(this,e.partial(this._onBookmarkClick,b))))}},this);b.forEach(e.hitch(this,function(b){b&&b.itemNode&&b.itemNode.domNode&&a.place(b.itemNode.domNode,this.bookMarkerContainer,"last")}))}})})},"widgets/Bookmark/utils":function(){define("dojo/_base/lang dojo/_base/array dojo/_base/html jimu/utils ./ItemNode libs/storejs/store jimu/LayerInfos/LayerInfos".split(" "),function(m,k,e,a,n,l,h){var g={_uID:0,getUID:function(){return g._uID++},
+findBookMark:function(c,a){var d=-1,b=null;k.some(a,function(a,f){if(parseInt(a._uID,10)===parseInt(c._uID,10))return d=f,b=a,!0},this);return-1!==d?{bookmark:b,idx:d}:null},findBookMarkByUID:function(c,a){var d=-1,b=null;k.some(a,function(a,f){if(parseInt(a._uID,10)===parseInt(c,10))return d=f,b=a,!0},this);return-1!==d?{bookmark:b,idx:d}:null},findBookMarkByNameAndExtent:function(c,a){var d=-1,b=null;k.some(a,function(a,f){if(a.name===c.name&&a.extent&&c.extent&&a.extent.xmax===c.extent.xmax&&a.extent.xmin===
+c.extent.xmin&&a.extent.ymax===c.extent.ymax&&a.extent.ymin===c.extent.ymin)return d=f,b=a,!0},this);return-1!==d?{bookmark:b,idx:d}:null},isBookmarksDataEmpty:function(c){return Array.isArray(c)&&0===c.length?!0:!1},empty:function(c,a){var d=c;k.forEach(c,function(b){b&&b.itemNode&&b.itemNode.destroy()},this);c=[];c=d;a&&e.empty(a)},createBookMarkNode:function(c,q,d,b){d=c.thumbnail||"undefined"!==typeof c.thumbnail&&""!==c.thumbnail?a.processUrlInWidgetConfig(c.thumbnail,d):a.processUrlInWidgetConfig("images/thumbnail_default.png",
+d);var p=g.getUID();c._uID=p;return new n({dataId:p,img:d,label:c.displayName||c.name,display:b,nls:q})},cloneBookmarksDataWithOutDom:function(c){var a=[];if("undefined"===typeof c)return a;c.forEach(m.hitch(this,function(c){c.itemNode&&c.itemNode.domNode&&(c=m.clone(c),delete c.itemNode,a.push(c))}));return a},readBookmarksInWebmap:function(c){var a=[];if(!c.itemInfo||!c.itemInfo.itemData||!c.itemInfo.itemData.bookmarks)return a;k.forEach(c.itemInfo.itemData.bookmarks,function(c){c=m.mixin({},c);
+c.isInWebmap=!0;a.push(c)},this);return a},filterBookmarkFromTarget:function(c,a){for(var d=[],b=0,p=c.length;b<p;b++){var f=c[b];g.findBookmarkByNameOrExtent(f,a)||d.push(f)}return d},findBookmarkByNameOrExtent:function(c,a){var d=-1,b=null;k.some(a,function(a,f){if((a.displayName||a.name)===(c.displayName||c.name)||a.extent&&c.extent&&a.extent.xmax===c.extent.xmax&&a.extent.xmin===c.extent.xmin&&a.extent.ymax===c.extent.ymax&&a.extent.ymin===c.extent.ymin)return d=f,b=a,!0},this);return-1!==d?{bookmark:b,
+idx:d}:null},filter:function(c,a){a.forEach(function(a){"undefined"!==typeof c&&""!==c?-1!==(a.displayName||a.name).indexOf(c)?n.show(a):n.hide(a):n.show(a)})},getKeysKey:function(){return this.appConfig.map["3D"]?this.name+".3D":this.name+".2D"},getAutoRenameBeforeAdd:function(c,a,d){var b=0,e=new RegExp(/\((\d+)\){1}$/g);k.forEach(a,function(a){a&&"undefined"!==typeof a.name&&-1!==a.name.indexOf(c)&&("undefined"===typeof d||!0===d&&c.length===a.name.length)&&(a=e.exec(a.displayName),null===a&&0===
+b?b=1:a&&"undefined"!==typeof a[1]&&a[1]>=b&&(b=parseInt(a[1],10)+1))});return 0===b?c:c+"("+b+")"},processDuplicateName:function(a){for(var c=[],d={},b=a.length-1;0<=b;b--){var e=a[b];if(!e||"undefined"===typeof e.name)return;var f=e.name;f in d?d[f]++:d[f]=0;if(0<d[f]){var r=f+"("+d[f]+")";r in d?(d[r]++,d[f]++):d[r]=0;e.displayName=0<d[r]?f+"("+d[f]+")":r;e._autoRename=!0}else e.displayName=f;c.push(e)}a=c},toogleCheckboxChecked:function(a){a&&a.setValue&&a.setValue(!a.checked)},setCheckboxWithoutEvent:function(a,
+e){a&&a.check&&a.uncheck&&(!0===e?a.check(!0):a.uncheck(!0))},layerInfosRestoreState:function(a){var c=h.getInstanceSync(),d={};if(a){for(var b in a)if(a.hasOwnProperty(b)){var e=a[b],f=!1,f="undefined"===typeof e.visible?e.selected:e.visible;d[b]={visible:f}}c.restoreState({layerOptions:d})}},getlayerInfos:function(){var a={},e=h.getInstanceSync();e&&e.traversal&&e.traversal(m.hitch(this,function(c){a[c.id]={visible:c.isVisible()}}));return a},stringifyBookmarks:function(a){var c=[];k.forEach(a,
+function(a){a=m.mixin({},a);a.itemNode&&delete a.itemNode;c.push(a)},this);return c},parseBookmarks:function(a){return m.clone(a)},getKey:function(c){return"Bookmark.2D."+encodeURIComponent(a.getAppIdFromUrl())+"."+c},isConfigBefore5_3:function(a){return"undefined"===typeof a.syncMode||!0===a.needToUpdateFlag?!0:!1},getUpdateCacheKey:function(a){return"bookmark_cache_updated_"+encodeURIComponent(g.getKey(a))},setUpdateCacheKey:function(a){l.set(g.getUpdateCacheKey(a),!0)},isCacheKeyUpdatedy:function(a){return l.get(g.getUpdateCacheKey(a))},
+setDefaultConfigForUpdate:function(a){a.needToUpdateFlag=!0;a.layout={cards:!0,list:!1,defaultMode:"cards"};a.editable=!0;Array.isArray(a.bookmarks2D)&&0<a.bookmarks2D.length?a.syncMode={webmap:!1,custom:!0}:a.syncMode={webmap:!0,custom:!0}},completeUpdateConfig:function(a){a.needToUpdateFlag&&delete a.needToUpdateFlag},updateBookmarks:function(a){for(var c=0;c<a.length;c++)"undefined"===typeof a[c]&&(a.splice(c,1),c--);var d=/\/widgets\/Bookmark\/images\/thumbnail_default.png$/;k.forEach(a,function(a){"undefined"===
+typeof a.isSaveExtent&&(a.isSaveExtent=!0);a.thumbnail&&d.test(a.thumbnail)&&delete a.thumbnail},this)},getLayoutRecorderKey:function(){return"bookMarkLayout_"+encodeURIComponent(a.getAppIdFromUrl())},cleanLayoutRecorder:function(a){l.remove(g.getLayoutRecorderKey(a))},setLastLayout:function(a){l.set(g.getLayoutRecorderKey(),a)},getLastLayout:function(){return l.get(g.getLayoutRecorderKey())},oldBookmarksBackup:'[{"displayName":"Greater Manchester or Greater Lincolnshire HAHAHAHA","name":"Greater Manchester or Greater Lincolnshire HAHAHAHA","extent":{"type":"extent","xmin":8997982.70263581,"ymin":2110475.6293307655,"xmax":14672667.682525788,"ymax":6024051.4775307495,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false},{"displayName":"Peterborough and Cambridgeshire HEHEHEHEHEH","name":"Peterborough and Cambridgeshire HEHEHEHEHEH","extent":{"type":"extent","xmin":9055621.33977054,"ymin":445965.34674161975,"xmax":14730306.319660518,"ymax":4359541.194941604,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false},{"displayName":"mentougou biejing china","name":"mentougou biejing china","extent":{"type":"extent","xmin":9502343.119353313,"ymin":3151483.465165457,"xmax":15177028.09924329,"ymax":7065059.313365442,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false},{"displayName":"\u51e4\u51f0\u7f6e\u5730\u4e09\u5143\u6865\u5317\u4eac\u4e2d\u56fd\u4e16\u754c\u592a\u9633\u7cfb\u5b87\u5b99","name":"\u51e4\u51f0\u7f6e\u5730\u4e09\u5143\u6865\u5317\u4eac\u4e2d\u56fd\u4e16\u754c\u592a\u9633\u7cfb\u5b87\u5b99","extent":{"type":"extent","xmin":-22698739.91955998,"ymin":-13654303.392799985,"xmax":22698739.91955998,"ymax":17654303.39279999,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false},{"displayName":"\u77ed\u4e2d\u6587","name":"\u77ed\u4e2d\u6587","extent":{"type":"extent","xmin":-22698739.91955998,"ymin":-13654303.392799985,"xmax":22698739.91955998,"ymax":17654303.39279999,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false},{"displayName":"short","name":"short","extent":{"type":"extent","xmin":-22698739.91955998,"ymin":-13654303.392799985,"xmax":22698739.91955998,"ymax":17654303.39279999,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false},{"displayName":"\u4e2d\u6587 English","name":"\u4e2d\u6587 English","extent":{"type":"extent","xmin":-22698739.91955998,"ymin":-13654303.392799985,"xmax":22698739.91955998,"ymax":17654303.39279999,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false},{"displayName":"Underneath the icons","name":"Underneath the icons","extent":{"type":"extent","xmin":-22698739.91955998,"ymin":-13654303.392799985,"xmax":22698739.91955998,"ymax":17654303.39279999,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false},{"displayName":"\u4e2d\u6587\u4e2d\u6587 \u5475\u5475","name":"\u4e2d\u6587\u4e2d\u6587 \u5475\u5475","extent":{"type":"extent","xmin":-22698739.91955998,"ymin":-13654303.392799985,"xmax":22698739.91955998,"ymax":17654303.39279999,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false},{"displayName":"eee RTL","name":"eee RTL","extent":{"type":"extent","xmin":-22698739.91955998,"ymin":-13654303.392799985,"xmax":22698739.91955998,"ymax":17654303.39279999,"spatialReference":{"wkid":102100}},"thumbnail":"","isInWebmap":false}]',
+_testUpdateOldConfig:function(){return{bookmarks2D:[{extent:{spatialReference:{wkid:102100},xmax:-1656069.6628128502,xmin:-1.0861390956860503E7,ymax:1.510258315961978E7,ymin:-1119447.7364922247},name:"bm1",isInWebmap:!0,displayName:"bm1"},{extent:{spatialReference:{wkid:102100},xmax:-1656069.6628128502,xmin:-1.0861390956860503E7,ymax:1.510258315961978E7,ymin:-1119447.7364922247},name:"bm1",isInWebmap:!0,displayName:"bm1(1)"},{extent:{spatialReference:{wkid:102100},xmax:-3197863.7584074493,xmin:-1.3112899816301128E7,
+ymax:1.1466459916526379E7,ymin:-4859686.568575533},name:"bm2",isInWebmap:!0,displayName:"bm2"},{extent:{spatialReference:{wkid:102100},xmax:-3767577.3201611056,xmin:-1.430429896767071E7,ymax:1.5120033300894285E7,ymin:-4622246.062418217},name:"Untitled",isInWebmap:!0,displayName:"Untitled"},{extent:{spatialReference:{wkid:102100},xmax:-4334684.982862408,xmin:-1.6556089386187213E7,ymax:1.6750523655935397E7,ymin:-5666212.383958025},name:"Untitled",isInWebmap:!0,displayName:"Untitled(1)"}],bookmarks3D:[],
+flyTime:3E3}},_testSetOldCache:function(a){var c=[];k.forEach(a,function(a){var b="Bookmark.2D."+a.displayName;c.push(b);a=m.mixin({},a);a.itemNode&&delete a.itemNode;a._uID&&delete a._uID;try{l.set(b,a)}catch(p){alert("store error\x3d\x3d\x3e")}},this);l.set("Bookmark.2D",c)},_testSetOldCacheBookmark:function(){return JSON.parse('[{"extent":{"spatialReference":{"wkid":102100,"latestWkid":3857},"xmax":-8273877.24778316,"xmin":-14295892.084200885,"ymax":6466269.8495007465,"ymin":2983187.344602761},"name":"bm1","isInWebmap":true,"displayName":"bm1"},{"extent":{"spatialReference":{"wkid":102100,"latestWkid":3857},"xmax":-8004818.908219411,"xmin":-11015826.326428276,"ymax":5527011.645932751,"ymin":3785470.393483758},"name":"bm1","isInWebmap":true,"displayName":"bm1(1)"},{"extent":{"spatialReference":{"wkid":102100,"latestWkid":3857},"xmax":-12874774.854323175,"xmin":-13627526.708875552,"ymax":4655629.523482032,"ymin":4220244.210369689},"name":"bm2","isInWebmap":true,"displayName":"bm2"},{"extent":{"spatialReference":{"wkid":102100,"latestWkid":3857},"xmax":-11618761.605541585,"xmin":-14629769.023750449,"ymax":6691911.956998556,"ymin":4950370.704549563},"name":"bm3","isInWebmap":true,"displayName":"bm3"},{"extent":{"spatialReference":{"wkid":102100,"latestWkid":3857},"xmax":-4317189.3003047705,"xmin":-16361218.973140221,"ymax":10449906.504800193,"ymin":3483741.495004222},"name":"bm4","isInWebmap":true,"displayName":"bm4"},{"name":"add-inRT-1","displayName":"add-inRT-1","extent":{"xmin":-14714155.502977258,"ymin":2694561.125798012,"xmax":-7855613.8290067855,"ymax":6754896.068305495,"spatialReference":{"wkid":102100,"latestWkid":3857}}},{"name":"add-inRT-2","displayName":"add-inRT-2","extent":{"xmin":-14714155.502977258,"ymin":2694561.125798012,"xmax":-7855613.8290067855,"ymax":6754896.068305495,"spatialReference":{"wkid":102100,"latestWkid":3857}}}]')}};
+return g})},"widgets/Bookmark/ItemNode":function(){define("dojo/Evented dojo/_base/declare dojo/_base/lang dojo/_base/html jimu/BaseWidget dijit/_WidgetsInTemplateMixin dojo/on dojo/query jimu/utils dojo/text!./ItemNode.html dojo/mouse dijit/form/ValidationTextBox".split(" "),function(m,k,e,a,n,l,h,g,c,q){var d={},d=k([n,l,m],{templateString:q,isSelected:!1,postMixInProperties:function(){this.nls=e.mixin(this.nls,window.jimuNls.common)},postCreate:function(){a.setAttr(this.domNode,"data-id",c.sanitizeHTML(this.dataId));
+this.img&&a.setAttr(this.thumbnail,"src",this.img);this.nls&&(a.setAttr(this.deleteBtn,"title",this.nls.deleteBtnTip),a.setAttr(this.editBtn,"title",this.nls.editBtnTip),a.setAttr(this.changeImgBtn,"title",this.nls.changeThumbnailTip),a.setAttr(this.renameBtn,"title",this.nls.editBtnTip),a.setAttr(this.thumbnail,"title",this.nls.dragReorderTip));this.display&&(!1===this.display.selectedBtn&&a.addClass(this.selectedBtn,"hide"),!1===this.display.editBtn&&a.addClass(this.editBtn,"hide"),!1===this.display.deleteBtn&&
+a.addClass(this.deleteBtn,"hide"),!1===this.display.renameBtn&&a.addClass(this.renameBtn,"hide"),!0===this.display.selectedBtn&&a.removeClass(this.selectedBtn,"hide"),!0===this.display.changeImgBtn&&a.removeClass(this.changeImgBtn,"hide"));this.nodeLabel.setValue(c.sanitizeHTML(this.label));this._updateLabelTooltips(this.label);this.own(h(this.selectedBtn,"click",e.hitch(this,this.onSelected)));this.own(h(this.deleteBtn,"click",e.hitch(this,this.onDelete)));this.own(h(this.editBtn,"click",e.hitch(this,
+this.onEdit)));this.own(h(this.changeImgBtn,"click",e.hitch(this,this.onChangeImg)));this.own(h(this.renameBtn,"click",e.hitch(this,this.onRenameClick)));this.own(h(this.nodeBox,"click",e.hitch(this,this.onNodeBoxClick)));this.own(h(this.dragMasker,"click",e.hitch(this,this.onNodeBoxClick)));!0===this.display.enableEditLabel?(this.own(h(this.nodeLabel,"click",e.hitch(this,this.onLabelClick))),this.own(h(this.nodeLabel,"change",e.hitch(this,this.onLabelChange))),this.own(h(this.nodeLabel,"blur",e.hitch(this,
+this.onLabelBlur)))):this.nodeLabel.setDisabled(!0);this.own(h(this.nodeLabel,"contextmenu",e.hitch(this,function(a){a.preventDefault()})));this.own(h(this.nodeBox,"contextmenu",e.hitch(this,function(a){a.preventDefault()})))},onClick:function(){g(".jimu-img-node",this.getParent().domNode).removeClass("jimu-state-selected");g(this.domNode).addClass("jimu-state-selected");this.emit("click")},onNodeBoxClick:function(a){a&&a.stopPropagation&&a.preventDefault&&(a.stopPropagation(),a.preventDefault());
+this.emit("thumbnail-click")},onLabelClick:function(a){a&&a.stopPropagation&&a.preventDefault&&(a.stopPropagation(),a.preventDefault());this.emit("label-click")},onLabelChange:function(a){this._updateLabelTooltips(a)},onLabelBlur:function(a){a&&a.stopPropagation&&a.preventDefault&&(a.stopPropagation(),a.preventDefault());a=this.nodeLabel.get("value");this._updateLabelTooltips(a);this.emit("label-blur")},onSelected:function(b){b&&b.stopPropagation&&b.preventDefault&&(b.stopPropagation(),b.preventDefault());
+a.hasClass(this.domNode,"selected")?(a.removeClass(this.domNode,"selected"),this.isSelected=!1,!1!==b&&this.emit("unselected")):(a.addClass(this.domNode,"selected"),this.isSelected=!0,!1!==b&&this.emit("selected"))},onDelete:function(a){a&&a.stopPropagation&&a.preventDefault&&(a.stopPropagation(),a.preventDefault());this.emit("delete")},onEdit:function(a){a&&a.stopPropagation&&a.preventDefault&&(a.stopPropagation(),a.preventDefault());this.emit("edit")},onChangeImg:function(a){a&&a.stopPropagation&&
+a.preventDefault&&(a.stopPropagation(),a.preventDefault());this.emit("change-img")},changeImg:function(b){a.setAttr(this.thumbnail,"src",b)},onRenameClick:function(a){a&&a.stopPropagation&&a.preventDefault&&(a.stopPropagation(),a.preventDefault());this.emit("rename")},highLight:function(){g(".jimu-img-node",this.getParent().domNode).removeClass("jimu-state-selected");g(this.domNode).addClass("jimu-state-selected")},startup:function(){this.inherited(arguments)},destroy:function(){this.inherited(arguments);
+a.destroy(this.domNode)},_updateLabelTooltips:function(b){b&&(b=c.sanitizeHTML(b),a.setAttr(this.nodeLabel,"title",b),this.dragMasker&&a.setAttr(this.dragMasker,"title",b))}});d.addFloatLeading=function(b){b.itemNode&&b.itemNode.domNode&&(g(".selected-btn",b.itemNode.domNode).forEach(function(b){a.addClass(b,"jimu-float-leading")}),g(".node-box",b.itemNode.domNode).forEach(function(b){a.addClass(b,"jimu-float-leading")}),g(".node-label",b.itemNode.domNode).forEach(function(b){a.addClass(b,"jimu-float-leading")}),
+g(".close-btn",b.itemNode.domNode).forEach(function(b){a.addClass(b,"jimu-float-leading")}))};d.removeFloatLeading=function(b){b.itemNode&&b.itemNode.domNode&&(g(".selected-btn",b.itemNode.domNode).forEach(function(b){a.removeClass(b,"jimu-float-leading")}),g(".node-box",b.itemNode.domNode).forEach(function(b){a.removeClass(b,"jimu-float-leading")}),g(".node-label",b.itemNode.domNode).forEach(function(b){a.removeClass(b,"jimu-float-leading")}),g(".close-btn",b.itemNode.domNode).forEach(function(b){a.removeClass(b,
+"jimu-float-leading")}))};d.toggleEditable=function(a){a.itemNode&&a.itemNode.nodeLabel&&(a.itemNode.nodeLabel.disabled?d.enableEditable(a):d.disableEditable(a))};d.disableEditable=function(){};d.enableEditable=function(){};d.focusLabel=function(a){a.itemNode&&a.itemNode.nodeLabel&&a.itemNode.nodeLabel.focus()};d.unSelected=function(b){b.itemNode&&b.itemNode&&(b=b.itemNode,a.removeClass(b.domNode,"selected"),b.isSelected=!1)};d.show=function(b){b&&b.itemNode&&(b=b.itemNode,a.removeClass(b.domNode,
+"hide"),b.isShow=!0)};d.hide=function(b){b&&b.itemNode&&(b=b.itemNode,a.addClass(b.domNode,"hide"),b.isShow=!1)};return d})},"widgets/Bookmark/CustomBookmarks":function(){define("dojo/Evented dojo/_base/declare dojo/_base/lang dojo/_base/html dojo/_base/array dojo/on dojo/sniff esri/SpatialReference jimu/BaseWidget dijit/_TemplatedMixin ./utils ./ItemNode jimu/dijit/ImageChooser".split(" "),function(m,k,e,a,n,l,h,g,c,q,d,b,p){var f=window.Sortable;return k([c,q,m],{baseClass:"dojoDndSource dojoDndTarget dojoDndContainer bookmarker-nodes",
+templateString:"\x3cdiv\x3e\x3c/div\x3e",nls:null,_CHANGING_IMG_BM:null,postCreate:function(){this.inherited(arguments);this.drawerHandle=a.create("div",{"class":"drawer-handle hide",innerHTML:"\x3cdiv class\x3d'separate-line'\x3e\x3c/div\x3e"},this.domNode);this.bookMarkerContainer=a.create("div",{"class":"custom editing"},this.domNode);this.imageChooserContainer=a.create("div",{"class":"hide"},this.domNode)},startup:function(){this.inherited(arguments);var b=d.readBookmarksInWebmap(this.map);(!0===
+this.config.syncMode.webmap&&0<b.length||!0===this.config.syncMode.custom&&0<this.config.bookmarks2D.length)&&a.removeClass(this.drawerHandle,"hide");this.sortableBookMarkerNodes=f.create(this.bookMarkerContainer,{handle:".drag-masker",filter:".disable-drag .hide",sort:!0,disabled:!1,animation:100,onSort:e.hitch(this,function(){this.saveBookMarkersBySortable();this.emit("sort",this.bookmarks)})});this.imageChooser=new p({cropImage:!1,showSelfImg:!0,goldenWidth:108,goldenHeight:71,maxSize:100,label:this.nls.selectFile,
+format:["image/gif","image/png","image/jpeg"]},this.imageChooserContainer);this.imageChooser.startup();this.own(l(this.imageChooser,"imageChange",e.hitch(this,"_onImageChange")))},toggleMobile:function(a){(this._IS_MOBILE=a)?this.sortableBookMarkerNodes.option("disabled",!0):this.sortableBookMarkerNodes.option("disabled",!1)},refresh:function(a){this.bookmarks=a;d.updateBookmarks(this.bookmarks);this.displayBookmarks(this.bookmarks);this.toggleDrawer()},add:function(){var c=d.getAutoRenameBeforeAdd("bookmark",
+this.bookmarks),f={name:"bookmark",displayName:c,extent:this.map.extent.toJson(),isSaveLayers:this.config.isSaveLayerVisibility,isSaveExtent:!0};!0===this.config.isSaveLayerVisibility&&(f.layerOptions=d.getlayerInfos());"bookmark"!==c&&(f._autoRename=!0);this._doAddBookmark(f);this.bookmarks.unshift(f);f.itemNode&&f.itemNode.domNode&&a.place(f.itemNode.domNode,this.bookMarkerContainer,"first");this.displayBookmarks(this.bookmarks);this.toggleDrawer();this.bookmarks.forEach(e.hitch(this,function(a,
+c){0===c?(b.enableEditable(a),b.focusLabel(a)):b.disableEditable(a)}));this.emit("added",this.bookmarks)},_doAddBookmark:function(a){var b=d.createBookMarkNode(a,this.nls,this.folderUrl,{enableEditLabel:!0,editBtn:!1,changeImgBtn:!0});a.itemNode=b;this.own(l(b,"thumbnail-click",e.hitch(this,e.partial(this._onNodeBoxClick,a))));this.own(l(b,"label-click",e.hitch(this,e.partial(this._onLebelClick,a))));this.own(l(b,"label-blur",e.hitch(this,e.partial(this._onLabelBlur,a))));this.own(l(b,"delete",e.hitch(this,
+e.partial(this._onBookmarkDeleteImmediately,a))));this.own(l(b,"change-img",e.hitch(this,e.partial(this._onBookmarkChangeImg,a))));this.own(l(b,"rename",e.hitch(this,e.partial(this._onRename,a))));return b},filter:function(a){this._LAST_FILTER_STR=a;d.filter(a,this.bookmarks)},displayBookmarks:function(b){d.empty(b,this.bookMarkerContainer);n.forEach(b,function(a){a&&this._doAddBookmark(a)},this);b.forEach(e.hitch(this,function(b){b&&b.itemNode&&b.itemNode.domNode&&a.place(b.itemNode.domNode,this.bookMarkerContainer,
+"last")}))},saveBookMarkersBySortable:function(a){for(var b=this.sortableBookMarkerNodes.toArray(),c=[],f=0,r=b.length;f<r;f++){var e=d.findBookMarkByUID(b[f],this.bookmarks);e&&c.push(e.bookmark)}this.bookmarks=c;a&&a.isRefresh&&this.displayBookmarks(this.bookmarks)},_isListMode:function(){if(this.domNode){var b=this.domNode.parentElement||this.domNode.parentNode;if(b)return a.hasClass(b,"list")}return!1},_onNodeBoxClick:function(a){require(["esri/geometry/Extent"],e.hitch(this,function(b){if(!1!==
+a.isSaveExtent){var c=a.extent;c.spatialReference?new g(c.spatialReference):new g({wkid:4326});this.map.setExtent(new b(c))}d.layerInfosRestoreState(a.layerOptions)}))},_onLebelClick:function(a){this._isListMode()||!0===this._IS_MOBILE?this._onNodeBoxClick(a):b.focusLabel(a)},_onLabelBlur:function(a){var b=a.itemNode.nodeLabel.get("value");a.displayName=b;a.name=b;this.emit("label-blur",this.bookmarks);this.filter(this._LAST_FILTER_STR)},_onBookmarkDeleteImmediately:function(a){this.removeBookMarks([a])},
+removeBookMarks:function(a){for(var b=0,c=a.length;b<c;b++){var f=d.findBookMark(a[b],this.bookmarks);f&&f.bookmark&&(f.bookmark.itemNode&&f.bookmark.itemNode.destroy(),this.bookmarks.splice(f.idx,1))}this.emit("delete",this.bookmarks);this.toggleDrawer()},_onBookmarkChangeImg:function(a){this._CHANGING_IMG_BM=a;a=this.imageChooser.mask;if(h("safari")){var b=document.createEvent("MouseEvents");b.initEvent("click",!0,!0);a.dispatchEvent(b)}else a.click()},_onImageChange:function(a){this._CHANGING_IMG_BM&&
+this._CHANGING_IMG_BM.itemNode&&(""!==a&&(this._CHANGING_IMG_BM.itemNode.changeImg(a),this._CHANGING_IMG_BM.thumbnail=a),this.emit("change-img",this.bookmarks))},_onRename:function(a){b.focusLabel(a)},toggleDrawer:function(){!0===d.isBookmarksDataEmpty(this.bookmarks)?a.addClass(this.domNode,"hide"):a.removeClass(this.domNode,"hide")},hideDrawer:function(){a.addClass(this.bookMarkerContainer,"hide")},showDrawer:function(){a.removeClass(this.bookMarkerContainer,"hide")}})})},"widgets/Bookmark/_build-generate_module":function(){define(["dojo/text!./Widget.html",
+"dojo/text!./css/style.css","dojo/i18n!./nls/strings"],function(){})},"url:widgets/Bookmark/HeadBar.html":'\x3cdiv\x3e\r\n\t\x3cdiv class\x3d"header"\x3e\r\n\t\t\x3cdiv data-dojo-attach-point\x3d"editableBtns" class\x3d"editable-btns"\x3e\r\n\t\t\t\x3cdiv data-dojo-attach-point\x3d"addBtn" class\x3d"add hide" title\x3d"${nls.labelBookmarkName}"\x3e${nls.addBtn}\x3c/div\x3e\r\n\t\t\x3c/div\x3e\r\n\r\n\t\t\x3cdiv class\x3d"oper-btns"\x3e\r\n\t\t\t\x3cdiv data-dojo-attach-point\x3d"filter" class\x3d"filter-container hide"\x3e\r\n\t\t\t\t\x3cdiv class\x3d"filter-input"\x3e\r\n\t\t\t\t\t\x3cdiv data-dojo-attach-point\x3d"filterInput" data-dojo-type\x3d"dijit/form/ValidationTextBox"\r\n\t\t\t\t\t\tplaceHolder\x3d"${nls.searchBookmark}" required\x3d"false"\x3e\x3c/div\x3e\r\n\t\t\t\t\t\x3cdiv class\x3d"search" data-dojo-attach-point\x3d"filterBtn" title\x3d"${nls.searchBookmark}"\x3e\x3c/div\x3e\r\n\t\t\t\t\x3c/div\x3e\r\n\t\t\t\x3c/div\x3e\r\n\t\t\t\x3c!--\x3cdiv data-dojo-attach-point\x3d"commonFunBtns" class\x3d"common-fun-btns"\x3e\r\n\t\t\t\t\x3cdiv data-dojo-attach-point\x3d"syncBtn" class\x3d"head-btns sync-btn" title\x3d"${nls.syncTip}"\x3e\x3c/div\x3e\r\n\t\t\t\t\x3cdiv data-dojo-attach-point\x3d"backToInitBtn" class\x3d"head-btns back-to-init hide" title\x3d""\x3e\x3c/div\x3e--\x3e\r\n\t\t\t\x3cdiv data-dojo-attach-point\x3d"displayMode" class\x3d"display-mode"\x3e\r\n\t\t\t\t\x3cdiv data-dojo-attach-point\x3d"cardsBtn" class\x3d"head-btns cards hide" title\x3d"${nls.cardsTips}"\x3e\x3c/div\x3e\r\n\t\t\t\t\x3cdiv data-dojo-attach-point\x3d"listBtn" class\x3d"head-btns list hide" title\x3d"${nls.listTips}"\x3e\x3c/div\x3e\r\n\t\t\t\x3c/div\x3e\r\n\t\t\x3c/div\x3e\r\n\t\t\x3c!--\x3cdiv data-dojo-attach-point\x3d"editBtns" class\x3d"edit-btns"\x3e\r\n\t\t\t\t\x3cdiv data-dojo-attach-point\x3d"renameBtn" class\x3d"head-btns rename" title\x3d"rename"\x3e\x3c/div\x3e\r\n\t\t\t\t\x3cdiv data-dojo-attach-point\x3d"deleteBtn" class\x3d"head-btns delete" title\x3d"delete"\x3e\x3c/div\x3e\r\n\t\t\t\x3c/div\x3e\r\n\t\t\x3c/div\x3e--\x3e\r\n\t\x3c/div\x3e\r\n\x3c/div\x3e',
+"url:widgets/Bookmark/ItemNode.html":'\x3cdiv class\x3d"jimu-img-node jimu-float-leading clearFix" data-id\x3d""\x3e\r\n\t\x3cdiv data-dojo-attach-point\x3d"dragMasker" class\x3d"drag-masker"\x3e\x3c/div\x3e\x3c!--for different browsers drag behavior--\x3e\r\n\r\n\t\x3cdiv data-dojo-attach-point\x3d"selectedBtn" class\x3d"selected-btn oper-btns no-user-select hide"\x3e\x3c/div\x3e\r\n\t\x3cdiv data-dojo-attach-point\x3d"nodeBox" class\x3d"node-box verticalCenter no-user-select"\x3e\r\n\t\t\x3cimg data-dojo-attach-point\x3d"thumbnail" class\x3d"thumbnail" src\x3d""\x3e\r\n\t\x3c/div\x3e\r\n\r\n\t\x3cdiv data-dojo-attach-point\x3d"nodeLabel" data-dojo-type\x3d"dijit/form/ValidationTextBox" required\x3d"true" data-dojo-props\x3d"trim:true"\x3e\x3c/div\x3e\r\n\r\n\t\x3cdiv data-dojo-attach-point\x3d"deleteBtn" class\x3d"delete-btn oper-btns no-user-select"\x3e\x3c/div\x3e\r\n\t\x3cdiv data-dojo-attach-point\x3d"editBtn" class\x3d"edit-btn oper-btns no-user-select"\x3e\x3c/div\x3e\r\n\t\x3cdiv data-dojo-attach-point\x3d"renameBtn" class\x3d"rename-btn oper-btns no-user-select"\x3e\x3c/div\x3e\r\n\t\x3cdiv data-dojo-attach-point\x3d"changeImgBtn" class\x3d"change-img-btn oper-btns no-user-select hide"\x3e\x3c/div\x3e\r\n\x3c/div\x3e',
+"url:widgets/Bookmark/Widget.html":'\x3cdiv\x3e\r\n\t\x3cdiv class\x3d""\x3e\r\n\t\t\x3cdiv data-dojo-attach-point\x3d"headBarContainer" class\x3d"head-bar"\x3e\x3c/div\x3e\r\n\r\n\t\t\x3cdiv data-dojo-attach-point\x3d"bookmarksContainer" class\x3d"bookmarks-container cards"\x3e\r\n\t\t\t\x3cdiv data-dojo-attach-point\x3d"webmapBookmarksContainer"\x3e\x3c/div\x3e\r\n\t\t\t\x3cdiv data-dojo-attach-point\x3d"customBookmarksContainer"\x3e\x3c/div\x3e\r\n\t\t\x3c/div\x3e\r\n\r\n\x3c!--\r\n\t\t\x3cdiv data-dojo-attach-point\x3d"bookMarkerContainer" class\x3d"bookmarker-nodes cards"\x3e\x3c/div\x3e\r\n\t\t\r\n\t\t\x3cdiv data-dojo-attach-point\x3d"editMenuContainer" class\x3d"edit-menu"\x3e\r\n\t\t\t\x3cdiv class\x3d"delete-btn edit-menu-btns" data-dojo-attach-point\x3d"deleteBtn" data-dojo-attach-event\x3d"onclick:_onEditMenuDelete"\x3e${nls.labelDelete}\x3c/div\x3e\r\n\t\t\x3c/div\x3e\r\n\t\t\r\n\t\t\x3cdiv data-dojo-attach-point\x3d"imageChooserContainer" class\x3d"hide"\x3e\x3c/div\x3e--\x3e\r\n\t\x3c/div\x3e\r\n\x3c/div\x3e',
+"url:widgets/Bookmark/css/style.css":'.jimu-img-node{font-size: 12px; position: relative; float: left; color: #666; overflow: hidden;}.jimu-img-node .node-box{position: relative; border-radius: 4px; overflow: hidden;}.jimu-img-node img{width: 100%; height: 100%; cursor: pointer;}.jimu-img-node .node-label{height: 30px; text-align: center; overflow: hidden; text-overflow: ellipsis;}.jimu-widget-bookmark .jimu-img-node .dijitTextBoxDisabled{opacity: 1;}.jimu-widget-bookmark .jimu-img-node .dijitTextBox .dijitInputInner {color: #000; opacity: 0.9;}.jimu-widget-bookmark .no-user-select{user-select: none; -moz-user-select: none; -webkit-user-select: none; -ms-user-select: none;}.jimu-widget-bookmark .hide {display: none !important;}.jimu-widget-bookmark .clearFix {*overflow: hidden; *zoom: 1;}.jimu-widget-bookmark .clearFix:after {display: table; content: ""; width: 0; clear: both;}.jimu-widget-bookmark .verticalCenter{display: flex; align-items: center;}.jimu-widget-bookmark .jimu-img-node .node-box{margin: 0 auto; width: 100px; height: 60px;}.jimu-widget-bookmark .cards .jimu-img-node .drag-masker{width: 100px; height: 60px;}.jimu-widget-bookmark .jimu-img-node .dijitTextBox {border: none; width: 100%; background-color: transparent;}.jimu-widget-bookmark .jimu-img-node .dijitTextBoxDisabled,.jimu-widget-bookmark .jimu-img-node .dijitTextBox .dijitInputField{background-color: transparent; width: 100%; overflow: hidden;}.jimu-widget-bookmark .jimu-img-node .dijitTextBox .dijitInputInner{white-space: nowrap; text-overflow: ellipsis; text-align: center;}.jimu-widget-bookmark .jimu-img-node .dijitTextBoxFocused.dijitFocused{border:none !important; box-shadow: none; background-image: none;}.jimu-widget-bookmark .jimu-img-node .dijitTextBoxFocused.dijitValidationTextBoxFocused{background-image: none;}.jimu-widget-bookmark .jimu-img-node .dijitTextBoxFocused.dijitFocused .dijitInputInner{box-shadow: none; background: rgba(36, 181, 204, 0.2) !important;}.jimu-img-node .oper-btns{display: none; position: absolute; z-index: 10;}.editing .jimu-img-node .thumbnail{}.jimu-img-node .drag-masker{position: absolute; z-index: 5; top: 0; width: 100%; height: 60px; cursor: pointer;}.jimu-img-node .drag-masker:hover{background-color: transparent}.editing .jimu-img-node .oper-btns{width:20px; height:20px; cursor: pointer; background-color: rgba(0,0,0,0.5);}.editing .jimu-img-node .oper-btns:hover{background-color: rgba(0,0,0,0.7);}.editing .jimu-img-node .selected-btn{background: url("../images/btns/unselected.svg") no-repeat; left:0; top:0;}.editing .jimu-img-node.selected .selected-btn{background: url("../images/btns/selected.svg") no-repeat;}.jimu-widget-bookmark:not(.mobile) .editing .jimu-img-node .delete-btn{cursor: pointer; top:0;}.jimu-rtl .jimu-widget-bookmark:not(.mobile) .jimu-img-node .delete-btn{right: auto;}.jimu-widget-bookmark:not(.mobile) .editing .jimu-img-node .delete-btn:before{position: absolute; content: url("../images/btns/x.svg"); display: block; width: 8px; left: 50%; top: 50%; transform: translate(-50%, -50%);}.editing .jimu-img-node .edit-btn{right: 0; bottom: 30px;}.jimu-rtl .jimu-img-node .edit-btn{right: auto; left: 0;}.editing .jimu-img-node .edit-btn:before{position: absolute; content: url("../setting/css/images/btns/edit.svg"); display: block; width: 9px; height: 11px; left: 50%; top: 50%; transform: translate(-50%, -50%);}.jimu-widget-bookmark:not(.mobile) .editing .jimu-img-node .rename-btn{display: none; top: 0px; left: 0px;}.jimu-widget-bookmark:not(.mobile) .editing .jimu-img-node .rename-btn:before{position: absolute; content: url("../setting/css/images/btns/edit.svg"); display: block; width: 9px; height: 12px; left: 50%; top: 50%; transform: translate(-50%, -50%);}.editing .jimu-img-node .change-img-btn{right: calc((100% - 100px)/2); bottom: 30px;}.jimu-rtl .jimu-img-node .change-img-btn{right: auto; left: calc((100% - 100px)/2);}.editing .jimu-img-node .change-img-btn:before{position: absolute; content: url("../images/btns/change.svg"); display: block; width: 11px; height: 15px; left: 50%; top: 50%; transform: translate(-50%, -50%);}.jimu-widget-bookmark .header {display: flex; align-items: center; justify-content: space-between; height: 30px; margin-bottom: 15px;}.jimu-widget-bookmark .header .editable-btns,.jimu-widget-bookmark .header .common-fun-btns,.jimu-widget-bookmark .header .edit-btns,.jimu-widget-bookmark .header .common-fun-btns .display-mode{display: flex; align-items: center;}.jimu-widget-bookmark .header .common-fun-btns .display-mode {margin: 0 5px;}.jimu-widget-bookmark .header .two-modes .list{background: url("../images/btns/list.svg") no-repeat;}.jimu-widget-bookmark .header .two-modes .list:hover{background: url("../images/btns/list_selected.svg") no-repeat;}.jimu-widget-bookmark .header .two-modes .cards{background: url("../images/btns/cards.svg") no-repeat;}.jimu-widget-bookmark .header .two-modes .cards:hover{background: url("../images/btns/cards_selected.svg") no-repeat;}.jimu-widget-bookmark .adding .header .add{background: url("../images/btns/add_selected.svg") no-repeat;}.jimu-widget-bookmark .header .edit{background: url("../images/btns/edit.svg") no-repeat;}.jimu-widget-bookmark .editing .header .edit{background: url("../images/btns/edit_selected.svg") no-repeat;}.jimu-widget-bookmark .header .sync-btn{background: url("../images/btns/sync.svg") no-repeat;}.jimu-widget-bookmark .header .sync-btn.marked{background: url("../images/btns/sync.svg") no-repeat; background-color: red;}.jimu-widget-bookmark .header .back-to-init{background: url("../images/btns/backtoinit.svg") no-repeat;}.jimu-widget-bookmark .header .back-to-init.marked{background: url("../images/btns/backtoinit_selected.svg") no-repeat;}.jimu-widget-bookmark .header .rename{background: url("../images/btns/rename_selected.svg") no-repeat;}.jimu-widget-bookmark .header .rename.disable{background: url("../images/btns/rename.svg") no-repeat;}.jimu-widget-bookmark .header .delete{background: url("../images/btns/delete_selected.svg") no-repeat;}.jimu-widget-bookmark .header .delete.disable{background: url("../images/btns/delete.svg") no-repeat;}.jimu-widget-bookmark .header .edit-btns{display: none;}.jimu-widget-bookmark .editing .header .edit-btns{display: flex;}.jimu-widget-bookmark .header .common-fun-btns{display: flex;}.jimu-widget-bookmark .editing .header .common-fun-btns{display: none;}.bookmark-notice-popup{font-family: "Avenir Medium"; font-size: 12px;}.bookmark-notice-popup .tips{color: #000000; letter-spacing: 0;}.bookmark-notice-popup .check-box{position: absolute; bottom: 20px;}.bookmark-notice-popup .check-box .jimu-checkbox .label{font-size: 12px; color: #353535; letter-spacing: 0.3px;}.DartTheme .jimu-widget-bookmark .dijitTextBox{border: none !important;}.DartTheme .jimu-widget-bookmark .jimu-img-node .dijitTextBox .dijitInputInner {color: #FFF !important;}.jimu-widget-bookmark{width: 100%; height: 100%; overflow: hidden; position: relative;}.jimu-widget-bookmark .add-section{position: relative; height: 30px; margin-top: 7px; overflow: visible;}.jimu-widget-bookmark .input-bookmark-name{border-top-right-radius: 0; border-bottom-right-radius: 0; position: absolute; left: 0; top: 0; width: 100%;}.jimu-widget-bookmark .jimu-state-error{margin-top: 4px; visibility: hidden;}.jimu-widget-bookmark .bookmark-list{margin-bottom: 35px; width: 100%;}.jimu-widget-bookmark .play-section{overflow: hidden; margin-top: 20px; position: absolute; bottom: 0;}.jimu-widget-bookmark .jimu-btn{float: none; margin: auto; width: 100%;}.jimu-widget-bookmark .jimu-img-node{margin-bottom: 8px;}.jimu-widget-bookmark .jimu-img-node .node-label{height: 2.7em; line-height: 16px; vertical-align: middle; padding: 0 5px; margin: 0 auto; width: 100px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;}.jimu-widget-bookmark .jimu-img-node .node-box{border-radius: 0; position: relative;}.jimu-widget-bookmark .jimu-img-node img{display: flex; width: 100%; height: 60px; opacity: 1; min-width: 80px;}.jimu-widget-bookmark .jimu-img-node.selected img{opacity: 0.4; transition: opacity .5s;}.jimu-widget-bookmark .cards .jimu-img-node:hover .dijitTextBox .dijitInputInner{color: #51B1FE !important;}.jimu-widget-bookmark .cards .jimu-img-node .drag-masker{left: 50%; transform: translate(-50%, 0%);}.jimu-widget-bookmark .cards .jimu-img-node .delete-btn{display: none; right:calc((100% - 100px)/2); justify-content: center; align-items: center;}.jimu-rtl .jimu-widget-bookmark .cards .jimu-img-node .delete-btn{right: auto; left: calc((100% - 100px)/2);}.jimu-widget-bookmark .cards .jimu-img-node:hover .delete-btn{display: flex;}.jimu-widget-bookmark .cards .jimu-img-node .change-img-btn{display: none;}.jimu-widget-bookmark .cards .jimu-img-node:hover .change-img-btn{display: block;}.jimu-widget-bookmark .cards .jimu-img-node .dijitTextBox{max-width: 104px; width: 100%; margin: 0 auto; display: flex;}.jimu-widget-bookmark .list{}.jimu-widget-bookmark .list .jimu-img-node{width: 100% !important; display: flex; height: 36px; margin-bottom: 8px;}.jimu-widget-bookmark .list .jimu-img-node:hover{background-color: #E2E2E2;}.DartTheme .jimu-widget-bookmark .list .jimu-img-node:hover{background-color: #444;}.jimu-widget-bookmark .list .node-box{height: 36px; width: 16px; margin: 0;}.jimu-widget-bookmark .list .jimu-img-node .dijitTextBoxFocused.dijitValidationTextBoxFocused{z-index: 99;}.jimu-widget-bookmark .list .node-box img{display: none;}.jimu-widget-bookmark .node-box:after{display: none;}.jimu-widget-bookmark .list .node-box:after{position: absolute; content: url(../images/btns/place.svg); display: block; height: 16px; top: 9px; left: 4px;}.jimu-widget-bookmark .list .editing .node-box:after{top: 10px;}.jimu-rtl .jimu-widget-bookmark .list .node-box:after{left: auto; right: 3px;}.jimu-widget-bookmark .list.editing .node-box{display: none;}.jimu-widget-bookmark .list.editing .node-box:after{display: none;}.jimu-widget-bookmark .list.editing .jimu-img-node .node-box{margin: 0;}.jimu-widget-bookmark .list .jimu-img-node .dijitTextBox{height: 36px;}.mobile.jimu-widget-bookmark .jimu-img-node .dijitTextBoxDisabled,.mobile.jimu-widget-bookmark .jimu-img-node .dijitTextBox .dijitInputField,.jimu-widget-bookmark .list .jimu-img-node .dijitTextBoxDisabled,.jimu-widget-bookmark .list .jimu-img-node .dijitTextBox .dijitInputField{width: calc(100% - 70px); height: 100%;}.jimu-widget-bookmark .list .jimu-img-node .dijitTextBox .dijitInputInner{height: 100%;}.jimu-widget-bookmark .list .jimu-img-node .dijitTextBox .dijitInputInner{text-align: left;}.jimu-rtl .jimu-widget-bookmark .list .jimu-img-node .dijitTextBox .dijitInputInner{text-align: right;}.jimu-widget-bookmark .list.editing .head-btns{}.jimu-widget-bookmark .list .jimu-img-node .oper-btns{top: 8px;}.jimu-widget-bookmark:not(.mobile) .list .editing .jimu-img-node .oper-btns{top: 8px;}.mobile .jimu-img-node .oper-btns{display: none;}.mobile .editing .jimu-img-node .oper-btns,.mobile .editing .jimu-img-node .oper-btns:hover,.jimu-widget-bookmark .list .editing .jimu-img-node .oper-btns,.jimu-widget-bookmark .list .editing .jimu-img-node .oper-btns:hover{background-color: transparent;}.mobile .editing .jimu-img-node .rename-btn:before,.jimu-widget-bookmark:not(.mobile) .list .editing .jimu-img-node .rename-btn:before{content: url(images/pencil.svg); width: 16px; height: 16px;}.mobile .editing .jimu-img-node .rename-btn:hover:before,.jimu-widget-bookmark:not(.mobile) .list .editing .jimu-img-node .rename-btn:hover:before{content: url(images/pencil_hover.svg);}.mobile .editing .jimu-img-node .delete-btn:before,.jimu-widget-bookmark:not(.mobile) .list .editing .jimu-img-node .delete-btn:before{content: url(images/clear.svg); width: 20px; height: 20px;}.mobile .editing .jimu-img-node .delete-btn:hover:before,.jimu-widget-bookmark:not(.mobile) .list .editing .jimu-img-node .delete-btn:hover:before{content: url(images/clear_hover.svg);}.jimu-widget-bookmark .list.editing .jimu-img-node .selected-btn{position: relative; align-self: center;}.jimu-widget-bookmark .list.editing .jimu-img-node .close-btn{position: relative; background-color: green;}.jimu-widget-bookmark .list .jimu-img-node .delete-btn{left: auto; right: 15px; display: block;}.jimu-rtl .list .jimu-img-node .delete-btn{left: 15px; right: auto;}.jimu-widget-bookmark .list .jimu-img-node .change-img-btn{display: none;}.jimu-widget-bookmark .list .editing .jimu-img-node .rename-btn{display: block; left: auto; right: 50px;}.jimu-rtl .jimu-widget-bookmark .list .editing .jimu-img-node .rename-btn{left: 50px; right: auto;}.jimu-widget-bookmark {position: relative; overflow: hidden;}.jimu-widget-bookmark .drawer-handle{width: 100%; display: flex; align-items: center; font-family: "Avenir Medium"; font-size: 14px; color: #000000; letter-spacing: 0.39px;}.jimu-widget-bookmark .drawer-handle .separate-line{margin: 10px 0 25px 0; border-top: 1px solid #eee; width: 100%;}.DartTheme .jimu-widget-bookmark .drawer-handle .separate-line{border-top: 1px solid #666;}.jimu-widget-bookmark .drop-down{display: flex; align-items: center; background: url(images/dropDown.svg) no-repeat; background-size: 6px 6px; width: 6px; height: 6px; cursor: pointer;}.jimu-widget-bookmark .drop-down.open{transform: rotate(0deg); -ms-transform: rotate(0deg); -moz-transform: rotate(0deg); -webkit-transform: rotate(0deg); -o-transform: rotate(0deg);}.jimu-widget-bookmark .drop-down{margin: 0 10px; transform: rotate(90deg); -ms-transform: rotate(90deg); -moz-transform: rotate(90deg); -webkit-transform: rotate(90deg); -o-transform: rotate(90deg);}.jimu-widget-bookmark .bookmarks-container{overflow-x: hidden; overflow-y: auto;}.jimu-widget-bookmark .bookmarker-nodes{overflow: auto;}.jimu-widget-bookmark .dojoDndItemAnchor{padding: 0; border: none;}.jimu-widget-bookmark .header .oper-btns{width: 100%; height: 100%; display: flex; align-items: center; justify-content: flex-end;}.jimu-widget-bookmark .header .head-btns{width:16px; height:16px; margin: 4px; overflow: hidden; cursor: pointer;}.jimu-widget-bookmark .header .add{display: flex; align-items: center; justify-content: center; height:30px; min-width: 65px; padding: 0 10px; border: 1px solid #c7c7c7; color: #000; font-family: Avenir-Medium; font-size: 12px; cursor: pointer;}.jimu-widget-bookmark .header .add:hover{border: 1px solid #000;}.DartTheme .jimu-widget-bookmark .header .add{border: 1px solid #666; color: #FFF;}.DartTheme .jimu-widget-bookmark .header .add:hover{border: 1px solid #FFF;}.jimu-widget-bookmark .editable .header .filter-container{margin-left:20px;}.jimu-rtl .jimu-widget-bookmark .editable .header .filter-container{margin-left: auto; margin-right: 20px;}.jimu-widget-bookmark .header .filter-container{display: flex; position: relative; width: 100%; height: 100%; overflow: hidden;}.jimu-widget-bookmark .header .filter-container .filter-input{position: absolute; height: 30px; width: 100%;}.jimu-widget-bookmark .header .filter-container .dijitTextBox {width: 100%;}.jimu-widget-bookmark .header .filter-container .search{position: absolute; background: url(images/search.svg) no-repeat; background-size: contain; width: 16px; height: 16px; margin: 7px; right: 0; top: 0;}.jimu-rtl .jimu-widget-bookmark .header .filter-container .search{right: auto; left: 0;}.jimu-widget-bookmark .header .display-mode{margin: 0 10px;}.jimu-widget-bookmark .cards .header{margin-bottom: 25px;}.mobile.jimu-widget-bookmark {}.mobile.jimu-widget-bookmark .jimu-img-node{width:100% !important; height:64px; display: flex; align-items: center; border-top: 1px solid rgba(230,230,230,0.5); margin-top: 0; margin-bottom: 0; padding: 4px 0;}.DartTheme .mobile.jimu-widget-bookmark .jimu-img-node{border-top: 1px solid #333333}.mobile.jimu-widget-bookmark .jimu-img-node .drag-masker{width: 100%;}.mobile.jimu-widget-bookmark .cards .jimu-img-node .dijitTextBox{margin: 0; max-width: 100%;}.mobile.jimu-widget-bookmark .node-box{height: 50px; width: 80px; margin: 0 10px; overflow: visible;}.mobile.jimu-widget-bookmark .list.editing .node-box{display: flex;}.mobile.jimu-widget-bookmark .node-box img{max-height: 50px; max-width: 75px; display: flex;}.mobile.jimu-widget-bookmark .node-box:after{display: none;}.mobile.jimu-widget-bookmark .editing .node-box{}.mobile.jimu-widget-bookmark .editing .node-box:after{display: none;}.mobile.jimu-widget-bookmark .jimu-img-node .node-box{margin-left: 0; margin-right:10px;}.jimu-rtl .mobile.jimu-widget-bookmark .jimu-img-node .node-box{margin-left: 10px; margin-right:0;}.mobile.jimu-widget-bookmark .jimu-img-node .dijitTextBoxDisabled,.mobile.jimu-widget-bookmark .jimu-img-node .dijitTextBox .dijitInputField{max-width: 300px;}.mobile.jimu-widget-bookmark .jimu-img-node .dijitTextBox .dijitInputInner{text-align: left;}.jimu-rtl .mobile.jimu-widget-bookmark .jimu-img-node .dijitTextBox .dijitInputInner{text-align: right;}.mobile.jimu-widget-bookmark {-webkit-touch-callout:none; -webkit-user-select:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;}.mobile.jimu-widget-bookmark .jimu-img-node .node-label{user-select: none; -moz-user-select: none; -webkit-user-select: none; -ms-user-select: none;}.mobile.jimu-widget-bookmark .editing .jimu-img-node .oper-btns{top: 20px;}.mobile.jimu-widget-bookmark .editing .jimu-img-node .selected-btn{position: relative; align-self: center;}.mobile.jimu-widget-bookmark .editing .jimu-img-node .close-btn{position: relative;}.mobile.jimu-widget-bookmark .jimu-img-node .change-img-btn {display: none !important;}.mobile.jimu-widget-bookmark .jimu-img-node .rename-btn {display: block; left: auto; right: 50px;}.jimu-rtl .mobile.jimu-widget-bookmark .jimu-img-node .rename-btn {left: 50px; right: auto;}.mobile.jimu-widget-bookmark .jimu-img-node .delete-btn {display: block; right: 15px;}.jimu-rtl .mobile.jimu-widget-bookmark .jimu-img-node .delete-btn {left: 15px; right: auto;}',
+"*now":function(m){m(['dojo/i18n!*preload*widgets/Bookmark/nls/Widget*["ar","bs","cs","da","de","en","el","es","et","fi","fr","he","hi","hr","id","it","ja","ko","lt","lv","nb","nl","pl","pt-br","pt-pt","ro","ru","sl","sr","sv","th","tr","zh-cn","vi","zh-hk","zh-tw","ROOT"]'])},"*noref":1}});
+define("dojo/_base/declare dojo/_base/lang dojo/_base/array dojo/_base/html jimu/BaseWidget dojo/query dojo/on dojo/Deferred ./HeadBar ./WebmapBookmarks ./CustomBookmarks ./utils libs/storejs/store".split(" "),function(m,k,e,a,n,l,h,g,c,q,d,b,p){return m([n],{baseClass:"jimu-widget-bookmark dojoDndSource dojoDndTarget dojoDndContainer",name:"Bookmark",bookmarks:[],jimuNls:null,postMixInProperties:function(){this.jimuNls=window.jimuNls},startup:function(){this.inherited(arguments);b.isConfigBefore5_3(this.config)&&
+b.setDefaultConfigForUpdate(this.config);this.headBar=new c({map:this.map,nls:this.nls,bookmarksContainer:this.bookmarksContainer,editMenuContainer:this.editMenuContainer,editable:this.config.editable,layout:this.config.layout},this.headBarContainer);this.headBar.startup();this.own(h(this.headBar,"add",k.hitch(this,function(){this.customBookmarks.add()})));this.own(h(this.headBar,"filter-change",k.hitch(this,function(a){this.webmapBookmarks.filter(a);this.customBookmarks.filter(a)})));this.webmapBookmarks=
+new q({nls:this.nls,map:this.map,folderUrl:this.folderUrl,config:this.config},this.webmapBookmarksContainer);this.webmapBookmarks.startup();this.customBookmarks=new d({nls:this.nls,map:this.map,folderUrl:this.folderUrl,widgetId:this.id,config:this.config},this.customBookmarksContainer);this.customBookmarks.startup();this.own(h(this.customBookmarks,"sort",k.hitch(this,"_onSort")));this.own(h(this.customBookmarks,"change-img",k.hitch(this,"_onChangeImg")));this.own(h(this.customBookmarks,"delete",k.hitch(this,
+"_onDelete")));this.own(h(this.customBookmarks,"label-blur",k.hitch(this,"_onLabelBlur")));this.own(h(this.customBookmarks,"added",k.hitch(this,"_onAdded")));this.resize()},_onLabelBlur:function(a){this.onBookmarksChange(a)},_onSort:function(a){this.onBookmarksChange(a)},_onChangeImg:function(a){this.onBookmarksChange(a)},_onDelete:function(a){this.onBookmarksChange(a)},_onAdded:function(a){this.onBookmarksChange(a)},onBookmarksChange:function(a){this._saveAllToLocalCache(a);this.resize()},onOpen:function(){this.webmapBookmarks.refresh();
+var a=this._getLocalCache();this.customBookmarks.refresh(a);this.resize()},destroy:function(){this.headBar&&(this.headBar.destroy(),this.headBar=null);this.webmapBookmarks&&(this.webmapBookmarks.destroy(),this.webmapBookmarks=null);this.customBookmarks&&(this.customBookmarks.destroy(),this.customBookmarks=null);this.inherited(arguments)},onMinimize:function(){this.resize()},onMaximize:function(){this.resize()},resize:function(){window.appInfo.isRunInMobile?a.addClass(this.domNode,"mobile"):a.removeClass(this.domNode,
+"mobile");this.headBar.toogleMobileDisplay(window.appInfo.isRunInMobile);this.customBookmarks.toggleMobile(window.appInfo.isRunInMobile);var b=this.domNode.parentElement||this.domNode.parentNode;b&&(window.isRTL?a.setStyle(b,"padding-left","0"):a.setStyle(b,"padding-right","0"));this._getParentSize(b).then(k.hitch(this,function(c){var d=this.domNode;if(279<=c.w&&329>c.w)this._setNodeWidths(d,130,100);else if(1>=Math.abs(c.w-330))this._setNodeWidths(d,100,100);else{var f=a.getMarginBox(d).w-20,e=parseInt(f/
+100,10);0<e&&(f=parseInt(f%100/e,10),this._setNodeWidths(d,100+f,100))}this.setContainerHeight(c,b)}))},_setNodeWidths:function(b,c,d){d+=4;c<d&&(c=d);l(".jimu-img-node",b).forEach(function(b){a.setStyle(b,"width",c+"px")})},getItemSize:function(){var a={};a.width=this.itemSize.width;a.height=this.itemSize.height;return a},setContainerWidth:function(b,c){a.setStyle(this.domNode,{width:(c.width+2*this.hmargin)*Math.floor(b.w/(c.width+2*this.hmargin))+20+"px",margin:"0px auto"})},setContainerHeight:function(b,
+c){c=this._getDomHeight(".header",c);a.setStyle(this.bookmarksContainer,{height:b.h-c+"px"})},setItemPosition:function(b,c){var d={position:"relative",margin:this.vmargin+"px "+this.hmargin+"px"};0<=c.width&&(d.width=c.width+"px");0<=c.height&&(d.height=c.height+"px");a.setStyle(b.domNode,d);a.addClass(b.domNode,"jimu-float-leading")},_getDomHeight:function(b,c){var d=0;(b=l(b,c)[0])&&(b=a.getMarginBox(b))&&b.h&&(d=b.h);return d},_getParentSize:function(b){var c=new g;setTimeout(k.hitch(this,function(){var d=
+a.getMarginBox(b),e=a.getPadExtents(b);d.h-=e.h;c.resolve(d)}),10);return c},_saveAllToLocalCache:function(a){var c=[];e.forEach(p.get(b.getKey(this.id)),function(a){p.remove(a)},this);e.forEach(a,function(a){var d=b.getKey(this.id)+"."+a.displayName;c.push(d);a=k.mixin({},a);a.itemNode&&delete a.itemNode;a._uID&&delete a._uID;try{p.set(d,a)}catch(t){alert("localcache store error")}},this);p.set(b.getKey(this.id),c)},_getLocalCache:function(){var a=this._getCacheByKeys(this._getOldKey()),c=this._getCacheByKeys(b.getKey(this.id)),
+d=this._getCacheUpdatedKey();0===c.length&&0<a.length&&!0!==p.get(d)&&(c=b.filterBookmarkFromTarget(a,this.config.bookmarks2D),this._saveAllToLocalCache(c),p.set(d,!0));return c},_getCacheUpdatedKey:function(){return b.getKey(this.id)+".BookmarkCacheUpdated"},_getCacheByKeys:function(a){var b=[];p.get(a)&&e.forEach(p.get(a),function(c){c.startWith(a)&&(c=p.get(c),b.push(c))},this);return b},_getOldKey:function(){return this.appConfig.map["3D"]?this.name+".3D":this.name+".2D"}})});
