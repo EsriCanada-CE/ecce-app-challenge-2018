@@ -28,6 +28,7 @@ define([
   //'jimu/dijit/Message',
   'dojo/NodeList-dom'
 ],
+
   function (/*Evented, */declare, html, lang, on, /*query, */ utils,
     _widgetBase, _TemplatedMixin, template/* Message,*/) {
     var Cropper = window.Cropper;
