@@ -29,6 +29,7 @@ define([
     'dijit/form/HorizontalRuleLabels',
     'dijit/form/HorizontalRule'
   ],
+  
   function(declare, dojoConfig, _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin,
     Evented, template, lang, html, on, HorizontalSlider, HorizontalRuleLabels,
     HorizontalRule) {/* jshint unused: false */

@@ -30,6 +30,7 @@ define(['dojo/_base/declare',
   'dijit/Tree',
   'jimu/utils'
 ],
+
 function(declare, _WidgetBase, _TemplatedMixin, tnTemplate, lang, html, array,
   dojoEvent, query, aspect, on, Evented, registry, DojoTree, jimuUtils) {
   /*jshint unused: false*/

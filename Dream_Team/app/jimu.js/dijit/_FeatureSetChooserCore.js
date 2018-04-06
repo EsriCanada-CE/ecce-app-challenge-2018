@@ -32,6 +32,7 @@ define([
   'esri/layers/FeatureLayer',
   'esri/symbols/jsonUtils'
 ],
+
 function(on, sniff, Evented, Deferred, lang, array, declare, jimuUtils, symbolUtils, SelectionManager,
   LayerInfos, Graphic, EsriQuery, QueryTask, FeatureLayer, symbolJsonUtils) {
 
