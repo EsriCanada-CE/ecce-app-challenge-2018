@@ -1,7 +1,7 @@
 Team Name: Hegemone
 
-Yunus Amer Ali (left) - Yunus Amer is a fourth year Computer Science student at The University of Western Ontario. Yunus' favourite fields of Computer Science are Computer Vision, Human-Computer Interaction, and Data Transmission Methods. This is his first year participating in the ECCE app challenge and he has no prior experience with GIS software.
+Yunus Amer Ali - Yunus Amer is a fourth year Computer Science student at The University of Western Ontario. Yunus' favourite fields of Computer Science are Computer Vision, Human-Computer Interaction, and Data Transmission Methods. This is his first year participating in the ECCE app challenge and he has no prior experience with GIS software.
 
-Jenny Tjhin (centre) - Jenny is a second year MSc. student in Geography at Western. Her research uses GIS and spatial statistical methods to detect cluster of points in epidemiology. This is the first time for her to compete in the challenge and she's excited to collaborate with the team.
+Jenny Tjhin - Jenny is a second year MSc. student in Geography at Western. Her research uses GIS and spatial statistical methods to detect cluster of points in epidemiology. This is the first time for her to compete in the challenge and she's excited to collaborate with the team.
 
-Martin Healy (right) - Martin will be completing his Ph.D. in Geography this year in the Human Environments Analysis Lab (HEAL). He is using ArcGIS Desktop, ArcGIS Pro, and the R-ArcGIS-Bridge in his research. He has primarily programmed using Python over the last few years and is excited to use the Web App Builder for ArcGIS and delve into the ArcGIS API for JavaScript.
+Martin Healy - Martin will be completing his Ph.D. in Geography this year in the Human Environments Analysis Lab (HEAL). He is using ArcGIS Desktop, ArcGIS Pro, and the R-ArcGIS-Bridge in his research. He has primarily programmed using Python over the last few years and is excited to use the Web App Builder for ArcGIS and delve into the ArcGIS API for JavaScript.
