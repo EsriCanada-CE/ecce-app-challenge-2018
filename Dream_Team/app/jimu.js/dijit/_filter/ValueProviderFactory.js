@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
+﻿///////////////////////////////////////////////////////////////////////////
 // Copyright © 2014 - 2017 Esri. All Rights Reserved.
 //
 // Licensed under the Apache License Version 2.0 (the "License");
@@ -27,6 +27,7 @@ define([
   './DateIsInValueProvider',
   'jimu/LayerInfos/LayerInfos'
 ],
+
   function(lang, array, declare, BlankValueProvider, SimpleValueProvider, TwoNumbersValueProvider,
     TwoDatesValueProvider, ListValueProvider, NumberListValueProvider, DateIsInValueProvider, LayerInfos) {
 
