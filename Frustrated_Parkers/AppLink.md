@@ -7,11 +7,16 @@ Hosted on ArcGIS Online:
 
 Steps to open application using AppStudio Player for ArcGIS:
 
-1. Get the AppStudio Player for ArcGIS for iOS or Android devices: ![App Store](http://doc.arcgis.com/assets/img/badges/app_store.svg "App Store") ![Google Play](https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png "Google Play")
+1. Get the AppStudio Player for ArcGIS for iOS or Android devices:
+
+  &nbsp;&nbsp;<a target="_blank" href="https://itunes.apple.com/us/app/appstudio-player-for-arcgis/id1018006050?ls=1&mt=8"><img src="http://doc.arcgis.com/assets/img/badges/app_store.svg" height="40px"></a><br />
+  <a target="_blank" href="https://play.google.com/store/apps/details?id=com.esri.appstudio.player"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" height="60"></a>
 
 2. Open AppStudio Player, and from the menu sign-in with an ArcGIS Online organizational or developer account.
 
-3. From the AppStudio Player menu, choose to scan a QR code, and point the camera at this image: ![alt text](https://esricanada-ce.github.io/ecce-app-challenge-2018/Frustrated_Parkers/images/appstudio_qrcode.gif "QR Code")
+3. From the AppStudio Player menu, choose to scan a QR code, and point the camera at this image:
+
+  ![alt text](https://esricanada-ce.github.io/ecce-app-challenge-2018/Frustrated_Parkers/images/appstudio_qrcode.gif "QR Code")
 
 *Note*: While interacting with this app in the AppStudio Player for ArcGIS, you will see a watermark in the map view indicating that it is intended for developer use only.
 
