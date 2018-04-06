@@ -1,6 +1,6 @@
 Hosted on ArcGIS Online:
 
-- AppStudio application: [http://edu.maps.arcgis.com/home/item.html?id=f6c04d2e173445b38e60f636b77dd048](http://edu.maps.arcgis.com/home/item.html?id=f6c04d2e173445b38e60f636b77dd048)
+- AppStudio application: [http://www.arcgis.com/home/item.html?id=f6c04d2e173445b38e60f636b77dd048](http://www.arcgis.com/home/item.html?id=f6c04d2e173445b38e60f636b77dd048)
 
 Hosted on GitHub:
 
