@@ -1,3 +1,11 @@
+# App Challenge 2018 Winner
+
+***mapit.space*** *is the winner of the App Challenge 2018*!
+
+Congratulations from everyone at Esri Canada.
+
+---
+
 # goElectric by mapit.space
 ### Submission for the 2018 Esri App Challenge
 ### Team

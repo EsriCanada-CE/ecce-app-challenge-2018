@@ -1,3 +1,11 @@
+# App Challenge 2018 Runner-up
+
+***Water3D*** *was the first runner-up for the App Challenge 2018*!
+
+Congratulations from everyone at Esri Canada.
+
+---
+
 Azure Web App
 =========
 
