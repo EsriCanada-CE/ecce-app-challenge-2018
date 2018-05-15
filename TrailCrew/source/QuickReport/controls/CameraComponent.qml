@@ -11,7 +11,6 @@ import Qt.labs.folderlistmodel 2.1
 
 import ArcGIS.AppFramework 1.0
 import ArcGIS.AppFramework.Controls 1.0
-import ArcGIS.AppFramework.Dialogs 1.0
 import ArcGIS.AppFramework.Multimedia 1.0
 
 Item {
